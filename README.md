@@ -6,4 +6,4 @@
 
 . This game have 5 levels: easy - normal - hard - very hard - infinity.
 
-. Now let's try this game by link: 
+. Now let's try this game by link:  https://hachngochai.github.io/MonsterMash/
