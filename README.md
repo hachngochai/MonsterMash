@@ -1,6 +1,6 @@
 # Monster Mash — The Midnight Hunt
 
-Rebuild 02 của game Monster Mash của KIO. Native Canvas 2D, không cần Processing.js, CDN, thư viện hoặc cài package. Có thể mở `index.html` trực tiếp; nên dùng preview local để tiến trình lưu cùng một địa chỉ trình duyệt.
+Rebuild 03 của game Monster Mash của KIO. Native Canvas 2D, không cần Processing.js, CDN, thư viện hoặc cài package. Có thể mở `index.html` trực tiếp; nên dùng preview local để tiến trình lưu cùng một địa chỉ trình duyệt.
 
 Chơi bản public: [Monster Mash trên GitHub Pages](https://hachngochai.github.io/MonsterMash/).
 
@@ -27,6 +27,8 @@ GitHub Pages của repo xuất bản từ nhánh `master`, thư mục gốc `/`,
 
 - 50 màn có tên, mục tiêu và cấu hình riêng, chia thành 5 vùng: nghĩa địa, rừng tơ, thành phố ma, lâu đài trăng máu, cổng nhật thực.
 - Boss ở màn 10, 20, 30, 40, 50; xuất hiện sau khi hạ đủ địch thường. Hạ boss mới qua màn.
+- Màn 10: bộ xương gọi cột xương có dấu báo trước. Màn 20: thây ma xanh nhận đủ 10 phát trúng sẽ miễn đạn 2 giây; đạn bị chặn không tăng bộ đếm. Màn 30: nhện nhả tơ gây choáng 2 giây và phóng trứng mỗi 5 giây; phá bằng 2 phát, nếu để 5 giây sau khi chạm đất sẽ nở đúng 5 nhện con. Tối đa 2 trứng, dành sẵn chỗ cho đàn nhện con để không vượt 15 con.
+- Màn 40: ma trắng tàng hình mỗi 5 giây, không nhận đạn; sau 1,5 giây sẽ báo hướng và tập kích ngẫu nhiên từ trên, trái hoặc phải. Trúng đòn bị đánh ngã, mất 1 máu và 1 khiên tích (không xuống dưới 0). Màn 50: Dracula báo trước mỗi lần hút máu khi hóa dơi; đòn này không thể né bằng khoảng cách hoặc bất tử sau va chạm, chỉ khiên đang bật mới chặn. Đòn trúng hồi 1 máu cho boss. Ở nửa máu, boss phân thân một lần; phải hạ cả hai mới thắng. Bản sao có 17 máu ở Cân bằng, các đợt tấn công được lệch nhịp.
 - Sinh lực 7 / 5 / 4 ở chế độ Thư giãn / Cân bằng / Thử thách. Đạn có giới hạn, mỗi phát tiêu hao 1 viên; nhịp bắn 0,17 giây. Nhặt thùng **AMMO** rơi từ trên xuống để tiếp tế, kể cả lúc đánh boss. Khi hết đạn, súng hạ xuống và bộ đếm đạn chuyển màu cảnh báo.
 - Mỗi 10 địch hạ được nhận 1 khiên, tích tối đa 3. Tiến độ cộng dồn qua màn. Khiên kéo dài 5 giây và chặn tối đa 3 lần va chạm; không chồng nhiều khiên cùng lúc.
 - Sau khi trúng đòn có 1,35 giây bất tử. Qua màn hồi 1 máu, màn hồi phục hồi 2. Mỗi 7 địch rơi vật phẩm máu nếu đang thiếu máu.
@@ -59,15 +61,21 @@ Thùng rơi với tốc độ 180 pixel/giây rồi nằm trên đất 8 giây �
 | Khiên | Space | Vuốt xuống hoặc nút ◇ |
 | Tạm dừng | Esc / P hoặc nút Ⅱ | Nút Ⅱ |
 
-Có thể dùng hai ngón: một ngón di chuyển và một ngón bắn. Nút di chuyển, nhảy, khiên bổ sung hiển thị trên thiết bị cảm ứng. Game tự tạm dừng khi đổi tab, ẩn trang hoặc mở menu.
+Có thể dùng hai ngón: một ngón di chuyển và một ngón bắn. Nút di chuyển, nhảy, bắn hai phía và khiên nằm ngay trên sân chơi. Cài đặt có ba lựa chọn: **Vuốt + nút**, **Chỉ vuốt**, **Chỉ nút**; mặc định kết hợp cả hai. Giữ nút BẮN để bắn liên tục, nhả từng ngón độc lập. Game tự tạm dừng khi đổi tab, ẩn trang hoặc mở menu.
+
+Khi bắt đầu hoặc tiếp tục trên máy cảm ứng, game yêu cầu toàn màn hình rồi khóa hướng ngang trong thao tác của người chơi. Trình duyệt không hỗ trợ hoặc từ chối vẫn chơi được và có gợi ý xoay máy khi đang dọc. Nút toàn màn hình cũng cho phép bật/tắt thủ công. Thoát toàn màn hình tạm dừng trận đấu và giải phóng các ngón đang giữ; về trại sẽ bỏ khóa hướng và thoát chế độ do game mở. Việc xoay tự động phụ thuộc hỗ trợ của trình duyệt và hệ điều hành.
 
 ## Cấu trúc và cập nhật sau này
 
 - `js/campaign.js`: dữ liệu màn, 5 vùng, loại địch và hệ số độ khó. Thêm chương hoặc màn tại đây; `levels.length` điều khiển tiến trình và điều kiện màn cuối.
 - `js/game.js`: mô phỏng theo giây, input, va chạm, kỹ năng riêng của từng loài, đạn và tiếp tế, khiên, save và giao diện.
+- `js/typography.js` và `assets/fonts/`: font Noto Sans / Noto Serif có bộ ký tự tiếng Việt, tải từ file trong game trước khi vẽ Canvas. Font được phân phối theo SIL Open Font License; giấy phép nằm cùng thư mục.
+- `js/mobile.js`: điều khiển toàn màn hình, hướng ngang và xử lý trình duyệt không hỗ trợ.
+- `js/bosses.js`: kỹ năng boss, miễn đạn, tơ, trứng, tàng hình, hút máu và phân thân; đồng hồ đứng yên khi tạm dừng.
 - `js/renderer.js`: nhân vật khối vuông lấy cảm hứng source gốc, 5 bối cảnh được cache, bệ lơ lửng, tơ nhện, dơi biến hình, thùng đạn, sương, ánh sáng và hiệu ứng. Đồ họa vẽ bằng code, không cần tải ảnh.
 - `style.css` và `index.html`: giao diện responsive, bản đồ 50 màn, hướng dẫn và cài đặt.
 - `tests/`: kiểm tra chiến dịch, input, đa chạm, khiên, boss, save, pause và kết thúc trận.
+- `tests/boss-preview.html`: bảng xem các trạng thái hiệu ứng và dấu tiếng Việt; mở qua server local để kiểm tra hình ảnh khi cập nhật.
 
 Khi mở rộng vượt 5 vùng, bổ sung palette và scenery tương ứng trong renderer, cập nhật số vùng/màn hiển thị ở UI, giữ key save nếu cấu trúc tương thích hoặc migrate save khi đổi schema.
 

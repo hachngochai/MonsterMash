@@ -229,7 +229,7 @@ test('a vampire morphs into a rising bat and lands without resetting its HP or c
 });
 
 test('bosses inherit their archetype abilities without duplicating health or kill counts', () => {
-  for (const [id, ability, state] of [[20, 'hanging', 'hanging'], [30, 'airborne', 'airborne'], [40, 'bat', 'rising'], [50, 'bat', 'rising']]) {
+  for (const [id, ability, state] of [[20, 'ledge', 'ledge'], [30, 'hanging', 'hanging'], [40, 'airborne', 'airborne'], [50, 'bat', 'rising']]) {
     const { game } = fresh(id);
     const boss = activeAbility(game, 'boss', ability);
     assert.equal(boss.boss, true);
@@ -274,7 +274,7 @@ test('a full gun leaves its crate available until ammunition is actually spent',
 });
 
 test('boss arrival grants one physical crate, and never refills an empty gun remotely', () => {
-  const { game } = fresh(20);
+  const { game } = fresh(30);
   game.player.ammo = 0;
   game.levelKills = game.level.target;
   game.checkCompletion();

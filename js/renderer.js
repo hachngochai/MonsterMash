@@ -1,6 +1,7 @@
 /* Monster Mash — original block characters, hand-painted with native Canvas 2D. */
 (function () {
   'use strict';
+  const font = window.MM?.Typography?.sans || '"Noto Sans", Arial, sans-serif';
   const W = 960, H = 540, GROUND = 438, TAU = Math.PI * 2;
   const palettes = [
     { sky: '#111529', horizon: '#41405c', far: '#24273c', near: '#171d2d', ground: '#151c26', soil: '#101620', edge: '#556461', glow: '#b9a2ff', mist: '#a8aec5', moon: '#ddd8cb', name: 'cemetery' },
@@ -226,10 +227,12 @@
   }
   function drawHunter(c, player, t, effects) {
     const x = player.x, y = player.y, dir = player.dir || 1, motion = Math.min(1, Math.abs(player.vx || 0) / 120);
-    const stride = effects && Math.abs(player.vx || 0) > 10 ? Math.sin(t * 18) * 4 * motion : 0;
-    const airborne = y < GROUND - 4, bob = !airborne && effects ? Math.abs(Math.sin(t * 18)) * motion * .9 : 0;
-    shadow(c, x, y, player.w || 38, airborne);
+    const knocked = player.knockdownTime > 0;
+    const stride = !knocked && effects && Math.abs(player.vx || 0) > 10 ? Math.sin(t * 18) * 4 * motion : 0;
+    const airborne = y < GROUND - 4, bob = !knocked && !airborne && effects ? Math.abs(Math.sin(t * 18)) * motion * .9 : 0;
+    shadow(c, x, y, knocked ? 62 : player.w || 38, airborne);
     c.save(); c.translate(x, y - bob); c.scale((player.w || 38) / 38, (player.h || 54) / 54); c.lineJoin = 'round'; c.lineCap = 'round';
+    if (knocked) c.rotate(-1.16 * dir);
     if (player.invulnerable > 0 && effects) c.globalAlpha = .72 + Math.sin(t * 37) * .18;
     const outline = '#101923', skin = '#d8b47d', empty = player.ammo === 0 && !(player.shotTimer > .001);
     // Combat boots and articulated legs under the original square camo body.
@@ -266,6 +269,18 @@
         polygon(c, [[side * 39, -28], [side * 48, -28], [side * 42, -25]], '#fff6d4');
       }
     }
+    if (player.stunTime > 0 && !knocked) {
+      c.save(); c.globalAlpha = 1;
+      c.beginPath(); c.ellipse(0, -29, 29, 33, 0, 0, TAU); c.fillStyle = '#d6edbf14'; c.fill(); c.strokeStyle = '#d4efb7'; c.lineWidth = 1.6; c.stroke();
+      for (let i = 0; i < 5; i++) {
+        const webY = -51 + i * 10;
+        c.beginPath(); c.moveTo(-23, webY); c.quadraticCurveTo(0, webY + 13, 23, webY - 2); c.strokeStyle = '#d4efb7b3'; c.lineWidth = 1; c.stroke();
+      }
+      line(c, -17, -52, 15, -7, '#f0ffd49c', 1); line(c, 18, -52, -15, -7, '#f0ffd49c', 1);
+      rounded(c, -49, -83, 98, 18, 4, '#152731ee', '#bddda35e', 1);
+      c.font = `700 11px ${font}`; c.textAlign = 'center'; c.fillStyle = '#e1f5ca';
+      c.fillText(`CHOÁNG ${player.stunTime.toFixed(1)}s`, 0, -70); c.restore();
+    }
     if (player.shieldTime > 0) {
       c.save(); c.globalAlpha = .8; c.strokeStyle = '#98e8ec'; c.lineWidth = 2;
       c.beginPath(); c.ellipse(0, -29, 48, 42, 0, 0, TAU); c.stroke();
@@ -275,6 +290,11 @@
       c.restore();
     }
     c.restore();
+    if (knocked) {
+      c.save(); rounded(c, x - 68, y - 71, 136, 20, 4, '#152731ee', '#cadcd481', 1);
+      c.font = `700 11px ${font}`; c.textAlign = 'center'; c.fillStyle = '#e6f0de';
+      c.fillText('BỊ ĐÁNH NGÃ', x, y - 57); c.restore();
+    }
   }
   function drawSkeleton(c, dir, walk, t, boss) {
     const bone = boss ? '#e8d9b8' : '#dddaca', shade = '#aaa994', outline = '#19242d';
@@ -326,7 +346,7 @@
     line(c, -14, -43, 8, -43, '#73829377', 1.3);
   }
   function drawGhost(c, dir, walk, t, boss) {
-    const body = boss ? '#c1efe1' : '#d0e7e3';
+    const body = boss ? '#edf6ef' : '#d0e7e3';
     c.save(); c.globalAlpha *= .9;
     c.beginPath(); c.moveTo(-20, -31); c.quadraticCurveTo(-22, -53, -9, -53); c.lineTo(9, -53); c.quadraticCurveTo(21, -53, 20, -31);
     c.lineTo(22, -7); c.quadraticCurveTo(17, -1, 11, -9); c.quadraticCurveTo(6, 3, 0, -7); c.quadraticCurveTo(-6, 3, -11, -7); c.quadraticCurveTo(-18, 1, -22, -7); c.closePath();
@@ -399,14 +419,124 @@
     if (e.abilityState !== 'ground' && e.y < GROUND - 80) {
       c.setLineDash([3, 7]); line(c, e.x, e.y + 10, x, GROUND - 24, '#ffd19359', 1); c.setLineDash([]);
     }
-    c.font = 'bold 18px sans-serif'; c.textAlign = 'center'; c.fillStyle = '#ffd193'; c.fillText('!', e.x, e.y - e.h - 16);
+    c.font = `700 18px ${font}`; c.textAlign = 'center'; c.fillStyle = '#ffd193'; c.fillText('!', e.x, e.y - e.h - 16);
     c.restore();
   }
+  function drawBulletArmor(c, e, t, effects) {
+    if (!(e.hardenedTime > 0)) return;
+    const glow = effects ? .72 + Math.sin(t * 8) * .12 : .85;
+    c.save();
+    rounded(c, -23, -57, 46, 59, 8, '#91ed9910', '#b7f6a1', 2.2);
+    c.globalAlpha = glow;
+    for (const side of [-1, 1]) {
+      line(c, side * 23, -44, side * 26, -35, '#b7f6a1', 1.5);
+      line(c, side * 26, -35, side * 24, -27, '#b7f6a1', 1.5);
+    }
+    polygon(c, [[23, -47], [34, -44], [33, -36], [29, -32], [24, -36]], '#244c35', '#c4ffad', 1.3);
+    line(c, 29, -43, 29, -36, '#c4ffad', 1.2); line(c, 26, -40, 32, -40, '#c4ffad', 1.2);
+    c.restore();
+  }
+  function drawPhantomTell(c, e, t, effects, viewTop) {
+    if (e.phantomState !== 'windup') return;
+    const targetX = Number.isFinite(e.landX) ? e.landX : e.phantomTarget && e.phantomTarget.x || e.x;
+    const targetY = Math.max(viewTop + 145, Math.min(GROUND - 28, e.phantomTarget && e.phantomTarget.y || GROUND - 34));
+    const side = e.attackSide || 'top', arrowX = side === 'left' ? 18 : side === 'right' ? W - 18 : targetX;
+    const arrowY = side === 'top' ? viewTop + 144 : targetY;
+    c.save(); c.strokeStyle = '#e7fbf5'; c.lineWidth = 2;
+    c.beginPath(); c.ellipse(targetX, GROUND, 35, 8, 0, 0, TAU); c.stroke();
+    for (const sign of [-1, 1]) { line(c, targetX + sign * 35, GROUND - 11, targetX + sign * 26, GROUND - 7, '#e7fbf5', 2); }
+    c.setLineDash([4, 8]); line(c, arrowX, arrowY, targetX, GROUND - 23, '#d4f7ef70', 1); c.setLineDash([]);
+    c.translate(arrowX, arrowY);
+    c.rotate(side === 'left' ? -Math.PI / 2 : side === 'right' ? Math.PI / 2 : 0);
+    polygon(c, [[-9, -11], [-3, -11], [-3, 0], [9, 0], [0, 12], [-9, 0], [3, 0], [3, -11]], '#edfdf4', '#244354', 2);
+    c.restore();
+  }
+  const hazardStyles = {
+    bones: { color: '#efd3a2', label: 'CỘT XƯƠNG' },
+    web: { color: '#c2e6ac', label: 'LƯỚI TƠ' },
+    spectral: { color: '#92e8ed', label: 'HỒN MA' },
+    blood: { color: '#ff9a9d', label: 'NANH MÁU' },
+    eclipse: { color: '#ffd292', label: 'NHẬT THỰC' }
+  };
+  function drawBossHazards(c, hazards, t, effects, world) {
+    for (const hazard of hazards || []) {
+      if (hazard.phase !== 'warning' && hazard.phase !== 'active') continue;
+      const style = hazardStyles[hazard.kind] || { color: palettes[world].glow, label: 'NGUY HIỂM' };
+      const width = Math.max(16, hazard.w || 70), height = Math.max(8, hazard.h || 65);
+      const x = hazard.x, y = Number.isFinite(hazard.y) ? hazard.y : GROUND, left = x - width / 2, top = y - height;
+      c.save(); c.lineCap = 'round'; c.lineJoin = 'round';
+      // The dashed box is the locked future damage area; cosmetic settings never hide it.
+      if (hazard.phase === 'warning') {
+        const remaining = Math.max(0, Number(hazard.timer) || 0), total = Math.max(.01, Number(hazard.warning) || remaining || 1);
+        const progress = Math.max(0, Math.min(1, 1 - remaining / total));
+        c.globalAlpha = .07 + progress * .07; rect(c, left, top, width, height, style.color);
+        c.globalAlpha = .8; c.strokeStyle = style.color; c.lineWidth = 1.7; c.setLineDash([5, 5]); c.strokeRect(left, top, width, height); c.setLineDash([]);
+        for (const side of [-1, 1]) {
+          const edge = x + side * width / 2;
+          line(c, edge, y + 2, edge, y - 9, style.color, 2.5); line(c, edge, y + 2, edge - side * 9, y + 2, style.color, 2.5);
+        }
+        c.globalAlpha = 1; rounded(c, x - 66, y - 33, 132, 19, 4, '#111c2dea', style.color + '99', 1);
+        c.font = `600 10px ${font}`; c.textAlign = 'center'; c.fillStyle = style.color;
+        c.fillText(`${style.label} · ${remaining.toFixed(1)}s`, x, y - 20);
+        rounded(c, left, y + 7, width, 3, 1, '#111c2dcc'); rounded(c, left, y + 7, Math.max(1, width * progress), 3, 1, style.color);
+        c.restore(); continue;
+      }
+      c.globalAlpha = .11; rect(c, left, top, width, height, style.color);
+      c.globalAlpha = .7; line(c, left, y + 2, left + width, y + 2, style.color, 3);
+      c.globalAlpha = 1;
+      if (hazard.kind === 'bones') {
+        const count = Math.max(2, Math.min(10, Math.ceil(width / 22)));
+        for (let i = 0; i < count; i++) {
+          const bx = left + width * (i + .5) / count, tip = top + (i % 3) * Math.min(6, height * .12);
+          line(c, bx, y - 2, bx, tip + 5, '#3f303b', 8); line(c, bx, y - 2, bx, tip + 5, '#c4b08d', 5);
+          for (const side of [-1, 1]) { ellipse(c, bx + side * 2.4, tip + 4, 4, 4, '#3f303b'); ellipse(c, bx + side * 2.4, tip + 4, 2.8, 2.8, '#f6dfb7'); }
+          line(c, bx - 1, y - 8, bx - 1, tip + 13, '#f6dfb77a', 1);
+        }
+      } else if (hazard.kind === 'web') {
+        ellipse(c, x, y - height / 2, width / 2, height / 2, '#98be8d24');
+        c.strokeStyle = '#d6edba'; c.lineWidth = 1;
+        for (let i = 0; i < 8; i++) { const a = i * TAU / 8; line(c, x, y - height / 2, x + Math.cos(a) * width / 2, y - height / 2 + Math.sin(a) * height / 2, '#d6edba', 1); }
+        for (let i = 1; i < 4; i++) { c.beginPath(); c.ellipse(x, y - height / 2, width / 2 * i / 3, height / 2 * i / 3, 0, 0, TAU); c.stroke(); }
+        for (const side of [-1, 1]) polygon(c, [[x + side * width * .34, y - 5], [x + side * width * .34 - 3, y - 11], [x + side * width * .34 + 3, y - 11]], '#e1f5ce');
+      } else if (hazard.kind === 'spectral') {
+        const count = Math.max(2, Math.min(6, Math.ceil(width / 30)));
+        for (let i = 0; i < count; i++) {
+          const gx = left + width * (i + .5) / count, sway = effects ? Math.sin(t * 5 + i * 2) * 3 : 0, tip = top + (i % 2) * height * .12;
+          c.beginPath(); c.moveTo(gx - 8, y); c.quadraticCurveTo(gx - 14 + sway, y - height * .58, gx + sway, tip); c.quadraticCurveTo(gx + 14 + sway, y - height * .62, gx + 8, y); c.closePath(); c.fillStyle = '#8cd4dc65'; c.fill();
+          line(c, gx + sway, tip + 9, gx + sway, y - 13, '#b9fff08a', 2);
+          ellipse(c, gx - 3 + sway, tip + height * .28, 1.4, 2, '#153c55'); ellipse(c, gx + 3 + sway, tip + height * .28, 1.4, 2, '#153c55');
+        }
+      } else if (hazard.kind === 'blood') {
+        const count = Math.max(2, Math.min(8, Math.ceil(width / 27)));
+        for (let i = 0; i < count; i++) {
+          const bx = left + width * (i + .5) / count, half = width / count * .42, tip = top + (i % 2) * height * .15;
+          polygon(c, [[bx - half, y], [bx + 3, tip], [bx + half, y]], '#aa4856', '#ed8c96', 1.2);
+          polygon(c, [[bx + 3, tip + 3], [bx + 4, y - 8], [bx - half * .45, y - 7]], '#efb5ad');
+          line(c, bx + 4, tip + 13, bx + half * .65, y - 8, '#fff0d55e', 1);
+        }
+      } else {
+        // Eclipse energy uses crisp edges so the whole beam remains readable on mobile.
+        rect(c, left, top, width, height, '#dc9b4528'); rect(c, left + width * .15, top, width * .7, height, '#ffd29227');
+        rect(c, x - Math.max(2, width * .055), top, Math.max(4, width * .11), height, '#fff0b8a6');
+        line(c, left + 1, top, left + 1, y, '#eab374', 1.5); line(c, left + width - 1, top, left + width - 1, y, '#eab374', 1.5);
+        c.strokeStyle = '#ffe6a9'; c.lineWidth = 1.4;
+        c.beginPath(); c.ellipse(x, top + 4, width / 2, 6, 0, 0, TAU); c.stroke();
+        c.beginPath(); c.ellipse(x, y - 3, width / 2, 8, 0, 0, TAU); c.stroke();
+        if (effects) for (let i = 0; i < 4; i++) { const rise = (t * 78 + i * height / 4) % height; line(c, x - width * .22, y - rise, x + width * .22, y - rise - 5, '#ffe0a960', 1); }
+      }
+      c.restore();
+    }
+  }
   const monsterDrawers = { skeleton: drawSkeleton, zombie: drawZombie, spider: drawSpider, ghost: drawGhost, vampire: drawVampire };
-  function drawMonster(c, e, t, effects, world) {
+  function drawMonster(c, e, t, effects, world, viewTop = 0) {
     const boss = e.boss || e.type === 'boss';
     const type = monsterDrawers[e.archetype] ? e.archetype : monsterDrawers[e.type] ? e.type : ['skeleton', 'spider', 'ghost', 'vampire', 'vampire'][e.world == null ? world : e.world];
     const w = e.w || (boss ? 68 : 40), h = e.h || (boss ? 88 : 52), dir = e.dir || 1;
+    drawPhantomTell(c, e, t, effects, viewTop);
+    if (e.intangible) {
+      if (effects) { c.save(); c.globalAlpha = .045; ellipse(c, e.x, e.y - h * .42, 17, 5, '#c5eeeb'); c.restore(); }
+      return;
+    }
     const aerial = e.abilityState && e.abilityState !== 'ground' || e.y < GROUND - 8;
     shadow(c, e.x, aerial ? GROUND : e.y, w, !!aerial);
     if (type === 'spider' && e.abilityState === 'hanging') {
@@ -419,10 +549,11 @@
       if (!boss && e.health < e.maxHealth && e.health > 0) { rounded(c, e.x - 14, e.y - h - 10, 28, 3, 1, '#101a27a6'); rounded(c, e.x - 14, e.y - h - 10, 28 * e.health / e.maxHealth, 3, 1, '#e2b986'); }
       return;
     }
-    if (type === 'ghost' && aerial && effects) {
+    if (type === 'ghost' && (aerial || e.phantomState === 'strike') && effects) {
       c.save(); c.globalAlpha = .12;
-      ellipse(c, e.x - dir * 11, e.y - h * .46, w * .65, h * .34, '#a7e2df');
-      ellipse(c, e.x - dir * 24, e.y - h * .4, w * .48, h * .22, '#a7e2df'); c.restore();
+      const vertical = e.phantomState === 'strike' && e.attackSide === 'top';
+      ellipse(c, e.x - (vertical ? 0 : dir * 11), e.y - h * .46 - (vertical ? 14 : 0), w * .65, h * .34, '#a7e2df');
+      ellipse(c, e.x - (vertical ? 0 : dir * 24), e.y - h * .4 - (vertical ? 33 : 0), w * .48, h * .22, '#a7e2df'); c.restore();
     }
     c.save(); c.translate(e.x, e.y); c.scale(w / 40, h / 54); c.lineCap = 'round'; c.lineJoin = 'round';
     if (e.abilityState === 'shadow-windup') c.globalAlpha = .6;
@@ -432,6 +563,7 @@
       c.strokeStyle = palettes[world].glow; c.lineWidth = 1.2; c.beginPath(); c.ellipse(0, -32, 31, 37, 0, 0, TAU); c.stroke(); c.restore();
     }
     monsterDrawers[type](c, dir, walk, t, boss);
+    drawBulletArmor(c, e, t, effects);
     if (boss) {
       polygon(c, [[-17, -52], [-23, -65], [-9, -59], [0, -69], [9, -59], [23, -65], [17, -52]], '#bea05d', '#251e25', 1.6);
       line(c, -15, -54, 15, -54, '#f4d493', 1.2); ellipse(c, 0, -60, 2.8, 2.8, '#f5927c');
@@ -456,7 +588,7 @@
     if(e.drop && !e.abilityState){
       c.save();c.strokeStyle=p.glow+'80';c.setLineDash([3,7]);c.lineWidth=1;
       c.beginPath();c.moveTo(e.x,30);c.lineTo(e.x,y-75);c.stroke();c.setLineDash([]);
-      c.fillStyle=p.glow;c.font='11px sans-serif';c.textAlign='center';c.fillText('NHỆN RƠI ↓',e.x,26);c.restore();
+      c.fillStyle=p.glow;c.font=`400 11px ${font}`;c.textAlign='center';c.fillText('NHỆN RƠI ↓',e.x,26);c.restore();
     }
   }
   function drawBullet(c, b, effects) {
@@ -466,6 +598,28 @@
     ellipse(c, b.x, b.y, 4.2, 2, '#fff1bb'); c.restore();
   }
   function drawEnemyShot(c, shot, t, effects) {
+    if (shot.kind === 'spectral' || shot.kind === 'blood' || shot.kind === 'eclipse' || shot.kind === 'eclipseshot' || shot.kind === 'web') {
+      const color = shot.kind === 'spectral' ? '#97e9ed' : shot.kind === 'blood' ? '#f6a2ac' : shot.kind === 'web' ? '#d8edbc' : '#ffd292';
+      c.save();
+      if (effects) line(c, shot.x, shot.y, shot.x - (shot.vx || 0) * .075, shot.y - (shot.vy || 0) * .075, color + '59', 3);
+      c.translate(shot.x, shot.y); c.rotate(Math.atan2(shot.vy || 0, shot.vx || 1));
+      c.scale((shot.w || 12) / 12, (shot.h || 12) / 12);
+      if (shot.kind === 'web') {
+        ellipse(c, 0, 0, 6, 6, '#526b4c'); ellipse(c, 0, 0, 4.7, 4.7, '#d8edbc99');
+        c.strokeStyle = '#eaffd2'; c.lineWidth = .8; c.beginPath(); c.arc(0, 0, 4.5, 0, TAU); c.stroke();
+        for (let i = 0; i < 6; i++) { const a = i * TAU / 6; line(c, 0, 0, Math.cos(a) * 6.5, Math.sin(a) * 6.5, '#eaffd2', .8); }
+        line(c, -4, -3, -11, -5, '#d8edbc', .9); line(c, -4, 0, -13, 0, '#d8edbc', .9); line(c, -4, 3, -10, 5, '#d8edbc', .9);
+      } else if (shot.kind === 'spectral') {
+        ellipse(c, 0, 0, 6, 5.5, '#2b6472'); ellipse(c, 0, 0, 4.6, 4.1, color); ellipse(c, 1, -1, 2.3, 2.2, '#e0fff0');
+        polygon(c, [[-3, -3], [-10, -2], [-7, 1], [-11, 4], [-2, 3]], '#97e9ed8c');
+      } else if (shot.kind === 'blood') {
+        polygon(c, [[-6, -5], [8, 0], [-6, 5], [-2, 0]], '#a74560', color, 1.4); polygon(c, [[-3, -2], [6, 0], [-3, 2]], '#ffe2cc');
+      } else {
+        polygon(c, [[-7, 0], [0, -6], [7, 0], [0, 6]], '#ae744b', color, 1.4); polygon(c, [[-3, 0], [0, -3], [4, 0], [0, 3]], '#fff0bc');
+        line(c, -8, -5, -11, -5, '#ffd292', 1); line(c, -8, 5, -11, 5, '#ffd292', 1);
+      }
+      c.restore(); return;
+    }
     c.save();
     if (effects) line(c, shot.x, shot.y, shot.x - (shot.vx || 0) * .06, shot.y - (shot.vy || 0) * .06, '#e7ac8852', 2);
     c.translate(shot.x, shot.y); c.rotate(Math.atan2(shot.vy || 0, shot.vx || 1) + (effects ? t * 8 : 0));
@@ -516,8 +670,94 @@
       for (let i = 0; i < 2; i++) line(c, crate.x - w * .26 + i * w * .52, y - h - 7, crate.x - w * .26 + i * w * .52, y - h - 20, '#cfb87926', 1);
     }
   }
+  function drawBossEggs(c, eggs, t, effects) {
+    for (const egg of eggs || []) {
+      if (!(egg.health > 0)) continue;
+      const width = egg.w || 30, height = egg.h || 38, y = egg.y;
+      shadow(c, egg.x, GROUND, width, !egg.landed);
+      c.save(); c.translate(egg.x, y - height / 2);
+      if (!egg.landed && effects) c.rotate(Number.isFinite(egg.rotation) ? egg.rotation : Math.sin(t * 3) * .2);
+      c.beginPath(); c.ellipse(0, 0, width / 2, height / 2, -.06, 0, TAU); c.fillStyle = '#7e965f'; c.fill(); c.strokeStyle = '#1d3a32'; c.lineWidth = 2; c.stroke();
+      c.beginPath(); c.ellipse(-width * .12, -height * .08, width * .29, height * .38, -.06, 0, TAU); c.fillStyle = '#aebc779c'; c.fill();
+      for (let i = 0; i < 5; i++) {
+        const webY = -height * .35 + i * height * .16, reach = width * (.29 + Math.sin((i + 1) * Math.PI / 6) * .12);
+        c.beginPath(); c.moveTo(-reach, webY); c.quadraticCurveTo(0, webY + height * .18, reach, webY - height * .04); c.strokeStyle = '#e2ebba9c'; c.lineWidth = .85; c.stroke();
+      }
+      line(c, -width * .15, -height * .41, width * .12, height * .4, '#dbe7b37a', .8);
+      if (egg.health < (egg.maxHealth || 2)) {
+        c.beginPath(); c.moveTo(width * .25, -height * .35); c.lineTo(width * .03, -height * .13); c.lineTo(width * .22, height * .04); c.lineTo(-width * .06, height * .25); c.strokeStyle = '#3b563a'; c.lineWidth = 1.8; c.stroke();
+      }
+      c.restore();
+      const remaining = Math.max(0, Number(egg.hatchTime) || 0);
+      c.save(); c.font = `700 11px ${font}`; c.textAlign = 'center'; c.lineWidth = 3; c.strokeStyle = '#172b2e'; c.fillStyle = remaining < 2 ? '#f4c58e' : '#d8edbb';
+      const label = remaining.toFixed(1) + 's'; c.strokeText(label, egg.x, y - height - 9); c.fillText(label, egg.x, y - height - 9);
+      const ticks = Math.max(1, Math.min(5, egg.maxHealth || 2));
+      for (let i = 0; i < ticks; i++) rounded(c, egg.x - ticks * 4 + i * 8, y + 5, 6, 3, 1, i < egg.health ? '#c8e89f' : '#38564a');
+      c.restore();
+    }
+  }
+  function drawDraculaDrain(c, boss, player, t, effects) {
+    if (!player || !(boss.health > 0) || (!boss.drainWarning && !(boss.drainFlash > 0))) return;
+    const startY = boss.y - boss.h * .48, endY = player.y - player.h * .5;
+    c.save(); c.lineCap = 'round';
+    if (boss.drainWarning) {
+      line(c, boss.x, startY, player.x, endY, '#ec96a3a6', 1.2);
+      c.beginPath(); c.ellipse(player.x, endY, 25, 32, 0, 0, TAU); c.strokeStyle = '#f3a4ac'; c.lineWidth = 1.5; c.stroke();
+      if (effects) for (let i = 0; i < 3; i++) {
+        const progress = (t * 1.1 + i / 3) % 1;
+        ellipse(c, boss.x + (player.x - boss.x) * progress, startY + (endY - startY) * progress, 2, 2, '#ffd6c5');
+      }
+    }
+    if (boss.drainFlash > 0) {
+      if (effects) { c.globalAlpha = .45; line(c, boss.x, startY, player.x, endY, '#d57399', 9); c.globalAlpha = 1; }
+      line(c, boss.x, startY, player.x, endY, '#ffccd1', effects ? 3 : 2);
+      ellipse(c, boss.x, startY, 4, 4, '#ffdbcb'); ellipse(c, player.x, endY, 5, 5, '#f6bbc2');
+    }
+    c.restore();
+  }
+  function drawBossHUD(c, bosses, game) {
+    if (!bosses.length) return;
+    const top = game.viewTop || 0, slotWidth = Math.min(360, (W - 100) / bosses.length);
+    for (let i = 0; i < bosses.length; i++) {
+      const boss = bosses[i], centre = W / 2 + (i - (bosses.length - 1) / 2) * slotWidth;
+      const width = Math.min(260, slotWidth - 40), x = centre - width / 2;
+      const attackRate = boss.pressure && Number.isFinite(boss.pressure.attackRate) ? Math.max(1, boss.pressure.attackRate) : 1;
+      const split = boss.splitTriggered || boss.draculaClone;
+      const owner = boss.draculaClone ? 'II' : 'I';
+      const name = split ? 'DRACULA ' + owner : (game.level.bossName || 'KẺ GIỮ CỔNG').toUpperCase();
+      c.save(); c.textAlign = 'center'; c.font = `600 11px ${font}`; c.fillStyle = '#eadbc2';
+      c.fillText(name, centre, top + 31);
+      if (!boss.intangible) {
+        rounded(c, x, top + 42, width, 5, 2, '#071018bb');
+        rounded(c, x, top + 42, width * Math.max(.01, boss.health / boss.maxHealth), 5, 2, attackRate > 1.3 ? '#d28b72' : '#d9a174');
+        c.font = `400 9px ${font}`; c.fillStyle = '#b7c4ba'; c.fillText(`${boss.health} / ${boss.maxHealth}`, centre, top + 63);
+      } else { c.font = `600 10px ${font}`; c.fillStyle = '#b7d5d1'; c.fillText('ĐÃ BIẾN MẤT', centre, top + 56); }
+      c.font = `600 10px ${font}`; c.fillStyle = attackRate > 1.3 ? '#dfa180' : '#9ea99b';
+      c.fillText(`NHỊP TẤN CÔNG ×${attackRate.toFixed(2)}`, centre, top + 79);
+      let armorY = top + 98;
+      // Drain's shield instruction has priority when it coincides with another cast.
+      const warning = boss.drainWarning || boss.skillWarning;
+      if (warning) {
+        const remaining = Math.max(0, Number(warning.remaining) || 0), total = Math.max(.01, Number(warning.total) || remaining || 1);
+        const cardWidth = Math.min(330, slotWidth - 18), warningColor = boss.drainWarning ? '#f5abb7' : '#f1cf97';
+        rounded(c, centre - cardWidth / 2, top + 86, cardWidth, 25, 5, '#101c2aeb', boss.drainWarning ? '#d894a077' : '#e5b17666', 1);
+        c.font = `600 11px ${font}`; c.fillStyle = warningColor;
+        const warningName = boss.drainWarning ? 'HÚT MÁU · BẬT KHIÊN' : String(warning.name || 'KỸ NĂNG BOSS');
+        c.fillText(`${split ? owner + ' · ' : ''}${warningName} · ${remaining.toFixed(1)}s`, centre, top + 101);
+        rounded(c, centre - cardWidth / 2 + 10, top + 108, cardWidth - 20, 2, 1, '#493e34');
+        rounded(c, centre - cardWidth / 2 + 10, top + 108, (cardWidth - 20) * Math.max(.002, Math.min(1, 1 - remaining / total)), 2, 1, warningColor);
+        armorY = top + 128;
+      }
+      if (boss.bulletArmor) {
+        c.font = `600 11px ${font}`; c.fillStyle = boss.hardenedTime > 0 ? '#c4f6aa' : '#a8caa1';
+        const text = boss.hardenedTime > 0 ? `CƯỜNG HÓA · MIỄN ĐẠN ${boss.hardenedTime.toFixed(1)}s` : `GIÁP ${Math.max(0, boss.armorHits || 0)}/10`;
+        c.lineWidth = 3; c.strokeStyle = '#13222aed'; c.strokeText(text, centre, armorY); c.fillText(text, centre, armorY);
+      }
+      c.restore();
+    }
+  }
   function drawFloats(c, floats) {
-    c.save(); c.textAlign = 'center'; c.font = '700 15px "Trebuchet MS", sans-serif';
+    c.save(); c.textAlign = 'center'; c.font = `700 15px ${font}`;
     for (const f of floats || []) { c.globalAlpha = Math.min(1, Math.max(0, f.life * 2)); c.lineWidth = 3; c.strokeStyle = '#14202a'; c.strokeText(f.text, f.x, f.y); c.fillStyle = f.color || '#eadab1'; c.fillText(f.text, f.x, f.y); }
     c.restore();
   }
@@ -537,29 +777,26 @@
     c.drawImage(scenes.get(world), 0, 0); drawAtmosphere(c, world, t, effects);
     if (game.screen === 'home' && (!game.enemies || !game.enemies.length)) drawHomeCast(c, t, effects, world);
     else {
+      drawBossHazards(c, game.bossHazards, t, effects, world);
       drawPlatforms(c, game.enemies || [], t, effects);
       for (const p of game.pickups || []) drawPickup(c, p, t, effects);
       for (const crate of game.ammoCrates || []) drawAmmoCrate(c, crate, t, effects);
+      drawBossEggs(c, game.bossEggs, t, effects);
       for (const e of game.enemies || []) {
         if (e.phase === 'warning') drawWarning(c, e, t, effects, world);
-        else drawMonster(c, e, t, effects, world);
+        else drawMonster(c, e, t, effects, world, game.viewTop || 0);
+        if ((e.splitTriggered || e.draculaClone) && e.health > 0 && !e.intangible) {
+          c.save(); rounded(c, e.x - 10, e.y - e.h - 27, 20, 17, 3, '#202634c9', '#bd98a05e', 1);
+          c.font = `600 11px ${font}`; c.fillStyle = '#f6d7bd'; c.textAlign = 'center'; c.fillText(e.draculaClone ? 'II' : 'I', e.x, e.y - e.h - 15); c.restore();
+        }
       }
+      for (const e of game.enemies || []) drawDraculaDrain(c, e, game.player, t, effects);
       if (game.player) drawHunter(c, game.player, t, effects);
       for (const b of game.bullets || []) drawBullet(c, b, effects);
       for (const shot of game.enemyShots || []) drawEnemyShot(c, shot, t, effects);
       if (effects) for (const p of game.particles || []) drawParticle(c, p);
       drawFloats(c, game.floats);
-      const boss=(game.enemies||[]).find(e=>e.boss&&e.health>0);
-      if(boss){
-        const width=260,x=W/2-width/2,top=game.viewTop||0;
-        const attackRate=boss.pressure&&Number.isFinite(boss.pressure.attackRate)?Math.max(1,boss.pressure.attackRate):1;
-        c.save();c.textAlign='center';c.font='600 11px sans-serif';c.fillStyle='#eadbc2';
-        c.fillText((game.level.bossName||'KẺ GIỮ CỔNG').toUpperCase(),W/2,top+31);
-        rounded(c,x,top+42,width,5,2,'#071018bb');rounded(c,x,top+42,width*Math.max(.01,boss.health/boss.maxHealth),5,2,attackRate>1.3?'#d28b72':'#d9a174');
-        c.font='9px sans-serif';c.fillStyle='#b7c4ba';c.fillText(`${boss.health} / ${boss.maxHealth}`,W/2,top+63);
-        c.font='600 8px sans-serif';c.fillStyle=attackRate>1.3?'#dfa180':'#9ea99b';
-        c.fillText(`NHỊP TẤN CÔNG ×${attackRate.toFixed(2)}`,W/2,top+79);c.restore();
-      }
+      drawBossHUD(c, (game.enemies || []).filter(e => e.boss && e.health > 0), game);
     }
     if (game.flash > 0 && effects) { c.globalAlpha = Math.min(.19, game.flash); rect(c, 0, 0, W, H, '#d2eeec'); c.globalAlpha = 1; }
     c.restore();

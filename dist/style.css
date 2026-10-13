@@ -6,7 +6,9 @@
   --cream:#e9eade;
   --accent:#e8ad63;
   --green:#9fc8a7;
-  font-family:Arial,Helvetica,sans-serif;
+  --font-body:"Noto Sans",Arial,sans-serif;
+  --font-display:"Noto Serif",Georgia,serif;
+  font-family:var(--font-body);
   font-synthesis:none
 }
 * {
@@ -164,7 +166,7 @@ nav button span {
   min-width:250px
 }
 .level-number {
-  font:27px Georgia,serif;
+  font:27px var(--font-display);
   color:var(--accent);
   border-right:1px solid var(--line);
   padding-right:16px
@@ -287,7 +289,7 @@ nav button span {
   height:26px
 }
 .hud-shield b {
-  font:18px Georgia,serif
+  font:18px var(--font-display)
 }
 .hud-shield small {
   display:block;
@@ -344,7 +346,7 @@ canvas {
   background:var(--accent)
 }
 h1 {
-  font-family:Georgia,'Times New Roman',serif;
+  font-family:var(--font-display);
   line-height:.85;
   font-size:clamp(52px,6.8vw,94px);
   font-weight:900;
@@ -456,13 +458,13 @@ h1>span {
 }
 .chapter-symbol {
   font-size:43px;
-  font-family:Georgia,serif;
+  font-family:var(--font-display);
   color:#d2cda4;
   line-height:1;
   margin:24px 0 13px
 }
 .chapter-card h2 {
-  font:24px/1.15 Georgia,serif;
+  font:24px/1.15 var(--font-display);
   letter-spacing:-.3px;
   margin:0;
   color:#d5ddc7
@@ -576,7 +578,7 @@ h1>span {
   gap:3px
 }
 kbd {
-  font:10px Arial,sans-serif;
+  font:10px var(--font-body);
   display:inline-flex;
   align-items:center;
   justify-content:center;
@@ -642,13 +644,13 @@ footer>span:last-child {
   text-align:center;
   pointer-events:none;
   z-index:3;
-  font:24px Georgia,serif;
+  font:24px var(--font-display);
   color:#f2e8cd;
   animation:banner-in .4s ease
 }
 .stage-banner small {
   display:block;
-  font:9px Arial,sans-serif;
+  font:9px var(--font-body);
   letter-spacing:2px;
   color:#c5d4b9;
   margin-top:10px
@@ -691,7 +693,7 @@ footer>span:last-child {
   margin:15px
 }
 .result-card h2 {
-  font:38px Georgia,serif;
+  font:38px var(--font-display);
   margin:10px 0;
   color:#eee7d0
 }
@@ -716,7 +718,7 @@ footer>span:last-child {
   letter-spacing:1px
 }
 .result-stats b {
-  font:22px Georgia,serif;
+  font:22px var(--font-display);
   color:#e2dabc;
   display:block;
   margin-bottom:5px
@@ -756,7 +758,7 @@ dialog::backdrop {
   margin:0 0 9px
 }
 .dialog-head h2 {
-  font:30px Georgia,serif;
+  font:30px var(--font-display);
   margin:0
 }
 .close-button {
@@ -787,7 +789,7 @@ dialog::backdrop {
 }
 .world-map h3 span {
   color:var(--accent);
-  font:16px Georgia,serif
+  font:16px var(--font-display)
 }
 .world-map h3 small {
   margin-left:auto;
@@ -806,7 +808,7 @@ dialog::backdrop {
   color:#b9c7b2;
   border-radius:5px;
   height:42px;
-  font:14px Georgia,serif
+  font:14px var(--font-display)
 }
 .level-tile:hover {
   border-color:var(--accent);
@@ -836,7 +838,7 @@ dialog::backdrop {
 }
 .level-tile.completed::before {
   content:'✓';
-  font:7px Arial,sans-serif;
+  font:7px var(--font-body);
   position:absolute;
   left:3px;
   top:3px;
@@ -866,7 +868,7 @@ dialog::backdrop {
 }
 .help-grid article>span {
   color:var(--accent);
-  font:22px Georgia,serif
+  font:22px var(--font-display)
 }
 .help-grid h3 {
   font-size:13px;
@@ -1699,3 +1701,91 @@ dialog::backdrop {
   canvas { object-fit:cover;object-position:center bottom; }
   .control-strip,.touch-pad { display:none; }
 }
+
+/* Vietnamese labels use natural character spacing and room for stacked accents. */
+.eyebrow,.level-label .eyebrow,.hero-copy>.eyebrow,.chapter-card>.eyebrow,
+.mission>div:first-child,.ammo-status small,.hud-shield small,.hero-meta,
+.chapter-bottom,.game-status,.control-intro>span:last-child,
+.stage-banner small,.result-stats span {
+  letter-spacing:.05em;
+  line-height:1.5;
+}
+.level-label strong,.chapter-card h2,.stage-banner,.result-card h2,.dialog-head h2 {
+  letter-spacing:normal;
+  line-height:1.4;
+}
+.level-label strong,.world-map h3,.help-grid h3,.setting-row b {
+  line-height:1.5;
+}
+@media(max-width:600px) {
+  .level-label>div { min-width:0; }
+  .level-label .eyebrow { display:block;font-size:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+  .ammo-status small,.hud-shield small { font-size:6px; }
+  .home-overlay { padding:6% 7%; }
+  .hero-copy>.eyebrow { margin-bottom:12px; }
+  .hero-description { margin:12px 0; }
+  .hero-actions .primary>span:last-child { font-size:16px; }
+  .hero-meta { margin-top:12px; }
+}
+@media(max-width:360px) {
+  .hero-description { font-size:8px;margin:8px 0; }
+  .hero-meta { margin-top:8px; }
+}
+.mobile-tools,.stage-controls { display:none; }
+.boss-guide { grid-column:1/-1; }
+.mobile-tools {
+  position:absolute;top:10px;right:10px;z-index:5;
+  align-items:center;gap:8px;pointer-events:none;
+}
+#fullscreen-button {
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  min-width:40px;min-height:40px;padding:7px 10px;border-radius:9px;
+  border:1px solid #d6e7db33;background:#10251edb;color:#d8e4d5;
+  font:500 9px/1.4 var(--font-body);pointer-events:auto;touch-action:manipulation;
+}
+#fullscreen-button svg { width:18px;height:18px; }
+#fullscreen-button:disabled { opacity:.4; }
+#rotate-hint { color:#f1d596;font:500 10px/1.5 var(--font-body);text-shadow:0 1px 4px #000; }
+.stage-controls {
+  position:absolute;inset:auto 12px max(12px,env(safe-area-inset-bottom));z-index:3;
+  justify-content:space-between;align-items:flex-end;pointer-events:none;user-select:none;
+}
+.move-buttons { display:flex;gap:8px; }
+.action-buttons { display:grid;grid-template-columns:repeat(2,48px);gap:7px; }
+.stage-controls button {
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  width:48px;height:46px;padding:3px;border-radius:12px;touch-action:none;
+  color:#e6eddb;background:#20372cc9;border:1px solid #cee2ce66;
+  box-shadow:0 2px 8px #06100c55;pointer-events:auto;font:500 23px/1 var(--font-body);
+  -webkit-user-select:none;-webkit-touch-callout:none;
+}
+.move-buttons button { height:50px; }
+.stage-controls button small { font:600 8px/1.5 var(--font-body);letter-spacing:normal; }
+.stage-controls button svg { width:23px;height:23px; }
+.stage-controls .fire-control { background:#7b552bbd;border-color:#f4ce8f88; }
+.stage-controls .shield-control.ready { background:#316554cc;border-color:#9df1ce; }
+.stage-controls.empty .fire-control { background:#673b35bb;color:#e4a79b; }
+.stage-controls button:active,.stage-controls button.held { background:#759979dc;color:#102219;transform:translateY(1px); }
+@media(pointer:coarse),(max-width:600px),(max-height:550px) and (max-width:1000px) {
+  body.playing .mobile-tools,body.playing .stage-controls { display:flex; }
+  body[data-controls="gestures"] .stage-controls { display:none; }
+}
+@media(max-width:360px) {
+  .stage-controls { left:8px;right:8px;bottom:8px; }
+  .stage-controls button { width:42px;height:42px; }
+  .move-buttons { gap:6px; }
+  .action-buttons { grid-template-columns:repeat(2,42px);gap:6px; }
+  #rotate-hint { max-width:125px;font-size:9px; }
+  #fullscreen-button [data-fullscreen-label] { display:none; }
+}
+/* Fullscreen keeps the arena and all menus inside the same document. */
+html:fullscreen body { overflow:hidden;background:#101714; }
+html:fullscreen .app { width:100%;max-width:none; }
+html:fullscreen .topbar,html:fullscreen .control-strip,html:fullscreen footer,html:fullscreen .game-status { display:none; }
+html:fullscreen .game-frame {
+  display:flex;flex-direction:column;width:100%;height:100dvh;border:0;border-radius:0;box-shadow:none;max-width:none;
+}
+html:fullscreen .hud { flex:0 0 auto;min-height:52px;padding:8px max(12px,env(safe-area-inset-left)); }
+html:fullscreen .stage { flex:1;min-height:0;height:auto;max-height:none;aspect-ratio:auto; }
+html:fullscreen canvas { object-fit:cover;object-position:center bottom; }
+html:fullscreen .stage-controls { left:max(16px,env(safe-area-inset-left));right:max(16px,env(safe-area-inset-right)); }

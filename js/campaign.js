@@ -43,7 +43,7 @@
       ]
     },
     {
-      names: ['Dưới tán cây', 'Tơ vương lối nhỏ', 'Tiếng chân trên lá', 'Lối rẽ xanh', 'Khoảng sáng trong rừng', 'Mạng nhện bạc', 'Vượt gốc cổ thụ', 'Nhịp chân dồn dập', 'Hang tơ cuối cùng', 'Chúa nhện'],
+      names: ['Dưới tán cây', 'Tơ vương lối nhỏ', 'Tiếng chân trên lá', 'Lối rẽ xanh', 'Khoảng sáng trong rừng', 'Mạng nhện bạc', 'Vượt gốc cổ thụ', 'Nhịp chân dồn dập', 'Hang tơ cuối cùng', 'Thây ma xanh'],
       stories: [
         'Rời nghĩa địa và lấy lại nhịp thở. Con đường đầu rừng vẫn còn khá yên.',
         'Nhện bò sát đất và chạy nhanh. Hãy bắn sớm khi nhìn thấy dấu báo.',
@@ -54,7 +54,7 @@
         'Địch kéo tới từng nhóm. Đừng dùng hết khoảng trống trong một bước.',
         'Nhện đi nhanh hơn bộ xương. Quan sát loại địch trước khi đổi hướng.',
         'Một tiếng động lớn vọng từ hang tơ. Chuẩn bị khiên cho trận tiếp theo.',
-        'Chúa nhện canh giữ đường đến thành phố. Kiên nhẫn bắn và tránh áp sát.'
+        'Thây ma xanh tuần tra trên bệ đá rồi thả xuống. Sau mỗi 10 phát bắn trúng, nó miễn nhiễm 2 giây: né đòn và chờ lớp bảo hộ tắt.'
       ],
       targets: [16, 18, 19, 20, 18, 21, 22, 23, 24, 25],
       intervals: [2.08, 1.82, 1.78, 1.73, 1.91, 1.67, 1.62, 1.57, 1.53, 1.6],
@@ -67,7 +67,7 @@
       ]
     },
     {
-      names: ['Phố vắng', 'Bóng trong cửa sổ', 'Chuyến tàu im lặng', 'Đèn đường chập chờn', 'Quảng trường yên tĩnh', 'Sương tràn mặt phố', 'Tiếng chuông xa', 'Ngã tư bóng ma', 'Dưới tháp chuông', 'Hồn ma thành phố'],
+      names: ['Phố vắng', 'Bóng trong cửa sổ', 'Chuyến tàu im lặng', 'Đèn đường chập chờn', 'Quảng trường yên tĩnh', 'Sương tràn mặt phố', 'Tiếng chuông xa', 'Ngã tư bóng ma', 'Dưới tháp chuông', 'Nhện chúa'],
       stories: [
         'Đèn đường cũ vẫn sáng. Hãy lấy lại nhịp trước khi khám phá thành phố.',
         'Bóng ma trôi qua màn sương. Nhìn vào dấu báo để giữ thế chủ động.',
@@ -78,7 +78,7 @@
         'Theo tiếng chuông, từng nhóm nhỏ tiến vào từ hai phía.',
         'Hãy giữ lối thoát giữa những nhóm địch. Khiên sẽ cứu bạn lúc bị kẹp.',
         'Tháp chuông đã ở trước mắt. Bạn gần đến nguồn gốc màn sương.',
-        'Đánh tan hồn ma thành phố để trả lại ánh đèn cho những con đường.'
+        'Nhện chúa đu trên tơ và phun lưới làm choáng 2 giây. Mỗi 5 giây nó đẻ một trứng; trứng nở thành 5 nhện con. Giữ khoảng trống và canh điểm rơi.'
       ],
       targets: [21, 23, 24, 25, 22, 26, 27, 28, 29, 30],
       intervals: [1.79, 1.52, 1.48, 1.44, 1.63, 1.4, 1.36, 1.33, 1.3, 1.38],
@@ -91,7 +91,7 @@
       ]
     },
     {
-      names: ['Sân lâu đài', 'Khách dưới trăng', 'Hành lang đỏ', 'Ban công đêm', 'Vườn hồng tĩnh lặng', 'Tiệc của bóng tối', 'Lưỡi gió lạnh', 'Trăng lên đỉnh tháp', 'Trước ngai đá', 'Bá tước trăng máu'],
+      names: ['Sân lâu đài', 'Khách dưới trăng', 'Hành lang đỏ', 'Ban công đêm', 'Vườn hồng tĩnh lặng', 'Tiệc của bóng tối', 'Lưỡi gió lạnh', 'Trăng lên đỉnh tháp', 'Trước ngai đá', 'Bóng ma trắng'],
       stories: [
         'Sân lâu đài rộng mở. Một nhịp nhẹ giúp bạn sẵn sàng cho kẻ địch mới.',
         'Ma cà rồng chịu nhiều đạn và biết lao tới. Chừa khoảng trống để né.',
@@ -102,7 +102,7 @@
         'Theo dõi nhịp lao của ma cà rồng. Dấu báo luôn xuất hiện trước địch.',
         'Trăng máu lên cao, đám đông tiến nhanh hơn. Tận dụng cả hai phía sân.',
         'Ngai đá ở phía trước. Tích một khiên và giữ đường lui.',
-        'Bá tước trăng máu thách đấu. Né trước, rồi đáp trả trong khoảng trống.'
+        'Bóng ma trắng lượn trong lâu đài, biến mất mỗi 5 giây rồi đánh từ trên, trái hoặc phải. Trúng đòn khiến bạn ngã, mất 1 máu và 1 khiên; quan sát dấu báo để né.'
       ],
       targets: [25, 27, 28, 29, 26, 30, 31, 32, 33, 34],
       intervals: [1.58, 1.31, 1.28, 1.25, 1.44, 1.21, 1.18, 1.15, 1.12, 1.22],
@@ -116,7 +116,7 @@
       ]
     },
     {
-      names: ['Bờ vực bình minh', 'Năm bóng tối', 'Tro của đêm dài', 'Cầu qua hư không', 'Đốm lửa hy vọng', 'Vòng xoáy nhật thực', 'Giữ ngọn đèn', 'Đêm cuối cùng', 'Một bước tới bình minh', 'Bình minh trở lại'],
+      names: ['Bờ vực bình minh', 'Năm bóng tối', 'Tro của đêm dài', 'Cầu qua hư không', 'Đốm lửa hy vọng', 'Vòng xoáy nhật thực', 'Giữ ngọn đèn', 'Đêm cuối cùng', 'Một bước tới bình minh', 'Dracula'],
       stories: [
         'Sau trận chiến lâu đài, hãy lấy lại nhịp. Cánh cổng cuối cùng đang chờ.',
         'Các loài quái vật đã tụ lại. Những gì bạn học được đều có ích ở đây.',
@@ -127,7 +127,7 @@
         'Giữ ngọn đèn sáng bằng những bước di chuyển đều và các phát bắn chính xác.',
         'Đêm dồn sức cho đợt cuối. Dùng khiên trước khi bị bao vây.',
         'Bình minh chỉ còn một bước. Chuẩn bị cho kẻ giữ cổng nhật thực.',
-        'Hạ Hắc Vương và đưa bình minh trở lại. Bạn đã đi qua tất cả năm vùng đất.'
+        'Dracula hóa dơi, hút máu dù ở xa và lao xuống từ bóng tối. Khiên đang bật chặn hút máu. Khi còn nửa máu, hắn tạo một bản sao: phải hạ cả hai để đưa bình minh trở lại.'
       ],
       targets: [29, 32, 33, 34, 30, 35, 36, 37, 37, 38],
       intervals: [1.36, 1.14, 1.11, 1.08, 1.27, 1.05, 1.02, 1.0, 0.98, 1.08],
@@ -142,8 +142,11 @@
     }
   ];
 
-  const bossNames = ['Kẻ gác nghĩa địa', 'Chúa nhện', 'Hồn ma thành phố', 'Bá tước trăng máu', 'Hắc Vương'];
-  const bossAbilities = [['bone-volley'], ['silk-drop'], ['sine-drop'], ['bat-morph'], ['bat-morph', 'shadow-drop']];
+  const bossNames = ['Kẻ gác nghĩa địa', 'Thây ma xanh', 'Nhện chúa', 'Bóng ma trắng', 'Dracula'];
+  // Boss identities follow their milestones independently of the world scenery.
+  const bossArchetypes = ['skeleton', 'zombie', 'spider', 'ghost', 'vampire'];
+  const bossAbilities = [['bone-volley'], ['ledge-drop'], ['silk-drop'], ['sine-drop'], ['bat-morph', 'shadow-drop']];
+  const bossSkills = [['bone-pillars'], ['hit-immunity'], ['web-stun', 'egg-hatch'], ['vanish-strike'], ['bat-drain', 'blood-clone']];
   const levels = [];
   chapters.forEach(function (chapter, world) {
     chapter.names.forEach(function (name, stage) {
@@ -177,8 +180,10 @@
         pressureWarmup: recovery ? 16 : 12,
         bossWarmup: 4,
         boss: stage === 9,
+        bossArchetype: stage === 9 ? bossArchetypes[world] : null,
         bossHealth: stage === 9 ? 18 + world * 4 : 0,
         bossAbilities: stage === 9 ? bossAbilities[world].slice() : [],
+        bossSkills: stage === 9 ? bossSkills[world].slice() : [],
         story: chapter.stories[stage],
         recovery: recovery
       };
@@ -215,7 +220,7 @@
     const config = typeof level === 'object' && level && levels.includes(level) ? level : getLevel(level && level.id || level);
     const settings = tuning(difficulty);
     const boss = type === 'boss';
-    const archetype = boss ? worlds[config.world].enemy : (Object.prototype.hasOwnProperty.call(enemyTypes, type) ? type : 'skeleton');
+    const archetype = boss ? (config.bossArchetype || bossArchetypes[config.world]) : (Object.prototype.hasOwnProperty.call(enemyTypes, type) ? type : 'skeleton');
     const stats = enemyTypes[archetype];
     const rawRandom = typeof rng === 'function' ? Number(rng()) : Math.random();
     const random = Number.isFinite(rawRandom) ? Math.max(0, Math.min(1, rawRandom)) : 0.5;
@@ -230,6 +235,7 @@
       archetype: archetype,
       ability: stats.ability,
       abilities: boss ? config.bossAbilities.slice() : (stats.ability ? [stats.ability] : []),
+      bossSkills: boss ? config.bossSkills.slice() : [],
       abilityCooldown: config.abilityInterval,
       abilityWarning: config.abilityWarning,
       health: health,

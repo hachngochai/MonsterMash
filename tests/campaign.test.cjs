@@ -94,10 +94,10 @@ test('enemy spawn geometry, boss archetype and malformed inputs are safe', () =>
   assert.equal(left.phase, 'warning');
   assert.equal(left.health, 1);
   const boss = campaign.createEnemy('boss', 20, 'normal', 1, () => 0.5);
-  assert.equal(boss.archetype, 'spider');
+  assert.equal(boss.archetype, 'zombie');
   assert.equal(boss.health, 22);
   assert.equal(boss.boss, true);
-  assert.ok(boss.w > campaign.enemyTypes.spider.w && boss.h > campaign.enemyTypes.spider.h);
+  assert.ok(boss.w > campaign.enemyTypes.zombie.w && boss.h > campaign.enemyTypes.zombie.h);
   const fallback = campaign.createEnemy('missing', undefined, 'missing', 0, () => NaN);
   assert.equal(fallback.type, 'skeleton');
   assert.ok(Number.isFinite(fallback.speed));
@@ -149,6 +149,35 @@ test('original enemy skills progress with the campaign and final boss combines s
   assert.equal(spider.abilityCooldown, campaign.getLevel(12).abilityInterval);
   const finalBoss = campaign.createEnemy('boss', 50, 'normal', 1, () => 0.5);
   assert.equal(finalBoss.abilities.join(','), 'bat-morph,shadow-drop');
+});
+
+test('boss milestones use their explicit identities and retain original native skills', () => {
+  const order = [
+    [10, 'skeleton', 'bone-volley', 18],
+    [20, 'zombie', 'ledge-drop', 22],
+    [30, 'spider', 'silk-drop', 26],
+    [40, 'ghost', 'sine-drop', 30],
+    [50, 'vampire', 'bat-morph,shadow-drop', 34]
+  ];
+  order.forEach(([id, archetype, abilities, health]) => {
+    const level = campaign.getLevel(id);
+    const boss = campaign.createEnemy('boss', level, 'normal', -1, () => 0.5);
+    assert.equal(level.bossArchetype, archetype);
+    assert.equal(boss.archetype, archetype);
+    assert.equal(level.bossAbilities.join(','), abilities);
+    assert.equal(boss.abilities.join(','), abilities);
+    assert.equal(boss.health, health);
+    assert.ok(level.bossSkills.length > 0);
+    assert.equal(boss.bossSkills.join(','), level.bossSkills.join(','));
+  });
+  assert.equal(campaign.getLevel(20).name, 'Thây ma xanh');
+  assert.equal(campaign.getLevel(30).name, 'Nhện chúa');
+  assert.equal(campaign.getLevel(40).name, 'Bóng ma trắng');
+  assert.equal(campaign.getLevel(50).name, 'Dracula');
+  campaign.levels.filter(level => !level.boss).forEach(level => {
+    assert.equal(level.bossArchetype, null);
+    assert.equal(level.bossSkills.length, 0);
+  });
 });
 
 test('elapsed attack pressure has gradual world transitions and conservative caps', () => {

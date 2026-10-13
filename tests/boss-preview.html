@@ -1,0 +1,25 @@
+<!doctype html><html lang="vi"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kiểm tra hiệu ứng boss</title><link rel="stylesheet" href="../assets/fonts/fonts.css">
+<style>body{margin:20px;background:#101714;color:#e9eade;font:14px/1.5 'Noto Sans',sans-serif}main{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}h1{font-size:20px}h2{font-size:14px;margin:0 0 6px}canvas{display:block;width:100%;border:1px solid #ffffff25;border-radius:8px}@media(max-width:700px){main{grid-template-columns:1fr}}</style>
+<h1>Kiểm tra hiệu ứng và dấu tiếng Việt</h1><main id="previews"></main>
+<script src="../js/typography.js"></script><script src="../js/campaign.js"></script><script src="../js/bosses.js"></script><script src="../js/renderer.js"></script><script src="../js/game.js"></script>
+<script>
+(async()=>{
+await MM.Typography.ready;
+const samples=[
+ [10,'10 · Cột xương báo trước',(g,b)=>{g.bossHazards=[-132,0,132].map(offset=>({owner:b,kind:'bones',x:440+offset,y:438,w:38,h:58,phase:'warning',timer:.8,warning:1.2,totalActive:.65,life:1.45,pulse:.4}));b.skillWarning={name:'CỘT XƯƠNG',remaining:.8,total:1.2};}],
+ [20,'20 · Thây ma xanh cường hóa',(g,b)=>{b.hardenedTime=1.7;b.armorHits=0;}],
+ [30,'30 · Tơ gây choáng và trứng nhện',(g,b)=>{g.configureAbility(b,'hanging');b.x=670;g.player.stunTime=1.6;g.bossEggs=[{owner:b,x:370,y:438,w:28,h:32,health:1,maxHealth:2,hatchTime:3.4,landed:true}];g.enemyShots=[{kind:'web',x:510,y:350,w:30,h:24,life:3}];}],
+ [40,'40 · Ma trắng tàng hình',(g,b)=>{b.intangible=true;b.phantomState='invisible';b.skillWarning={name:'ẨN MÌNH',remaining:1.1,total:1.5};}],
+ [40,'40 · Tập kích từ trên',(g,b)=>{b.phantomState='windup';b.attackSide='top';b.landX=440;b.x=440;b.y=235;b.skillWarning={name:'TẬP KÍCH TỪ TRÊN',remaining:.9,total:1.2};}],
+ [40,'40 · Người chơi bị đánh ngã',(g,b)=>{g.player.knockdownTime=.6;g.player.stunTime=.6;b.phantomState='strike';b.attackSide='left';b.x=550;}],
+ [50,'50 · Dracula báo hút máu',(g,b)=>{g.morphToBat(b);b.x=680;b.y=275;b.drainWarning={remaining:.9,total:1.2};}],
+ [50,'50 · Hai bản thể Dracula',(g,b)=>{b.x=250;b.health=17;MM.BossCombat.update(g,.01);const clone=g.enemies.find(e=>e.draculaClone);clone.phase='active';clone.x=700;g.morphToBat(clone);clone.y=280;clone.drainWarning={remaining:1,total:1.2};}]
+];
+for(const[id,title,configure]of samples){
+ const g=new MM.Game({headless:true,random:()=>.5,storage:{getItem:()=>null,setItem:()=>{}}});g.start(id);g.levelKills=g.level.target;g.bossSpawned=true;g.time=7;
+ const b=g.spawn('boss');b.phase='active';b.x=680;b.y=438;g.player.x=440;g.player.invulnerable=0;configure(g,b);
+ const section=document.createElement('section'),heading=document.createElement('h2'),canvas=document.createElement('canvas');heading.textContent=title;canvas.width=960;canvas.height=540;section.append(heading,canvas);document.getElementById('previews').append(section);MM.Renderer.draw(canvas.getContext('2d'),g);
+}
+})();
+</script></html>

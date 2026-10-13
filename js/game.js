@@ -16,7 +16,7 @@
       version: 2, completed,
       resume: valid(raw.resume) ? Campaign.getLevel(raw.resume).id : 1,
       best: valid(raw.best) ? Math.floor(raw.best) : 0,
-      settings: { difficulty: ['story','normal','hard'].includes(settings.difficulty) ? settings.difficulty : 'normal', sound: settings.sound === true, effects: settings.effects !== false, reducedMotion: settings.reducedMotion === true }
+      settings: { difficulty: ['story','normal','hard'].includes(settings.difficulty) ? settings.difficulty : 'normal', controls: ['both','gestures','buttons'].includes(settings.controls) ? settings.controls : 'both', sound: settings.sound === true, effects: settings.effects !== false, reducedMotion: settings.reducedMotion === true }
     };
   }
   class Sound {
@@ -48,6 +48,7 @@
       this.screen = 'home'; this.time = 0; this.levelTime = 0; this.lastTime = 0;
       this.enemies = []; this.bullets = []; this.particles = []; this.floats = []; this.pickups = [];
       this.ammoCrates = []; this.enemyShots = []; this.ammoTimer = 2.4;
+      this.bossHazards = []; this.bossEggs = [];
       this.keys = new Set(); this.pointers = new Map(); this.padInputs = new Map();
       this.score = 0; this.totalKills = 0; this.levelKills = 0; this.shieldCount = 0;
       this.regularSpawned = 0; this.spawnTimer = 1; this.bossSpawned = false; this.bossDefeated = false;
@@ -57,13 +58,17 @@
       if (!this.headless) {
         this.canvas = document.getElementById('canvas'); this.ctx = this.canvas.getContext('2d');
         this.ui = {}; document.querySelectorAll('[id]').forEach(node => this.ui[node.id] = node);
+        this.mobileView = MM.MobileView ? new MM.MobileView(this, root) : null;
         this.bind(); this.buildMap(); this.syncSettings(); this.updateUI(); this.resize();
-        this.frame = this.frame.bind(this); this.raf = root.requestAnimationFrame(this.frame);
+        this.frame = this.frame.bind(this);
+        (MM.Typography?.ready || Promise.resolve()).then(() => {
+          this.resize(); this.raf = root.requestAnimationFrame(this.frame);
+        });
       }
     }
     makePlayer(health = this.tuning.health) {
       const ammo=Math.max(1,Math.round((this.level.initialAmmo||3)*(this.tuning.ammoMultiplier||1)));
-      return {x:W/2,y:GROUND,w:38,h:54,dir:1,vx:0,vy:0,grounded:true,health,maxHealth:this.tuning.health,ammo,maxAmmo:this.level.ammoCapacity||18,shieldTime:0,shieldHits:0,invulnerable:1.5,shotTimer:0,dryCooldown:0,jumpBuffer:0,coyote:.1};
+      return {x:W/2,y:GROUND,w:38,h:54,dir:1,vx:0,vy:0,grounded:true,health,maxHealth:this.tuning.health,ammo,maxAmmo:this.level.ammoCapacity||18,shieldTime:0,shieldHits:0,invulnerable:1.5,shotTimer:0,dryCooldown:0,jumpBuffer:0,coyote:.1,stunTime:0,stunGrace:0,knockdownTime:0};
     }
     persist() { try { this.storage?.setItem(SAVE_KEY,JSON.stringify(this.save)); } catch { /* Game remains playable without localStorage. */ } }
     start(id = this.save.resume, options = {}) {
@@ -79,6 +84,7 @@
       this.checkpoint = {score:this.score,totalKills:this.totalKills,shieldCount:this.shieldCount,ammo:this.player.ammo};
       this.enemies = []; this.bullets = []; this.particles = []; this.floats = []; this.pickups = [];
       this.ammoCrates=[];this.enemyShots=[];this.ammoTimer=2.4;
+      this.bossHazards=[];this.bossEggs=[];
       this.levelKills = 0; this.regularSpawned = 0; this.spawnTimer = 2.2; this.levelTime = 0; this.restTimer = 0;
       this.bossSpawned = false; this.bossDefeated = false; this.shake = 0; this.flash = 0;
       this.screen = 'playing'; this.clearInputs(); this.sound.unlock();
@@ -87,6 +93,7 @@
         document.querySelectorAll('dialog[open]').forEach(dialog => dialog.close());
         this.ui['home-overlay'].hidden = true; this.ui['result-overlay'].hidden = true;
         this.ui['toast'].hidden = true; this.toastTime = 0;
+        this.mobileView?.enter();
         this.banner(`MÀN ${String(this.level.id).padStart(2,'0')} · ${this.level.name}`, this.level.boss ? 'HẠ ĐỦ ĐỊCH ĐỂ GỌI BOSS' : `HẠ ${this.level.target} ĐỊCH · ${this.level.recovery ? 'MỘT NHỊP THỞ NHẸ' : 'GIỮ NGỌN ĐÈN SÁNG'}`, 3);
         this.canvas.focus({preventScroll:true});
       }
@@ -96,14 +103,16 @@
       this.save.best = Math.max(this.save.best,this.score); this.persist();
       this.screen = 'home'; this.clearInputs(); this.enemies = []; this.bullets = []; this.particles = []; this.pickups = []; this.floats = [];
       this.ammoCrates=[];this.enemyShots=[];
+      this.bossHazards=[];this.bossEggs=[];
       this.level=Campaign.getLevel(this.save.resume);this.tuning=Campaign.tuning(this.settings.difficulty);this.player=this.makePlayer();
       this.levelKills=0;this.totalKills=0;this.shieldCount=0;this.score=0;this.bossSpawned=false;this.bossDefeated=false;
-      if (!this.headless) { this.ui['home-overlay'].hidden = false; this.ui['result-overlay'].hidden = true; this.ui['stage-banner'].hidden = true; this.ui['toast'].hidden = true; }
+      if (!this.headless) { this.mobileView?.leave(); this.ui['home-overlay'].hidden = false; this.ui['result-overlay'].hidden = true; this.ui['stage-banner'].hidden = true; this.ui['toast'].hidden = true; }
       this.updateUI();
     }
     clearInputs() {
       this.keys.clear(); this.pointers.clear(); this.padInputs.clear();
       this.player.vx = 0; this.player.jumpBuffer = 0;
+      if(!this.headless)document.querySelectorAll('[data-control].held').forEach(button=>button.classList.remove('held'));
     }
     keyDown(event) {
       const code = event.code;
@@ -124,6 +133,7 @@
     }
     pointerDown(event) {
       if (this.screen !== 'playing' || event.button > 0) return;
+      if (event.pointerType !== 'mouse' && this.settings.controls === 'buttons') return;
       event.preventDefault?.(); this.sound.unlock();
       this.canvas?.focus({preventScroll:true});
       try { this.canvas?.setPointerCapture(event.pointerId); } catch { /* Synthetic test pointers have no capture. */ }
@@ -147,7 +157,25 @@
       this.pointers.delete(event.pointerId);
       try { this.canvas?.releasePointerCapture(event.pointerId); } catch { /* Optional capture. */ }
     }
-    jump() { if (this.screen === 'playing') this.player.jumpBuffer = .14; }
+    padDown(event, button) {
+      event.preventDefault?.();
+      if (this.screen !== 'playing') return;
+      this.sound.unlock();
+      this.canvas?.focus({preventScroll:true});
+      const action = button.dataset.control;
+      this.padInputs.set(event.pointerId, action);
+      button.classList?.add('held');
+      try { button.setPointerCapture(event.pointerId); } catch { /* Optional capture. */ }
+      if (action === 'jump') this.jump();
+      if (action === 'shield') this.activateShield();
+      if (action === 'fire-left' || action === 'fire-right') this.shoot(action === 'fire-left' ? -1 : 1);
+    }
+    padUp(event, button) {
+      event.preventDefault?.(); this.padInputs.delete(event.pointerId);
+      if(![...this.padInputs.values()].includes(button.dataset.control))button.classList?.remove('held');
+      try { button.releasePointerCapture(event.pointerId); } catch { /* Optional capture. */ }
+    }
+    jump() { if (this.screen === 'playing' && this.player.stunTime <= 0) this.player.jumpBuffer = .14; }
     activateShield() {
       if (this.screen !== 'playing' || this.player.shieldTime > 0) return false;
       if (this.shieldCount <= 0) { this.toast(`Còn ${10 - this.totalKills % 10} địch để có khiên`); return false; }
@@ -156,7 +184,7 @@
       this.burst(this.player.x,this.player.y-28,'#91e3d1',22,'ring'); this.sound.play('shield'); this.toast('Khiên bật · 5 giây / 3 lần chặn'); this.updateUI(); return true;
     }
     shoot(dir) {
-      if (this.screen !== 'playing' || this.player.shotTimer > .001) return false;
+      if (this.screen !== 'playing' || this.player.shotTimer > .001 || this.player.stunTime > 0) return false;
       const p = this.player; p.dir = dir;
       if(p.ammo<=0){
         if(p.dryCooldown<=0){this.toast('Hết đạn · di chuyển nhặt hòm AMMO');this.sound.play('empty');p.dryCooldown=1.2;}
@@ -195,6 +223,7 @@
       this.ui['ammo-status'].classList.toggle('low',p.ammo>0&&p.ammo<=3);
       this.ui['ammo-status'].classList.toggle('empty',p.ammo===0);
       this.ui['ammo-status'].setAttribute('aria-label',`Đạn ${p.ammo} / ${p.maxAmmo}. Nhặt hòm AMMO để tiếp tế.`);
+      this.ui['touch-controls']?.classList.toggle('empty',p.ammo===0);
     }
     burst(x,y,color,count=12,type='spark') {
       if (!this.settings.effects) return;
@@ -211,6 +240,7 @@
       // Keep the portal inside the arena while the enemy is still harmless.
       enemy.x = side === -1 ? 24 : W - 24;
       enemy.baseW=enemy.w;enemy.baseH=enemy.h;enemy.abilityState='ground';enemy.abilityTimer=enemy.boss?4:enemy.abilityCooldown||8;enemy.combatTime=0;
+      if(enemy.boss)MM.BossCombat?.setup(this,enemy);
       this.enemies.push(enemy); return enemy;
     }
     configureAbility(enemy, state) {
@@ -281,6 +311,7 @@
       const p=this.player,archetype=e.archetype||e.type,state=e.abilityState||'ground';
       e.combatTime=(e.combatTime||0)+dt;
       const pressure=e.pressure=this.getPressure(e);
+      if(e.phantomState)return; // The ghost's announced attack owns its position and collisions.
       e.flightPhase=(e.flightPhase||0)+dt*pressure.flightRate;
       // Patrol and cooldown clocks accelerate. The announced attack window uses real seconds.
       const realWarning=e.tell||state==='shadow-windup'||state==='volley-windup';
@@ -321,6 +352,7 @@
             if(e.boss&&this.level.world===4&&e.lastSkill!=='shadow'){e.lastSkill='shadow';this.shadowDrop(e);}
             else{e.lastSkill='bat';this.morphToBat(e);}
           }else if(e.boss&&archetype==='spider')this.configureAbility(e,'hanging');
+          else if(e.boss&&archetype==='zombie')this.configureAbility(e,'ledge');
           else if(e.boss&&archetype==='ghost')this.configureAbility(e,'airborne');
         }
       }
@@ -336,7 +368,10 @@
     killEnemy(enemy) {
       if (this.screen !== 'playing' || enemy.dead) return; enemy.dead = true; enemy.health = 0;
       this.totalKills++; this.score += enemy.score || 100;
-      if (enemy.boss) this.bossDefeated = true; else this.levelKills++;
+      if (enemy.boss) {
+        this.bossDefeated = !this.enemies.some(other=>other!==enemy&&other.boss&&!other.dead&&other.health>0);
+        MM.BossCombat?.cleanup(this,enemy);
+      } else if(!enemy.minion)this.levelKills++;
       this.burst(enemy.x,enemy.y-enemy.h/2,enemy.boss?'#ffd391':'#bbc4a5',enemy.boss?36:14);
       this.floating(enemy.x,enemy.y-enemy.h-10,'+'+(enemy.score||100)); this.sound.play('kill');
       if (this.totalKills % 10 === 0) {
@@ -350,6 +385,11 @@
     }
     hurt(enemy) {
       const p = this.player; if (p.invulnerable > 0 || this.screen !== 'playing') return;
+      if(enemy.phantomStrike){
+        this.shieldCount=Math.max(0,this.shieldCount-1);p.shieldTime=0;p.shieldHits=0;
+        p.knockdownTime=.75;p.stunTime=Math.max(p.stunTime,.75);this.clearInputs();
+        this.floating(p.x,p.y-p.h-16,'BỊ ĐÁNH NGÃ · −1 KHIÊN','#d5e8ec');
+      }
       if (p.shieldTime > 0 && p.shieldHits > 0) {
         p.shieldHits--; p.invulnerable = .45; enemy.x += Math.sign(enemy.x-p.x || 1)*55;
         this.burst(p.x,p.y-28,'#91e3d1',10,'ring'); this.sound.play('shield');
@@ -362,12 +402,27 @@
       }
       this.updateUI();
     }
+    drainTarget(owner) {
+      if(this.screen!=='playing'||owner.dead||owner.health<=0)return;
+      const p=this.player;
+      if(p.shieldTime>0&&p.shieldHits>0){
+        p.shieldHits--;if(p.shieldHits===0)p.shieldTime=0;
+        this.burst(p.x,p.y-28,'#91e3d1',10,'ring');this.floating(p.x,p.y-p.h-12,'KHIÊN CHẶN HÚT MÁU','#91e3d1');this.sound.play('shield');
+      }else{
+        p.health=Math.max(0,p.health-1);p.invulnerable=Math.max(p.invulnerable,.65);
+        owner.health=Math.min(owner.healthCeiling||owner.maxHealth,owner.health+1);
+        this.flash=.2;this.floating(p.x,p.y-p.h-12,'−1 MÁU · DRACULA HÚT MÁU','#ff9da7');this.sound.play('hit');
+        if(p.health===0)this.finish(false);
+      }
+      this.updateUI();
+    }
     checkCompletion() {
       if (this.screen !== 'playing' || this.levelKills < this.level.target) return;
       if (this.level.boss && !this.bossDefeated) {
         if (!this.bossSpawned) {
           this.bossSpawned = true; this.restTimer = 1.2;
           const boss=this.spawn('boss',this.player.x<W/2 ? 1 : -1);
+          if(boss.archetype==='zombie')this.configureAbility(boss,'ledge');
           if(boss.archetype==='spider')this.configureAbility(boss,'hanging');
           else if(boss.archetype==='ghost')this.configureAbility(boss,'airborne');
           else if(boss.archetype==='vampire')this.configureAbility(boss,'bat');
@@ -382,6 +437,9 @@
       if (this.screen !== 'playing') { if (this.screen === 'home') this.time += dt; return; }
       this.time += dt; this.levelTime += dt; this.restTimer = Math.max(0,(this.restTimer||0)-dt);
       const p = this.player; p.invulnerable = Math.max(0,p.invulnerable-dt); p.shieldTime = Math.max(0,p.shieldTime-dt); p.shotTimer = Math.max(0,p.shotTimer-dt);p.dryCooldown=Math.max(0,p.dryCooldown-dt);
+      const wasStunned=p.stunTime>0;
+      p.stunTime=Math.max(0,p.stunTime-dt);p.knockdownTime=Math.max(0,p.knockdownTime-dt);p.stunGrace=Math.max(0,p.stunGrace-dt);
+      if(wasStunned&&p.stunTime===0)p.stunGrace=.6;
       let move = (this.keys.has('ArrowRight')?1:0)-(this.keys.has('ArrowLeft')?1:0);
       let fire = this.keys.has('KeyA')||this.keys.has('KeyJ') ? -1 : this.keys.has('KeyD')||this.keys.has('KeyL') ? 1 : 0;
       this.pointers.forEach(pointer => {
@@ -389,7 +447,13 @@
         if (pointer.mode === 'move') move = pointer.move;
         else if (pointer.mode === 'pending' && (pointer.mouse || pointer.age > .28)) { fire = pointer.worldX<W/2 ? -1 : 1; pointer.shot = true; }
       });
-      this.padInputs.forEach(action => { if(action==='left') move=-1; if(action==='right') move=1; });
+      let padMove=0, movingWithPad=false;
+      this.padInputs.forEach(action => {
+        if(action==='left'||action==='right'){movingWithPad=true;padMove+=action==='left'?-1:1;}
+        if(action==='fire-left'||action==='fire-right')fire=action==='fire-left'?-1:1;
+      });
+      if(movingWithPad)move=clamp(padMove,-1,1);
+      if(p.stunTime>0){move=0;fire=0;p.vx=0;p.jumpBuffer=0;}
       const speed=285, acceleration=2100;
       const desired=move*speed; p.vx += clamp(desired-p.vx,-acceleration*dt,acceleration*dt); if (move) p.dir=move;
       p.x=clamp(p.x+p.vx*dt,26,W-26);
@@ -425,10 +489,11 @@
         if(this.screen!=='playing')break;
         this.updateEnemy(e,dt);
       }
+      MM.BossCombat?.update(this,dt);
       if(this.screen!=='playing')return;
       for(const shot of this.enemyShots){
         shot.x+=shot.vx*dt;shot.y+=shot.vy*dt;shot.life-=dt;
-        if(overlaps({...p,w:p.w*.75,h:p.h*.86},shot)){this.hurt(shot);shot.life=0;}
+        if(overlaps({...p,w:p.w*.75,h:p.h*.86},shot)){if(shot.kind==='web')MM.BossCombat?.webHit(this,shot);else this.hurt(shot);shot.life=0;}
       }
       this.enemyShots=this.enemyShots.filter(shot=>shot.life>0&&shot.x>-30&&shot.x<W+30&&shot.y>-30&&shot.y<H+30);
       if(this.screen!=='playing')return;
@@ -436,10 +501,13 @@
       for(const bullet of this.bullets) {
         if(this.screen!=='playing')break;
         const prev=bullet.x; bullet.previousX=prev; bullet.x+=bullet.dir*780*dt; bullet.life-=dt;
-        const candidates=this.enemies.filter(e=>!e.dead&&e.phase==='active'&&bullet.y>=e.y-e.h-3&&bullet.y<=e.y+3&&Math.max(prev,bullet.x)>=e.x-e.w/2&&Math.min(prev,bullet.x)<=e.x+e.w/2).sort((a,b)=>Math.abs(a.x-prev)-Math.abs(b.x-prev));
+        const candidates=this.enemies.filter(e=>!e.dead&&!e.intangible&&e.phase==='active'&&bullet.y>=e.y-e.h-3&&bullet.y<=e.y+3&&Math.max(prev,bullet.x)>=e.x-e.w/2&&Math.min(prev,bullet.x)<=e.x+e.w/2).sort((a,b)=>Math.abs(a.x-prev)-Math.abs(b.x-prev));
+        if(MM.BossCombat?.hitEgg(this,bullet,prev,candidates.length?Math.abs(candidates[0].x-prev):Infinity)){spent.add(bullet);continue;}
         const e=candidates[0];
         if(e) {
-          spent.add(bullet); e.health--; e.hit=.12; e.x=clamp(e.x+bullet.dir*(e.boss?2:7),18,W-18);
+          spent.add(bullet);
+          if(MM.BossCombat?.hit(this,e)===false){this.burst(e.x,bullet.y,'#a7edab',4);continue;}
+          e.health--; e.hit=.12; e.x=clamp(e.x+bullet.dir*(e.boss?2:7),18,W-18);
           this.burst(e.x,bullet.y,'#ffdaa0',5); if(e.health<=0)this.killEnemy(e);
         }
       }
@@ -464,7 +532,7 @@
     }
     togglePause() {
       if(this.screen==='playing'){this.screen='paused';this.clearInputs();if(!this.headless)this.showResult();}
-      else if(this.screen==='paused'){this.screen='playing';this.clearInputs();this.lastTime=0;if(!this.headless){this.ui['result-overlay'].hidden=true;this.canvas.focus({preventScroll:true});}}
+      else if(this.screen==='paused'){this.screen='playing';this.clearInputs();this.lastTime=0;if(!this.headless){this.ui['result-overlay'].hidden=true;this.mobileView?.enter();this.canvas.focus({preventScroll:true});}}
       this.updateUI();
     }
     toast(message,time=2.5) { this.toastTime=time;if(!this.headless){this.ui['toast'].textContent=message;this.ui['toast'].hidden=false;} }
@@ -484,16 +552,24 @@
     syncSettings() {
       if(this.headless)return;
       this.ui.difficulty.value=this.settings.difficulty;this.ui['sound-setting'].checked=this.settings.sound;this.ui['effects-setting'].checked=this.settings.effects;this.ui['motion-setting'].checked=this.settings.reducedMotion;
+      this.ui['mobile-controls'].value=this.settings.controls;
       this.ui['sound-label'].textContent=this.settings.sound?'Âm thanh bật':'Âm thanh tắt';this.ui['sound-button'].setAttribute('aria-label',this.settings.sound?'Tắt âm thanh':'Bật âm thanh');this.ui['sound-button'].setAttribute('aria-pressed',String(this.settings.sound));this.ui['sound-waves'].setAttribute('d',this.settings.sound?'M17 8Q22 12 17 16':'M17 9L22 15M22 9L17 15');
     }
     updateUI() {
       if(this.headless)return;
       const home=this.screen==='home',p=this.player;document.body.className=home?'home':'playing';
+      document.body.dataset.controls=this.settings.controls;
+      this.ui['touch-controls'].hidden=this.screen!=='playing'||this.settings.controls==='gestures';
+      this.ui['touch-guide'].textContent=this.settings.controls==='buttons'?'Giữ ← → để đi · ↑ NHẢY · ◇ KHIÊN · BẮN ← →':this.settings.controls==='gestures'?'↔ Vuốt & giữ để đi · ↑ Nhảy · ↓ Khiên · Chạm hai nửa để bắn':'↔ Vuốt hoặc giữ nút để đi · ↑ Nhảy · ↓ Khiên · Chạm / nút để bắn';
+      this.mobileView?.sync();
       this.ui['level-number'].textContent=String(this.level.id).padStart(2,'0');this.ui['world-label'].textContent=`VÙNG ${String(this.level.world+1).padStart(2,'0')} / 05 · ${Campaign.worlds[this.level.world].name.toUpperCase()}`;this.ui['level-name'].textContent=this.level.name;
       this.ui['kill-count'].textContent=`${this.levelKills} / ${this.level.target}`;this.ui['kill-progress'].style.width=clamp(this.levelKills/this.level.target*100,0,100)+'%';this.ui['mission-label'].textContent=this.bossSpawned&&!this.bossDefeated?'HẠ BOSS ĐỂ QUA MÀN':'ĐỊCH ĐÃ HẠ';
       this.ui.health.innerHTML=Array.from({length:p.maxHealth},(_,i)=>`<span class="${i<p.health?'':'empty'}" aria-hidden="true"><svg viewBox="0 0 24 24" style="width:.85em;height:1em;fill:currentColor;stroke:none"><path d="M12 21C9 18 2 13 2 7A5 5 0 0 1 12 5A5 5 0 0 1 22 7C22 13 15 18 12 21Z"/></svg></span>`).join('');this.ui.health.setAttribute('aria-label',`Sinh lực ${p.health} / ${p.maxHealth}`);
       this.updateAmmoUI();
       this.ui['shield-count'].textContent=this.shieldCount;this.ui['shield-button'].classList.toggle('ready',this.shieldCount>0);this.ui['charge-label'].textContent=this.shieldCount>0?`${this.shieldCount} khiên sẵn sàng · ${this.totalKills%10}/10 địch tích khiên`:`${this.totalKills%10}/10 địch · Hạ 10 địch để nhận khiên`;
+      this.ui['pad-shield-count'].textContent=this.shieldCount;
+      document.querySelector('[data-control="shield"]').classList.toggle('ready',this.shieldCount>0);
+      this.ui['fullscreen-button'].disabled=this.screen!=='playing'&&!document.fullscreenElement;
       this.ui['score-label'].innerHTML=`${home?'KỶ LỤC':'ĐIỂM'} <b>${String(home?this.save.best:this.score).padStart(5,'0')}</b>`;this.ui['status-label'].textContent=home?'SẴN SÀNG CHO CUỘC SĂN':this.screen==='paused'?'CUỘC SĂN TẠM DỪNG':this.screen==='won'?'MÀN ĐÃ HOÀN THÀNH':this.screen==='lost'?'SẴN SÀNG THỬ LẠI':this.level.boss?'ĐÊM CỦA KẺ GIỮ CỔNG':'CUỘC SĂN ĐANG DIỄN RA';
       this.ui['start-label'].textContent=this.save.resume>1?'Tiếp tục · Màn '+this.save.resume:'Bắt đầu cuộc săn';this.ui['save-label'].textContent=this.save.completed.length?`${this.save.completed.length} / 50 MÀN ĐÃ HOÀN THÀNH`:'CHƯA CÓ HÀNH TRÌNH';
       this.ui['pause-button'].disabled=home;this.ui['shield-button'].disabled=home;
@@ -506,7 +582,7 @@
     resize() {
       if(this.headless)return;const dpr=Math.min(root.devicePixelRatio||1,2);this.canvas.width=W*dpr;this.canvas.height=H*dpr;this.dpr=dpr;this.ctx.setTransform(dpr,0,0,dpr,0,0);
       const rect=this.canvas.getBoundingClientRect();
-      this.viewTop=root.innerHeight<550&&root.innerWidth>root.innerHeight?Math.max(0,H-W*rect.height/Math.max(1,rect.width)):0;
+      this.viewTop=(document.fullscreenElement||root.innerHeight<550)&&root.innerWidth>root.innerHeight?Math.max(0,H-W*rect.height/Math.max(1,rect.width)):0;
       for(const enemy of this.enemies){
         if(enemy.homeY){enemy.homeY=Math.min(GROUND-45,Math.max(enemy.baseHomeY||enemy.homeY,this.viewTop+enemy.h+25));if(enemy.platform)enemy.platform.y=enemy.homeY;}
       }
@@ -526,11 +602,12 @@
       document.querySelectorAll('[data-close]').forEach(button=>button.addEventListener('click',()=>button.closest('dialog').close()));this.ui['help-done'].addEventListener('click',()=>this.ui['help-dialog'].close());
       document.querySelectorAll('dialog').forEach(dialog=>dialog.addEventListener('close',()=>{this.clearInputs();if(this.screen==='paused')this.showResult();}));
       this.ui.difficulty.addEventListener('change',event=>{this.settings.difficulty=event.target.value;this.persist();});
+      this.ui['mobile-controls'].addEventListener('change',event=>{this.settings.controls=event.target.value;this.clearInputs();this.persist();this.updateUI();});
       const toggleSound=()=>{this.settings.sound=!this.settings.sound;this.sound.unlock();this.persist();this.syncSettings();};this.ui['sound-button'].addEventListener('click',()=>{toggleSound();if(this.screen==='playing')this.canvas.focus({preventScroll:true});});this.ui['sound-setting'].addEventListener('change',toggleSound);
       [['effects-setting','effects'],['motion-setting','reducedMotion']].forEach(([id,key])=>this.ui[id].addEventListener('change',event=>{this.settings[key]=event.target.checked;this.persist();}));
       document.querySelectorAll('[data-control]').forEach(button=>{
-        button.addEventListener('pointerdown',event=>{event.preventDefault();if(this.screen!=='playing')return;this.sound.unlock();const action=button.dataset.control;this.padInputs.set(event.pointerId,action);try{button.setPointerCapture(event.pointerId);}catch{}if(action==='jump')this.jump();if(action==='shield')this.activateShield();});
-        ['pointerup','pointercancel','lostpointercapture'].forEach(type=>button.addEventListener(type,event=>{event.preventDefault();this.padInputs.delete(event.pointerId);}));
+        button.addEventListener('pointerdown',event=>this.padDown(event,button));
+        ['pointerup','pointercancel','lostpointercapture'].forEach(type=>button.addEventListener(type,event=>this.padUp(event,button)));
       });
       if(root.matchMedia?.('(pointer:coarse)').matches)this.ui['control-mode'].textContent='GESTURES & CẢM ỨNG';
     }
