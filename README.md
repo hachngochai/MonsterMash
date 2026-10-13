@@ -63,7 +63,9 @@ Thùng rơi với tốc độ 180 pixel/giây rồi nằm trên đất 8 giây �
 
 Có thể dùng hai ngón: một ngón di chuyển và một ngón bắn. Nút di chuyển, nhảy, bắn hai phía và khiên nằm ngay trên sân chơi. Cài đặt có ba lựa chọn: **Vuốt + nút**, **Chỉ vuốt**, **Chỉ nút**; mặc định kết hợp cả hai. Giữ nút BẮN để bắn liên tục, nhả từng ngón độc lập. Game tự tạm dừng khi đổi tab, ẩn trang hoặc mở menu.
 
-Khi bắt đầu hoặc tiếp tục trên máy cảm ứng, game yêu cầu toàn màn hình rồi khóa hướng ngang trong thao tác của người chơi. Trình duyệt không hỗ trợ hoặc từ chối vẫn chơi được và có gợi ý xoay máy khi đang dọc. Nút toàn màn hình cũng cho phép bật/tắt thủ công. Thoát toàn màn hình tạm dừng trận đấu và giải phóng các ngón đang giữ; về trại sẽ bỏ khóa hướng và thoát chế độ do game mở. Việc xoay tự động phụ thuộc hỗ trợ của trình duyệt và hệ điều hành.
+Ngay khi điện thoại mở game, trang thử khóa hướng ngang. Nếu trình duyệt cần một thao tác trước, lần chạm đầu ở màn chờ sẽ yêu cầu toàn màn hình rồi thử khóa ngang lại. Nút **Chơi ngang** cũng làm việc này mà không tự bắt đầu trận. Khi bắt đầu hoặc tiếp tục trên máy cảm ứng, game tái sử dụng yêu cầu đang chạy. Trình duyệt không hỗ trợ hoặc từ chối vẫn chơi được và có gợi ý xoay máy khi đang dọc. Thoát toàn màn hình tạm dừng trận đấu và giải phóng các ngón đang giữ; về trại sẽ bỏ khóa hướng và thoát chế độ do game mở. Việc xoay tự động phụ thuộc hỗ trợ của trình duyệt và hệ điều hành.
+
+Khung game nằm trong kích thước cửa sổ hiện tại, tránh thanh cuộn ngang/dọc cả trang. Trên điện thoại, hướng dẫn ngoài sân chơi ẩn khi đang chơi; **Cách chơi** mở hộp thoại có vùng cuộn riêng. Khi còn màn hình dọc, toàn bộ hai mép sân vẫn nhìn thấy, nút cảm ứng nằm ở phần dưới; hộp kết quả cuộn nội bộ để các nút thử lại/tiếp tục luôn dùng được. Toàn màn hình có khoảng đệm cho vùng tai thỏ.
 
 ## Cấu trúc và cập nhật sau này
 

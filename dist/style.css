@@ -1718,7 +1718,7 @@ dialog::backdrop {
   line-height:1.5;
 }
 @media(max-width:600px) {
-  .level-label>div { min-width:0; }
+  .level-label>div { min-width:0;flex:1; }
   .level-label .eyebrow { display:block;font-size:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
   .ammo-status small,.hud-shield small { font-size:6px; }
   .home-overlay { padding:6% 7%; }
@@ -1789,3 +1789,119 @@ html:fullscreen .hud { flex:0 0 auto;min-height:52px;padding:8px max(12px,env(sa
 html:fullscreen .stage { flex:1;min-height:0;height:auto;max-height:none;aspect-ratio:auto; }
 html:fullscreen canvas { object-fit:cover;object-position:center bottom; }
 html:fullscreen .stage-controls { left:max(16px,env(safe-area-inset-left));right:max(16px,env(safe-area-inset-right)); }
+
+/* Keep the app inside the visible window, including short desktop windows. */
+body { height:100dvh;min-height:0;overflow:hidden; }
+.app { height:100dvh;min-height:0;display:flex;flex-direction:column; }
+.topbar { flex:0 0 auto;height:clamp(64px,10dvh,104px); }
+.game-frame { flex:1;min-height:0;display:flex;flex-direction:column; }
+.hud,.game-status { flex:0 0 auto; }
+.stage { flex:1;min-height:0;height:auto;max-height:none;aspect-ratio:auto; }
+canvas { object-fit:cover;object-position:center bottom; }
+.control-strip { flex:0 0 auto;padding:10px 0;max-height:56px; }
+footer { flex:0 0 auto;max-height:32px;padding:10px 0; }
+@media(max-height:650px) and (min-width:1001px) {
+  .topbar { height:48px; }
+  .hud { min-height:56px; }
+  .game-status { min-height:30px; }
+  .control-strip { padding:5px 0;max-height:34px; }
+  footer { display:none; }
+}
+/* Phone layouts stay inside the visible viewport; help scrolls inside its dialog. */
+@media(pointer:coarse),(max-width:600px),(max-height:550px) and (max-width:1000px) {
+  body { height:100dvh;min-height:0;overflow:hidden;overscroll-behavior:none; }
+  .app { width:calc(100% - 20px);height:100dvh;min-height:0;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom); }
+  .topbar { flex:0 0 auto;height:clamp(48px,8dvh,67px);gap:12px; }
+  .brand small,.edition,footer { display:none; }
+  .topbar nav { gap:8px; }
+  .game-frame { flex:1;min-height:0;display:flex;flex-direction:column;max-width:none; }
+  .hud { flex:0 0 auto;gap:10px;padding:8px 12px;min-height:60px; }
+  .level-label { min-width:0;flex:0 1 210px;gap:10px; }
+  .level-label>div { min-width:0; }
+  .level-label .eyebrow { display:block;font-size:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+  .level-label strong { font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+  .level-number { font-size:23px;padding-right:10px; }
+  .mission { flex:1;min-width:0;max-width:170px; }
+  .mission>div:first-child { gap:6px;font-size:6px; }
+  .mission>div:first-child span { overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+  .mission b { flex-shrink:0;font-size:9px; }
+  .ammo-status { min-width:58px;gap:4px;padding-left:8px; }
+  .ammo-status svg { width:13px;height:18px; }
+  .ammo-status b { font-size:10px; }
+  .health { margin-left:0;gap:2px; }
+  .health span { font-size:12px; }
+  .hud-shield { padding-left:8px;gap:4px; }
+  .hud-shield svg { width:18px; }
+  .hud-shield b { font-size:16px; }
+  .pause { width:28px; }
+  .stage { flex:1;min-height:0;height:auto;max-height:none;aspect-ratio:auto; }
+  canvas { object-fit:cover;object-position:center bottom; }
+  .game-status { flex:0 0 auto;min-height:32px;gap:5px;padding:6px 12px;font-size:6px; }
+  .shield-status { font-size:7px; }
+  .control-strip { flex:0 0 auto;min-height:28px;max-height:32px;padding:4px 0;margin:0;border:0;overflow:hidden; }
+  .touch-guide { display:block;min-width:0;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+  body.playing .control-strip { display:none; }
+  .sound-button { flex-shrink:0; }
+  dialog { width:min(740px,calc(100vw - 20px));max-height:calc(100dvh - 24px);margin:auto;overflow:auto;overscroll-behavior:contain;padding:20px;scrollbar-width:thin; }
+  .dialog-head { position:sticky;top:-20px;z-index:2;padding:6px 0;background:#18241e; }
+  .close-button { flex:0 0 auto; }
+  .overlay { min-height:0;padding:8px; }
+  .result-card { min-height:0;max-height:100%;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;padding:4px; }
+  .result-card .eyebrow { margin:3px 0; }
+  .result-emblem { font-size:22px;line-height:1;margin:4px; }
+  .result-card h2 { font-size:22px;line-height:1.35;margin:6px 0; }
+  .result-card>p:not(.eyebrow) { margin:4px 0; }
+  .result-stats { margin-top:8px; }
+  .result-card .primary { margin:10px auto 4px; }
+  html:fullscreen .app { width:100%;padding:0; }
+  html:fullscreen .game-frame { height:auto;flex:1; }
+  html:fullscreen .hud { padding:max(8px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) 8px max(12px,env(safe-area-inset-left)); }
+  .mobile-tools { right:max(10px,env(safe-area-inset-right)); }
+  body.home .mobile-tools { display:flex; }
+}
+@media(max-width:600px) {
+  .hud { display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;gap:6px 8px; }
+  .level-label { grid-column:1;grid-row:1; }
+  .health { grid-column:2;grid-row:1; }
+  .hud-shield { grid-column:3;grid-row:1; }
+  .pause { grid-column:4;grid-row:1; }
+  .mission { grid-column:1/4;grid-row:2;max-width:none;width:100%;margin:0; }
+  .ammo-status { grid-column:4;grid-row:2;min-width:0; }
+  .hud-shield small { display:none; }
+}
+/* In portrait, keep the entire arena visible and put thumb buttons below it. */
+@media(orientation:portrait) and (pointer:coarse),(orientation:portrait) and (max-width:600px) {
+  .game-frame { flex:0 1 auto;max-height:calc(100dvh - 95px); }
+  .stage { flex:0 1 auto;height:max(260px,calc((100vw - 22px)*.75));max-height:calc(100dvh - 205px); }
+  canvas { object-fit:contain;object-position:center bottom; }
+  body.playing .stage { height:calc((100vw - 22px)*.5625 + 108px); }
+  body.playing canvas { height:calc(100% - 108px);object-position:center center; }
+  body.playing[data-controls="gestures"] .stage { height:calc((100vw - 22px)*.5625); }
+  body.playing[data-controls="gestures"] canvas { height:100%; }
+  html:fullscreen .game-frame { justify-content:flex-start; }
+  html:fullscreen .stage { flex:0 1 auto;max-height:calc(100dvh - 170px); }
+  html:fullscreen canvas { object-fit:contain;object-position:center center; }
+  body.home .stage { height:max(300px,calc((100vw - 22px)*.75)); }
+  body.home .home-overlay { padding-top:60px; }
+  body.home .hero-copy>.eyebrow { display:none; }
+  html:fullscreen body.home .stage { height:max(300px,calc((100vw - 22px)*.75)); }
+  html:fullscreen body.playing .stage { height:calc((100vw - 22px)*.5625 + 108px); }
+  html:fullscreen body.playing[data-controls="gestures"] .stage { height:calc((100vw - 22px)*.5625); }
+}
+@media(max-width:400px) and (orientation:portrait) {
+  .level-label { grid-column:1/-1;grid-row:1; }
+  .health { grid-column:1/3;grid-row:2; }
+  .hud-shield { grid-column:3;grid-row:2; }
+  .pause { grid-column:4;grid-row:2; }
+  .mission { grid-column:1/4;grid-row:3; }
+  .ammo-status { grid-column:4;grid-row:3; }
+}
+@media(max-width:360px) {
+  .brand { gap:5px; }
+  .brand>svg { width:20px; }
+  .brand>span { font-size:8px;letter-spacing:.6px;white-space:nowrap; }
+  .topbar { gap:8px; }
+  .topbar nav { gap:6px; }
+  .topbar nav button { font-size:9px;white-space:nowrap; }
+  .topbar .icon-button { width:26px; }
+}

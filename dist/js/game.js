@@ -569,7 +569,7 @@
       this.ui['shield-count'].textContent=this.shieldCount;this.ui['shield-button'].classList.toggle('ready',this.shieldCount>0);this.ui['charge-label'].textContent=this.shieldCount>0?`${this.shieldCount} khiên sẵn sàng · ${this.totalKills%10}/10 địch tích khiên`:`${this.totalKills%10}/10 địch · Hạ 10 địch để nhận khiên`;
       this.ui['pad-shield-count'].textContent=this.shieldCount;
       document.querySelector('[data-control="shield"]').classList.toggle('ready',this.shieldCount>0);
-      this.ui['fullscreen-button'].disabled=this.screen!=='playing'&&!document.fullscreenElement;
+      this.ui['fullscreen-button'].disabled=!['home','playing'].includes(this.screen)&&!document.fullscreenElement;
       this.ui['score-label'].innerHTML=`${home?'KỶ LỤC':'ĐIỂM'} <b>${String(home?this.save.best:this.score).padStart(5,'0')}</b>`;this.ui['status-label'].textContent=home?'SẴN SÀNG CHO CUỘC SĂN':this.screen==='paused'?'CUỘC SĂN TẠM DỪNG':this.screen==='won'?'MÀN ĐÃ HOÀN THÀNH':this.screen==='lost'?'SẴN SÀNG THỬ LẠI':this.level.boss?'ĐÊM CỦA KẺ GIỮ CỔNG':'CUỘC SĂN ĐANG DIỄN RA';
       this.ui['start-label'].textContent=this.save.resume>1?'Tiếp tục · Màn '+this.save.resume:'Bắt đầu cuộc săn';this.ui['save-label'].textContent=this.save.completed.length?`${this.save.completed.length} / 50 MÀN ĐÃ HOÀN THÀNH`:'CHƯA CÓ HÀNH TRÌNH';
       this.ui['pause-button'].disabled=home;this.ui['shield-button'].disabled=home;
@@ -582,7 +582,12 @@
     resize() {
       if(this.headless)return;const dpr=Math.min(root.devicePixelRatio||1,2);this.canvas.width=W*dpr;this.canvas.height=H*dpr;this.dpr=dpr;this.ctx.setTransform(dpr,0,0,dpr,0,0);
       const rect=this.canvas.getBoundingClientRect();
-      this.viewTop=(document.fullscreenElement||root.innerHeight<550)&&root.innerWidth>root.innerHeight?Math.max(0,H-W*rect.height/Math.max(1,rect.width)):0;
+      // Cover may trim distant sky, but must never crop the arena's left/right edges.
+      this.canvas.style.objectFit='';
+      const requestedFit=root.getComputedStyle?.(this.canvas).objectFit||'fill';
+      const fit=requestedFit==='cover'&&rect.width/Math.max(1,rect.height)<W/H?'contain':requestedFit;
+      this.canvas.style.objectFit=fit;
+      this.viewTop=fit==='cover'?Math.max(0,H-W*rect.height/Math.max(1,rect.width)):0;
       for(const enemy of this.enemies){
         if(enemy.homeY){enemy.homeY=Math.min(GROUND-45,Math.max(enemy.baseHomeY||enemy.homeY,this.viewTop+enemy.h+25));if(enemy.platform)enemy.platform.y=enemy.homeY;}
       }
