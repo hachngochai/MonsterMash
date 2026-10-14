@@ -1,8 +1,8 @@
 <!doctype html><html lang="vi"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Kiểm tra hiệu ứng boss · 2.3.0</title><link rel="stylesheet" href="../assets/fonts/fonts.css?v=2.3.0">
+<title>Kiểm tra hiệu ứng boss · 2.3.1</title><link rel="stylesheet" href="../assets/fonts/fonts.css?v=2.3.1">
 <style>body{margin:20px;background:#101714;color:#e9eade;font:14px/1.5 'Noto Sans',sans-serif}main{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}h1{font-size:20px}h2{font-size:14px;margin:0 0 6px}canvas{display:block;width:100%;border:1px solid #ffffff25;border-radius:8px}@media(max-width:700px){main{grid-template-columns:1fr}}</style>
-<h1>Kiểm tra hiệu ứng và dấu tiếng Việt · 2.3.0</h1><main id="previews"></main>
-<script src="../js/typography.js?v=2.3.0"></script><script src="../js/campaign.js?v=2.3.0"></script><script src="../js/bosses.js?v=2.3.0"></script><script src="../js/golem.js?v=2.3.0"></script><script src="../js/wolves.js?v=2.3.0"></script><script src="../js/renderer.js?v=2.3.0"></script><script src="../js/game.js?v=2.3.0"></script>
+<h1>Kiểm tra hiệu ứng và dấu tiếng Việt · 2.3.1</h1><main id="previews"></main>
+<script src="../js/typography.js?v=2.3.1"></script><script src="../js/campaign.js?v=2.3.1"></script><script src="../js/bosses.js?v=2.3.1"></script><script src="../js/golem.js?v=2.3.1"></script><script src="../js/wolves.js?v=2.3.1"></script><script src="../js/renderer.js?v=2.3.1"></script><script src="../js/game.js?v=2.3.1"></script>
 <script>
 (async()=>{
 await MM.Typography.ready;
@@ -32,6 +32,12 @@ samples.push(
  [70,'70 · Súng ngắm — vệt đạn xuyên màn đêm đỏ',(g,b)=>{bloodMoon(g,b);b.wolfState='approach';b.health=b.maxHealth-5;g.player.dir=1;g.player.shotTimer=.97;g.bullets=[{x:564,y:409,vx:1280,dir:1,kind:'sniper',damage:5}];}]
 );
 for(let index=1;index<=2;index++)samples.push([70,`70 · Trăng máu — cào ${index}/2${index===2?' · hiệu ứng tắt':''}`,(g,b)=>{bloodMoon(g,b);b.x=555;b.wolfState=index===1?'claw-windup':'claw';b.wolfProgress=index===1?0:.6;b.clawIndex=index;b.skillWarning={name:`LIÊN HOÀN CÀO ${index}/2`,remaining:.6,total:1.1};g.wolfZones=[{owner:b,kind:'claw',x:440,y:438,w:210,h:64,phase:index===1?'warning':'impact',timer:index===1?.6:.17,total:index===1?1.1:.3,damage:2,clawIndex:index}];if(index===2)g.settings.effects=false;}]);
+const prepareRock=(g,b)=>{b.x=720;b.dir=-1;b.golemState='rock-windup';b.golemStateTotal=1.15;b.golemStateTimer=.45;b.throwProgress=0;b.rockAimX=g.player.x;b.rockAimY=g.player.y-26;b.rockOriginX=b.x+b.dir*b.w*.33;b.rockOriginY=b.y-b.h*.60;b.skillWarning={name:'NÉM ĐÁ',remaining:.45,total:1.15};};
+samples.push(
+ [51,'51 · Golem giơ đá — đường ngắm cố định',(g,b)=>{prepareRock(g,b);},'golem'],
+ [61,'61 · Golem mini — đá có cạnh và bụi bay',(g,b)=>{prepareRock(g,b);g.enemyShots=[{kind:'rock',type:'rock',owner:b,x:565,y:398,vx:-320,vy:25,w:16,h:16,life:2,damage:1,rotationSeed:.8}];},'miniGolem'],
+ [60,'60 · Golem chúa — ném ba viên đá, hiệu ứng tắt',(g,b)=>{prepareRock(g,b);g.settings.effects=false;const angle=Math.atan2(b.rockAimY-b.rockOriginY,b.rockAimX-b.rockOriginX);g.enemyShots=[-.13,0,.13].map((spread,index)=>({kind:'rock',type:'rock',owner:b,x:b.rockOriginX+Math.cos(angle+spread)*150,y:b.rockOriginY+Math.sin(angle+spread)*150,vx:Math.cos(angle+spread)*340,vy:Math.sin(angle+spread)*340,w:27,h:27,life:2,damage:1,rotationSeed:index*.7}));}]
+);
 for(const[id,title,configure,type='boss']of samples){
  const g=new MM.Game({headless:true,random:()=>.5,storage:{getItem:()=>null,setItem:()=>{}}});g.start(id);g.levelKills=type==='boss'?g.level.target:0;g.bossSpawned=type==='boss';g.time=7;
  const b=g.spawn(type);b.phase='active';b.x=680;b.y=438;g.player.x=440;g.player.invulnerable=0;configure(g,b);

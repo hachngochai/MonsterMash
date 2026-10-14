@@ -515,7 +515,11 @@
       if(this.screen!=='playing')return;
       for(const shot of this.enemyShots){
         shot.x+=shot.vx*dt;shot.y+=shot.vy*dt;shot.life-=dt;
-        if(overlaps({...p,w:p.w*.75,h:p.h*.86},shot)){if(shot.kind==='web')MM.BossCombat?.webHit(this,shot);else this.hurt(shot);shot.life=0;}
+        if(overlaps({...p,w:p.w*.75,h:p.h*.86},shot)){
+          if(shot.kind==='rock')this.burst(shot.x,shot.y,'#c1a78a',10);
+          if(shot.kind==='web')MM.BossCombat?.webHit(this,shot);else this.hurt(shot);
+          shot.life=0;
+        }else if(shot.kind==='rock'&&shot.y>=GROUND){shot.life=0;this.burst(shot.x,GROUND,'#c1a78a',10);}
       }
       this.enemyShots=this.enemyShots.filter(shot=>shot.life>0&&shot.x>-30&&shot.x<W+30&&shot.y>-30&&shot.y<H+30);
       if(this.screen!=='playing')return;

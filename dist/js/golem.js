@@ -1,4 +1,4 @@
-/* Golem club combat and the final chapter's five-second rage sequence. */
+/* Golem club and ranged stone combat, with the king's five-second rage sequence. */
 (function (root) {
   'use strict';
   const MM = root.MM = root.MM || {};
@@ -7,14 +7,16 @@
   const isGolem = enemy => (enemy.archetype || enemy.type) === 'golem';
   const alive = enemy => enemy && !enemy.dead && enemy.health > 0;
   const overlaps = (player, zone) => Math.abs(player.x - zone.x) < (player.w * .75 + zone.w) / 2 && player.y > zone.y - zone.h && player.y - player.h * .86 < zone.y;
-  const pressure = (game, enemy) => game.getPressure?.(enemy) || {attackRate:1, moveRate:1, warningFloor:.9};
+  const pressure = (game, enemy) => game.getPressure?.(enemy) || {attackRate:1, moveRate:1, projectileRate:1, warningFloor:.9};
   const warning = (game, enemy, base) => Math.max(pressure(game, enemy).warningFloor || .9, base);
 
   function setup(game, enemy) {
     if (!isGolem(enemy)) return;
-    game.golemZones = game.golemZones || []; game.groundCracks = game.groundCracks || [];
+    game.golemZones = game.golemZones || []; game.groundCracks = game.groundCracks || []; game.enemyShots = game.enemyShots || [];
     enemy.golemState = 'approach'; enemy.golemTimer = 0;
     enemy.golemCooldown = enemy.boss ? 2.5 : 1.8;
+    enemy.rockCooldown = 3; enemy.rockAimX = 0; enemy.rockAimY = 0;
+    enemy.rockOriginX = 0; enemy.rockOriginY = 0; enemy.throwProgress = 0;
     enemy.golemActiveTime = 0; enemy.nextRageAt = 10;
     enemy.rageTime = 0; enemy.rageEndsAt = 0; enemy.golemRaging = false;
     enemy.swingProgress = 0; enemy.comboIndex = 0;
@@ -31,14 +33,17 @@
     if (!isGolem(enemy)) return;
     clearZones(game, enemy);
     game.groundCracks = (game.groundCracks || []).filter(crack => crack.owner !== enemy);
+    game.enemyShots = (game.enemyShots || []).filter(shot => shot.owner !== enemy || shot.kind !== 'rock');
     enemy.skillWarning = null; enemy.golemWarning = null; enemy.rageTime = 0; enemy.swingProgress = 0; enemy.golemRaging = false;
+    enemy.throwProgress = 0;
     enemy.tell = false; enemy.charging = false;
   }
 
   function state(enemy, name, seconds = 0, label = null) {
     enemy.golemState = name; enemy.golemTimer = seconds; enemy.golemStateTotal = seconds;
     enemy.swingProgress = 0;
-    enemy.tell = name === 'windup' || name === 'rage-windup' || name === 'combo-windup';
+    enemy.throwProgress = 0;
+    enemy.tell = name === 'windup' || name === 'rage-windup' || name === 'combo-windup' || name === 'rock-windup';
     enemy.charging = enemy.tell || name === 'charge';
     enemy.golemWarning = label ? {name:label, remaining:seconds, total:seconds} : null;
     enemy.skillWarning = enemy.golemWarning;
@@ -68,6 +73,33 @@
     const x = enemy.x + enemy.dir * (enemy.w / 2 + (enemy.boss ? 58 : mini ? 30 : 44));
     zone(game, enemy, 'club', x, enemy.boss ? 175 : mini ? 95 : 145, mini ? 44 : 54, seconds, 1);
     state(enemy, 'windup', seconds, 'CHÙY GỖ GAI');
+  }
+
+  function rockWarning(game, enemy) {
+    clearZones(game, enemy);
+    enemy.dir = Math.sign(game.player.x - enemy.x) || enemy.dir;
+    enemy.rockAimX = game.player.x; enemy.rockAimY = game.player.y - 26;
+    enemy.rockOriginX = enemy.x + enemy.dir * enemy.w * .33;
+    enemy.rockOriginY = enemy.y - enemy.h * .60;
+    const seconds = warning(game, enemy, 1.15 / (pressure(game, enemy).attackRate || 1));
+    state(enemy, 'rock-windup', seconds, 'NÉM ĐÁ');
+  }
+
+  function throwRock(game, enemy) {
+    const x = enemy.rockOriginX, y = enemy.rockOriginY;
+    const angle = Math.atan2(enemy.rockAimY - y, enemy.rockAimX - x);
+    const mini = enemy.variant === 'mini';
+    const speed = (enemy.boss ? 280 : mini ? 240 : 260) * (pressure(game, enemy).projectileRate || 1);
+    const size = enemy.boss ? 27 : mini ? 16 : 20;
+    for (const spread of enemy.boss ? [-.13, 0, .13] : [0]) {
+      if (game.enemyShots.length >= 12) break;
+      game.enemyShots.push({kind:'rock', type:'rock', owner:enemy, x, y,
+        vx:Math.cos(angle + spread) * speed, vy:Math.sin(angle + spread) * speed,
+        w:size, h:size, life:4, damage:1, rotationSeed:enemy.golemActiveTime});
+    }
+    enemy.rockCooldown = enemy.boss ? 5 : mini ? 6.5 : 6;
+    game.burst?.(x, y, '#c1a07b', 8);
+    state(enemy, 'rock-throw', .34);
   }
 
   function impact(game, enemy, nextState, duration) {
@@ -123,6 +155,7 @@
     if (enemy.golemRaging && enemy.rageTime <= EPSILON) {
       enemy.golemRaging = false;
       clearZones(game, enemy); state(enemy, 'approach'); enemy.golemCooldown = 2.3;
+      return;
     }
     const current = enemy.golemState;
     if (current === 'approach') {
@@ -135,7 +168,10 @@
         enemy.x = clamp(enemy.x + Math.sign(distance) * step, 26, W - 26);
       }
       enemy.golemCooldown = Math.max(0, enemy.golemCooldown - dt * (movement.attackRate || 1));
-      if (enemy.golemCooldown <= EPSILON && Math.abs(game.player.x - enemy.x) <= standOff + 35) clubWarning(game, enemy);
+      enemy.rockCooldown = Math.max(0, enemy.rockCooldown - dt * (movement.attackRate || 1));
+      const remainingDistance = Math.abs(game.player.x - enemy.x);
+      if (enemy.golemCooldown <= EPSILON && remainingDistance <= standOff + 35) clubWarning(game, enemy);
+      else if (enemy.rockCooldown <= EPSILON && remainingDistance >= 230) rockWarning(game, enemy);
     } else if (current === 'recover' && enemy.rageTime > 0) {
       // The final rage strike has landed; the remaining rage time is a safe recovery.
     } else {
@@ -143,12 +179,15 @@
       if (enemy.golemZone) enemy.golemZone.timer = enemy.golemTimer;
       if (enemy.golemWarning) enemy.golemWarning.remaining = enemy.golemTimer;
       if (current === 'swing' || current === 'combo-swing' || current === 'shock') enemy.swingProgress = clamp(1 - enemy.golemTimer / enemy.golemStateTotal, 0, 1);
+      if (current === 'rock-throw') enemy.throwProgress = clamp(1 - enemy.golemTimer / enemy.golemStateTotal, 0, 1);
       if (current === 'charge') {
         const amount = clamp(1 - enemy.golemTimer / enemy.golemStateTotal, 0, 1);
         enemy.x = enemy.chargeStartX + (enemy.chargeEndX - enemy.chargeStartX) * amount;
       }
       if (enemy.golemTimer <= EPSILON) {
         if (current === 'windup') impact(game, enemy, 'swing', .2);
+        else if (current === 'rock-windup') throwRock(game, enemy);
+        else if (current === 'rock-throw') state(enemy, 'recover', .35);
         else if (current === 'swing') { clearZones(game, enemy); state(enemy, 'recover', .4); enemy.golemCooldown = enemy.boss ? 3 : 2.7; }
         else if (current === 'recover') { state(enemy, 'approach'); enemy.golemCooldown = Math.max(enemy.golemCooldown, 0); }
         else if (current === 'rage-windup') impact(game, enemy, 'shock', .16);

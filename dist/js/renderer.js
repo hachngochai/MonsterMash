@@ -394,6 +394,15 @@
     rounded(c, -6, -30, 17, 5, 1, '#354a37'); rect(c, -3, -30, 3, 3, '#d3d0ab'); rect(c, 6, -28, 3, 3, '#d3d0ab');
     line(c, -11, -45, -4, -44, '#d4dbaa66', 1);
   }
+  function drawRock(c, x, y, size, rotation = 0) {
+    c.save(); c.translate(x, y); c.rotate(rotation); c.scale(size / 20, size / 20);
+    polygon(c, [[-9, -4], [-5, -10], [3, -9], [10, -3], [8, 6], [1, 10], [-7, 7]], '#77837b', '#223630', 1.8);
+    polygon(c, [[-5, -9], [3, -8], [6, -2], [-2, 0], [-8, -3]], '#b2b9a0');
+    polygon(c, [[6, -2], [9, -3], [7, 6], [1, 9], [-2, 0]], '#4a6056');
+    polygon(c, [[-8, -2], [-2, 0], [1, 9], [-6, 6]], '#899079');
+    line(c, -5, -9, 3, -8, '#e0d4af', 1.4); line(c, 3, -8, 7, -4, '#c8c3a1', 1.2);
+    line(c, -3, -5, 0, -2, '#758774', .9); line(c, 0, -2, -1, 3, '#596e5d', .9); c.restore();
+  }
   function drawGolem(c, dir, walk, t, boss, e, effects) {
     e = e || {};
     const state = e.golemState || 'approach', progress = Math.max(0, Math.min(1, e.swingProgress || 0)), rage = e.rageTime > 0;
@@ -417,11 +426,15 @@
       polygon(c, [[side * 4 + step, -8], [side * 16 + step, -8], [side * 17 + step, -3], [side * 10 + step, -4]], moss);
       line(c, side * 11 + step, -7, side * 16 + step, -2, '#aaa082', .8);
     }
-    const backHandY = state === 'rage-windup' ? -51 : -19;
-    line(c, -20, -32, -28, backHandY, wood, 8);
-    rounded(c, -33, backHandY - 5, 13, 12, 3, '#696a54', outline, 1.7);
-    line(c, -29, backHandY - 3, -29, backHandY + 5, '#aaa079', 1);
-    line(c, -25, backHandY - 3, -25, backHandY + 5, '#aaa079', 1);
+    const rockWindup = state === 'rock-windup', rockThrow = state === 'rock-throw';
+    const throwProgress = Math.max(0, Math.min(1, e.throwProgress || 0));
+    const lift = Math.max(0, Math.min(1, 1 - (e.golemStateTimer || 0) / Math.max(.01, e.golemStateTotal || 1)));
+    const backHandX = rockThrow ? -26 + throwProgress * 65 : rockWindup ? -28 + lift * 7 : -28;
+    const backHandY = rockThrow ? -61 + throwProgress * 31 : rockWindup ? -42 - lift * 19 : state === 'rage-windup' ? -51 : -19;
+    line(c, -20, -32, backHandX, backHandY, wood, 8);
+    rounded(c, backHandX - 5, backHandY - 5, 13, 12, 3, '#696a54', outline, 1.7);
+    line(c, backHandX - 1, backHandY - 3, backHandX - 1, backHandY + 5, '#aaa079', 1);
+    line(c, backHandX + 3, backHandY - 3, backHandX + 3, backHandY + 5, '#aaa079', 1);
     polygon(c, [[-21, -36], [20, -36], [24, -20], [17, -9], [-16, -9], [-23, -20]], stone, outline, 2.2);
     polygon(c, [[-19, -34], [-4, -34], [-5, -22], [-16, -21]], '#899081');
     polygon(c, [[2, -34], [19, -34], [21, -23], [5, -24]], '#5e675c');
@@ -458,6 +471,14 @@
     if (rage) {
       line(c, -2, -31, 3, -25, '#edb47a', 1.4); line(c, 3, -25, -1, -18, '#edb47a', 1.2);
       polygon(c, [[-5, -29], [0, -34], [5, -29], [1, -24]], '#d28d5270', '#efb677', .9);
+    }
+    const heldRockSize = (boss ? 27 : e.type === 'miniGolem' ? 16 : 20) * 40 / Math.max(1, e.w || 40);
+    if (rockWindup || rockThrow && throwProgress < .22) drawRock(c, backHandX + 1, backHandY - 8, heldRockSize, -.3);
+    if (rockThrow) {
+      // The free arm follows the released stone while the other hand keeps its club.
+      line(c, -20, -32, backHandX, backHandY, wood, 8);
+      ellipse(c, backHandX + 1, backHandY, 5.5, 5.5, '#7b775c');
+      line(c, backHandX - 1, backHandY - 3, backHandX + 2, backHandY + 3, '#b2a47c', 1);
     }
     // The club is actual timber: broad head, wood grain, binding and carved root spikes.
     c.save(); c.translate(23, gripY); c.rotate(clubAngle);
@@ -873,6 +894,29 @@
     }
     c.restore();
   }
+  function drawGolemRockTell(c, e, t, effects) {
+    if (e.golemState !== 'rock-windup' || !Number.isFinite(e.rockAimX) || !Number.isFinite(e.rockAimY)) return;
+    const dir = e.dir || 1;
+    const x = Number.isFinite(e.rockOriginX) ? e.rockOriginX : e.x + dir * (e.w || 60) * .33;
+    const y = Number.isFinite(e.rockOriginY) ? e.rockOriginY : e.y - (e.h || 90) * .60;
+    const dx = e.rockAimX - x, dy = e.rockAimY - y, length = Math.max(1, Math.hypot(dx, dy)), angle = Math.atan2(dy, dx);
+    const pulse = effects ? .82 + Math.sin(t * 9) * .12 : .9;
+    c.save(); c.globalAlpha = pulse; c.lineCap = 'round';
+    // These fixed paths and aim marks are gameplay warnings, including with effects disabled.
+    for (const spread of e.boss ? [-.13, 0, .13] : [0]) {
+      const targetX = x + Math.cos(angle + spread) * length, targetY = y + Math.sin(angle + spread) * length;
+      c.setLineDash([8, 7]); line(c, x, y, targetX, targetY, spread ? '#d9b982' : '#f7d599', spread ? 1.3 : 1.8); c.setLineDash([]);
+      c.beginPath(); c.ellipse(targetX, targetY, spread ? 11 : 22, spread ? 11 : 22, 0, 0, TAU); c.strokeStyle = '#ffdc9f'; c.lineWidth = spread ? 1 : 1.8; c.stroke();
+      if (!spread) {
+        line(c, targetX - 28, targetY, targetX - 15, targetY, '#fff0c0', 2); line(c, targetX + 15, targetY, targetX + 28, targetY, '#fff0c0', 2);
+        line(c, targetX, targetY - 28, targetX, targetY - 15, '#fff0c0', 2); line(c, targetX, targetY + 15, targetX, targetY + 28, '#fff0c0', 2);
+      }
+    }
+    ellipse(c, x, y, 3, 3, '#ffe7b1');
+    const labelY = Math.max(24, e.y - (e.h || 90) - 24), labelX = Math.max(51, Math.min(W - 51, e.x));
+    rounded(c, labelX - 46, labelY - 14, 92, 23, 4, '#14232bee', '#dbb777', 1);
+    c.font = `700 10px ${font}`; c.textAlign = 'center'; c.fillStyle = '#ffe5af'; c.fillText('NÉM ĐÁ', labelX, labelY + 1); c.restore();
+  }
   const monsterDrawers = { skeleton: drawSkeleton, zombie: drawZombie, greenZombie: drawZombie, spider: drawSpider, ghost: drawGhost, vampire: drawVampire, golem: drawGolem, miniGolem: drawGolem, werewolf: drawWerewolf };
   function drawMonster(c, e, t, effects, world, viewTop = 0) {
     const boss = e.boss || e.type === 'boss';
@@ -889,6 +933,7 @@
     }
     const aerial = e.abilityState && e.abilityState !== 'ground' || e.y < GROUND - 8;
     shadow(c, e.x, aerial ? GROUND : e.y, w, !!aerial);
+    if (type === 'golem' || type === 'miniGolem') drawGolemRockTell(c, e, t, effects);
     if (type === 'spider' && e.abilityState === 'hanging') {
       line(c, e.x, 0, e.x, e.y - h + 3, '#d3e3ce85', boss ? 1.6 : 1);
       line(c, e.x - 1, 0, e.x - 1, e.y - h + 3, '#ffffff18', .6);
@@ -954,6 +999,20 @@
     ellipse(c, b.x, b.y, 4.2, 2, '#fff1bb'); c.restore();
   }
   function drawEnemyShot(c, shot, t, effects) {
+    if (shot.kind === 'rock' || shot.type === 'rock') {
+      const size = Math.max(8, shot.w || 20), vx = shot.vx || 0, vy = shot.vy || 0;
+      c.save(); c.lineCap = 'round';
+      if (effects) {
+        line(c, shot.x, shot.y, shot.x - vx * .08, shot.y - vy * .08, '#c8c4a249', size * .5);
+        const length = Math.max(1, Math.hypot(vx, vy)), nx = -vy / length, ny = vx / length;
+        for (let i = 1; i <= 3; i++) {
+          const offset = Math.sin(t * 10 + (shot.rotationSeed || 0) + i * 1.8) * size * .3;
+          ellipse(c, shot.x - vx * .025 * i + nx * offset, shot.y - vy * .025 * i + ny * offset, Math.max(1, size * .085), Math.max(1, size * .065), '#cfcaab80');
+        }
+      }
+      const rotation = (shot.rotationSeed || 0) + (effects ? t * 5 : 0);
+      drawRock(c, shot.x, shot.y, size, rotation); c.restore(); return;
+    }
     if (shot.kind === 'spectral' || shot.kind === 'blood' || shot.kind === 'eclipse' || shot.kind === 'eclipseshot' || shot.kind === 'web') {
       const color = shot.kind === 'spectral' ? '#97e9ed' : shot.kind === 'blood' ? '#f6a2ac' : shot.kind === 'web' ? '#d8edbc' : '#ffd292';
       c.save();

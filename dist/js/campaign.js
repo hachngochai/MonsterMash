@@ -19,8 +19,8 @@
     spider: { w: 58, h: 34, speed: 63, health: 1, score: 100, damage: 1, ability: 'silk-drop' },
     ghost: { w: 44, h: 64, speed: 44, health: 2, score: 150, damage: 1, ability: 'sine-drop' },
     vampire: { w: 46, h: 78, speed: 55, health: 3, score: 190, damage: 1, ability: 'bat-morph' },
-    golem: { w: 74, h: 108, speed: 34, health: 4, score: 240, damage: 1, ability: 'club-swing' },
-    miniGolem: { w: 38, h: 68, speed: 44, health: 2, score: 170, damage: 1, ability: 'club-swing', archetype: 'golem', variant: 'mini' },
+    golem: { w: 74, h: 108, speed: 34, health: 4, score: 240, damage: 1, ability: 'club-swing', abilities: ['club-swing','rock-throw'] },
+    miniGolem: { w: 38, h: 68, speed: 44, health: 2, score: 170, damage: 1, ability: 'club-swing', abilities: ['club-swing','rock-throw'], archetype: 'golem', variant: 'mini' },
     werewolf: { w: 48, h: 72, speed: 58, health: 3, score: 210, damage: 1, ability: 'pounce' }
   };
 
@@ -199,7 +199,7 @@
   const bossNames = ['Kẻ gác nghĩa địa', 'Thây ma xanh', 'Nhện chúa', 'Bóng ma trắng', 'Dracula', 'Golem chúa', 'Lang Vương'];
   // Boss identities follow their milestones independently of the world scenery.
   const bossArchetypes = ['skeleton', 'zombie', 'spider', 'ghost', 'vampire', 'golem', 'werewolf'];
-  const bossAbilities = [['bone-volley'], ['ledge-drop'], ['silk-drop'], ['sine-drop'], ['bat-morph', 'shadow-drop'], ['club-swing'], ['pounce']];
+  const bossAbilities = [['bone-volley'], ['ledge-drop'], ['silk-drop'], ['sine-drop'], ['bat-morph', 'shadow-drop'], ['club-swing','rock-throw'], ['pounce']];
   const bossSkills = [['bone-pillars'], ['hit-immunity'], ['web-stun', 'egg-hatch'], ['vanish-strike'], ['bat-drain', 'blood-clone'], ['rage-ground-slam', 'triple-smash'], ['blood-moon', 'double-claw']];
   const levels = [];
   chapters.forEach(function (chapter, world) {
@@ -249,8 +249,8 @@
       if (config.id === 22) config.tutorial = 'Bóng ma bay theo đường lượn sóng rồi hạ xuống. Giữ khoảng trống, chờ chúng vào tầm bắn.';
       if (config.id === 32) config.tutorial = 'Thây ma xanh có nhiều máu hơn thây ma thường. Nhặt thùng đạn và giữ khoảng cách với bệ đá.';
       if (config.id === 42) config.tutorial = 'Ma cà rồng có thể hóa dơi, bay lên rồi đáp lại. Canh lúc chúng hạ thấp để tiết kiệm đạn.';
-      if (config.id === 51) config.tutorial = 'Golem nâng gậy gỗ gai trước khi quật. Rời vùng báo động hoặc nhảy qua gậy; khiên đang bật có thể chặn đòn.';
-      if (config.id === 61) config.tutorial = 'Golem nhỏ có kích thước như bộ xương nhưng chịu nhiều đạn hơn. Né vùng quật của gậy gai hoặc bật khiên trước khi áp sát.';
+      if (config.id === 51) config.tutorial = 'Golem nâng gậy trước khi quật và lấy đà ném đá khi ở xa. Né đường báo vàng hoặc bật khiên; đá không đổi hướng sau khi ném.';
+      if (config.id === 61) config.tutorial = 'Golem nhỏ chịu nhiều đạn hơn bộ xương, quật gậy khi gần và ném đá khi xa. Né dấu báo hoặc bật khiên trước khi áp sát.';
       if (config.id === 62) config.tutorial = 'Người sói lấy đà rồi nhảy lên vồ xuống. Rời vùng báo trước, nhảy qua cú vồ và canh bắn khi nó dừng lại.';
       if (config.id === 70) config.tutorial = 'Trăng máu mở súng ngắm tự động: cần ít nhất 5 viên, mỗi phát dùng 5 viên và gây 5 sát thương; hồi chiêu 1 giây. Lang Vương hồi đầy máu và lớn gấp đôi một lần khi còn nửa máu. Bật khiên hoặc né dấu báo của đòn cào kép mỗi 10 giây.';
       levels.push(config);
@@ -295,7 +295,7 @@
       archetype: archetype,
       variant: stats.variant || null,
       ability: stats.ability,
-      abilities: boss ? config.bossAbilities.slice() : (stats.ability ? [stats.ability] : []),
+      abilities: boss ? config.bossAbilities.slice() : (stats.abilities ? stats.abilities.slice() : stats.ability ? [stats.ability] : []),
       bossSkills: boss ? config.bossSkills.slice() : [],
       abilityCooldown: config.abilityInterval,
       abilityWarning: config.abilityWarning,

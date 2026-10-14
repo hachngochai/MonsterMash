@@ -163,7 +163,7 @@ test('boss milestones use their explicit identities and retain original native s
     [30, 'spider', 'silk-drop', 26],
     [40, 'ghost', 'sine-drop', 30],
     [50, 'vampire', 'bat-morph,shadow-drop', 34],
-    [60, 'golem', 'club-swing', 54],
+    [60, 'golem', 'club-swing,rock-throw', 54],
     [70, 'werewolf', 'pounce', 50]
   ];
   order.forEach(([id, archetype, abilities, health]) => {
