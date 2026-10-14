@@ -1,8 +1,8 @@
 <!doctype html><html lang="vi"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Kiểm tra hiệu ứng boss</title><link rel="stylesheet" href="../assets/fonts/fonts.css">
+<title>Kiểm tra hiệu ứng boss · 2.2.0</title><link rel="stylesheet" href="../assets/fonts/fonts.css?v=2.2.0">
 <style>body{margin:20px;background:#101714;color:#e9eade;font:14px/1.5 'Noto Sans',sans-serif}main{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}h1{font-size:20px}h2{font-size:14px;margin:0 0 6px}canvas{display:block;width:100%;border:1px solid #ffffff25;border-radius:8px}@media(max-width:700px){main{grid-template-columns:1fr}}</style>
-<h1>Kiểm tra hiệu ứng và dấu tiếng Việt</h1><main id="previews"></main>
-<script src="../js/typography.js"></script><script src="../js/campaign.js"></script><script src="../js/bosses.js"></script><script src="../js/renderer.js"></script><script src="../js/game.js"></script>
+<h1>Kiểm tra hiệu ứng và dấu tiếng Việt · 2.2.0</h1><main id="previews"></main>
+<script src="../js/typography.js?v=2.2.0"></script><script src="../js/campaign.js?v=2.2.0"></script><script src="../js/bosses.js?v=2.2.0"></script><script src="../js/golem.js?v=2.2.0"></script><script src="../js/renderer.js?v=2.2.0"></script><script src="../js/game.js?v=2.2.0"></script>
 <script>
 (async()=>{
 await MM.Typography.ready;
@@ -10,15 +10,20 @@ const samples=[
  [10,'10 · Cột xương báo trước',(g,b)=>{g.bossHazards=[-132,0,132].map(offset=>({owner:b,kind:'bones',x:440+offset,y:438,w:38,h:58,phase:'warning',timer:.8,warning:1.2,totalActive:.65,life:1.45,pulse:.4}));b.skillWarning={name:'CỘT XƯƠNG',remaining:.8,total:1.2};}],
  [20,'20 · Thây ma xanh cường hóa',(g,b)=>{b.hardenedTime=1.7;b.armorHits=0;}],
  [30,'30 · Tơ gây choáng và trứng nhện',(g,b)=>{g.configureAbility(b,'hanging');b.x=670;g.player.stunTime=1.6;g.bossEggs=[{owner:b,x:370,y:438,w:28,h:32,health:1,maxHealth:2,hatchTime:3.4,landed:true}];g.enemyShots=[{kind:'web',x:510,y:350,w:30,h:24,life:3}];}],
+ [32,'32 · So sánh zombie thường, zombie xanh, bộ xương và nhện',(g,b)=>{b.x=260;b.y=438;b.abilityState='ground';b.platform=null;g.player.x=520;for(const[type,x]of[['skeleton',125],['greenZombie',380],['spider',740]]){const e=g.spawn(type);e.phase='active';e.x=x;e.y=438;e.abilityState='ground';e.platform=null;}},'zombie'],
  [40,'40 · Ma trắng tàng hình',(g,b)=>{b.intangible=true;b.phantomState='invisible';b.skillWarning={name:'ẨN MÌNH',remaining:1.1,total:1.5};}],
  [40,'40 · Tập kích từ trên',(g,b)=>{b.phantomState='windup';b.attackSide='top';b.landX=440;b.x=440;b.y=235;b.skillWarning={name:'TẬP KÍCH TỪ TRÊN',remaining:.9,total:1.2};}],
  [40,'40 · Người chơi bị đánh ngã',(g,b)=>{g.player.knockdownTime=.6;g.player.stunTime=.6;b.phantomState='strike';b.attackSide='left';b.x=550;}],
  [50,'50 · Dracula báo hút máu',(g,b)=>{g.morphToBat(b);b.x=680;b.y=275;b.drainWarning={remaining:.9,total:1.2};}],
- [50,'50 · Hai bản thể Dracula',(g,b)=>{b.x=250;b.health=17;MM.BossCombat.update(g,.01);const clone=g.enemies.find(e=>e.draculaClone);clone.phase='active';clone.x=700;g.morphToBat(clone);clone.y=280;clone.drainWarning={remaining:1,total:1.2};}]
+ [50,'50 · Hai bản thể Dracula',(g,b)=>{b.x=250;b.health=17;MM.BossCombat.update(g,.01);const clone=g.enemies.find(e=>e.draculaClone);clone.phase='active';clone.x=700;g.morphToBat(clone);clone.y=280;clone.drainWarning={remaining:1,total:1.2};}],
+ [51,'51 · Thung lũng nguyền rủa — Golem thường giơ chùy',(g,b)=>{b.x=680;b.dir=-1;b.golemState='windup';b.swingProgress=0;g.golemZones=[{owner:b,kind:'club',x:485,y:438,w:145,h:54,phase:'warning',timer:.8,total:1.2}];for(const[type,x]of[['skeleton',130],['spider',815]]){const e=g.spawn(type);e.phase='active';e.x=x;e.y=438;e.abilityState='ground';}},'golem'],
+ [60,'60 · Golem chúa cuồng nộ — sóng chấn báo trước',(g,b)=>{b.x=680;b.dir=-1;b.rageTime=4.8;b.golemState='rage-windup';b.skillWarning={name:'CUỒNG NỘ · SÓNG CHẤN',remaining:.8,total:1.2};g.golemZones=[{owner:b,kind:'shock',x:480,y:438,w:360,h:38,phase:'warning',timer:.8,total:1.2}];}],
+ [60,'60 · Sóng chấn — đất nứt và đá bật lên',(g,b)=>{b.x=680;b.dir=-1;b.rageTime=4.5;b.golemState='shock';b.swingProgress=1;g.golemZones=[{owner:b,kind:'shock',x:480,y:438,w:360,h:38,phase:'impact',timer:.15,total:.3}];g.groundCracks=[{owner:b,x:480,y:438,w:375,life:1.8,maxLife:2}];}]
 ];
-for(const[id,title,configure]of samples){
- const g=new MM.Game({headless:true,random:()=>.5,storage:{getItem:()=>null,setItem:()=>{}}});g.start(id);g.levelKills=g.level.target;g.bossSpawned=true;g.time=7;
- const b=g.spawn('boss');b.phase='active';b.x=680;b.y=438;g.player.x=440;g.player.invulnerable=0;configure(g,b);
+for(let index=1;index<=3;index++)samples.push([60,`60 · Liên hoàn chùy ${index}/3${index===3?' — hiệu ứng tắt':''}`,(g,b)=>{b.x=680;b.dir=-1;b.rageTime=4.3-index*.6;b.golemState='combo-swing';b.comboIndex=index;b.swingProgress=index/3;g.golemZones=[{owner:b,kind:'slam',x:445,y:438,w:210,h:60,phase:'impact',timer:.14,total:.28,comboIndex:index}];g.groundCracks=[{owner:b,x:445,y:438,w:220+index*12,life:1.5,maxLife:2}];if(index===3)g.settings.effects=false;}]);
+for(const[id,title,configure,type='boss']of samples){
+ const g=new MM.Game({headless:true,random:()=>.5,storage:{getItem:()=>null,setItem:()=>{}}});g.start(id);g.levelKills=type==='boss'?g.level.target:0;g.bossSpawned=type==='boss';g.time=7;
+ const b=g.spawn(type);b.phase='active';b.x=680;b.y=438;g.player.x=440;g.player.invulnerable=0;configure(g,b);
  const section=document.createElement('section'),heading=document.createElement('h2'),canvas=document.createElement('canvas');heading.textContent=title;canvas.width=960;canvas.height=540;section.append(heading,canvas);document.getElementById('previews').append(section);MM.Renderer.draw(canvas.getContext('2d'),g);
 }
 })();

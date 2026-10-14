@@ -8,7 +8,8 @@
     { sky: '#0b1926', horizon: '#244f4b', far: '#183c3c', near: '#102827', ground: '#132924', soil: '#0b1919', edge: '#668369', glow: '#9ee1a2', mist: '#85bba5', moon: '#d8e9cd', name: 'woods' },
     { sky: '#102030', horizon: '#304d62', far: '#233c4e', near: '#162d3d', ground: '#1b3039', soil: '#14252d', edge: '#679199', glow: '#8ee7ee', mist: '#9bcfdc', moon: '#d5f1e9', name: 'city' },
     { sky: '#261524', horizon: '#6b364b', far: '#422433', near: '#291b2a', ground: '#291c29', soil: '#18141f', edge: '#82605f', glow: '#ff9a9d', mist: '#b97f8f', moon: '#f2a690', name: 'castle' },
-    { sky: '#171624', horizon: '#514039', far: '#3d3035', near: '#28232d', ground: '#292729', soil: '#181820', edge: '#927950', glow: '#ffc878', mist: '#c09968', moon: '#e5b770', name: 'eclipse' }
+    { sky: '#171624', horizon: '#514039', far: '#3d3035', near: '#28232d', ground: '#292729', soil: '#181820', edge: '#927950', glow: '#ffc878', mist: '#c09968', moon: '#e5b770', name: 'eclipse' },
+    { sky: '#141b20', horizon: '#343d32', far: '#22302c', near: '#1c2623', ground: '#242a25', soil: '#171b20', edge: '#727650', glow: '#d4cd89', mist: '#8c9b7f', moon: '#b4bca0', name: 'cursed-valley' }
   ];
   const scenes = new Map();
   function seedRandom(seed) {
@@ -93,6 +94,20 @@
     line(c, 1, -108, 1, -26, '#97b8c118', 3); line(c, 76, -119, 76, -22, '#97b8c118', 3);
     c.restore();
   }
+  function thornVine(c, points, color, width, thornSize = 7) {
+    c.save(); c.lineCap = 'round'; c.lineJoin = 'round';
+    c.beginPath(); c.moveTo(points[0][0], points[0][1]);
+    for (let i = 1; i < points.length - 1; i++) c.quadraticCurveTo(points[i][0], points[i][1], (points[i][0] + points[i + 1][0]) / 2, (points[i][1] + points[i + 1][1]) / 2);
+    c.lineTo(points[points.length - 1][0], points[points.length - 1][1]); c.strokeStyle = color; c.lineWidth = width; c.stroke();
+    for (let i = 0; i < points.length - 1; i++) {
+      const a = points[i], b = points[i + 1], dx = b[0] - a[0], dy = b[1] - a[1], len = Math.max(1, Math.hypot(dx, dy));
+      for (const side of [-1, 1]) {
+        const x = a[0] + dx * .55, y = a[1] + dy * .55, nx = -dy / len * side, ny = dx / len * side;
+        polygon(c, [[x - dx / len * 4, y - dy / len * 4], [x + nx * (width / 2 + thornSize), y + ny * (width / 2 + thornSize)], [x + dx / len * 4, y + dy / len * 4]], color);
+      }
+    }
+    c.restore();
+  }
   function createScene(world) {
     const p = palettes[world], r = seedRandom(7617 + world * 91);
     const canvas = document.createElement('canvas'); canvas.width = W; canvas.height = H;
@@ -101,6 +116,7 @@
     rect(c, 0, 0, W, H, sky);
     for (let i = 0; i < 88; i++) { const x = r() * W, y = r() * 280; ellipse(c, x, y, r() > .9 ? 1.1 : .6, .7, '#e2dde0' + (r() > .7 ? '8c' : '37')); }
     const moonX = world === 4 ? 713 : 728, moonY = world === 4 ? 113 : 122;
+    if (world !== 5) {
     halo(c, moonX, moonY, 157, p.moon, .18); halo(c, moonX, moonY, 89, p.moon, .17);
     ellipse(c, moonX, moonY, world === 3 || world === 4 ? 46 : 38, world === 3 || world === 4 ? 46 : 38, p.moon);
     ellipse(c, moonX - 12, moonY - 9, 9, 11, p.sky + '12'); ellipse(c, moonX + 10, moonY + 13, 13, 10, p.sky + '13'); ellipse(c, moonX + 14, moonY - 19, 6, 5, p.sky + '15');
@@ -108,6 +124,7 @@
       ellipse(c, moonX - 2, moonY - 2, 43, 43, '#1d1b29');
       ellipse(c, moonX - 2, moonY - 2, 41, 41, '#151521');
       halo(c, moonX, moonY + 43, 21, p.glow, .2);
+    }
     }
     // Broad brush cloud bands and layered hills keep silhouettes readable.
     for (let i = 0; i < 8; i++) { const x = r() * W, y = 110 + r() * 132; ellipse(c, x, y, 80 + r() * 180, 8 + r() * 12, p.sky + '33'); }
@@ -153,7 +170,7 @@
       tower(c, 112, 420, 114, 43, '#3c2935', false);
       tree(c, 5, 438, 261, '#201924', 16); tree(c, 944, 438, 250, '#201924', 14);
       for (let i = 0; i < 13; i++) { const x = i * 85; rect(c, x, 379, 10, 59, '#392733'); line(c, x, 378, x + 70, 394, '#392733', 3); }
-    } else {
+    } else if (world === 4) {
       // A monumental basalt temple beneath the eclipsed sun closes the campaign.
       polygon(c, [[476, 408], [495, 387], [929, 387], [949, 408]], '#31292f');
       rect(c, 506, 370, 409, 17, '#463b36'); rect(c, 525, 357, 371, 15, '#3c3333');
@@ -177,6 +194,33 @@
       }
       tree(c, 2, 438, 251, '#1d1d28', 14); tree(c, 957, 438, 267, '#1d1d28', 16);
       for (const x of [557, 864]) { rect(c, x, 333, 6, 29, '#382c2d'); ellipse(c, x + 3, 332, 4, 7, '#e2b374'); halo(c, x + 3, 332, 24, p.glow, .17); }
+    } else {
+      // Primordial canopy and thorn roots: earthy, dense, and distinct from the web forest.
+      for (let i = 0; i < 13; i++) {
+        const x = i * 81 - 21 + r() * 24;
+        tree(c, x, 423, 243 + r() * 120, i % 3 ? '#24352e' : '#302a38', 17 + r() * 17, 1);
+      }
+      for (const x of [264, 483, 706]) polygon(c, [[x, 103], [x + 12, 98], [x + 92, 427], [x + 26, 427]], '#dceab309');
+      for (const x of [102, 328, 605, 843]) {
+        const bend = x % 3 ? 1 : -1;
+        thornVine(c, [[x, 428], [x + bend * 34, 337], [x - bend * 17, 237], [x + bend * 20, 133], [x - bend * 16, 32]], '#25332d', 28, 10);
+        thornVine(c, [[x - 60, 427], [x - 28, 406], [x, 414], [x + 29, 399], [x + 82, 430]], '#354035', 12, 6);
+      }
+      for (let i = 0; i < 12; i++) {
+        const x = i * 94 - 28, y = 33 + r() * 30;
+        ellipse(c, x, y, 74 + r() * 31, 47 + r() * 22, i % 2 ? '#172720' : '#1b2528');
+        thornVine(c, [[x - 39, y + 17], [x - 12, y + 84], [x + 16, y + 101], [x + 8, y + 169]], '#283830', 5, 6);
+      }
+      for (let i = 0; i < 8; i++) {
+        const x = i * 132 + 37, y = 408 + r() * 13;
+        for (let leaf = -2; leaf <= 2; leaf++) polygon(c, [[x, y], [x + leaf * 13 + 4, y - 27 + Math.abs(leaf) * 5], [x + leaf * 16, y - 11]], '#3f4f38');
+      }
+      for (const x of [358, 547, 746]) {
+        polygon(c, [[x - 20, 425], [x - 14, 384], [x + 5, 369], [x + 17, 386], [x + 26, 428]], '#3e4439', '#817b4b1f');
+        thornVine(c, [[x - 18, 431], [x + 2, 415], [x - 3, 390], [x + 13, 382]], '#566047', 4, 3);
+      }
+      thornVine(c, [[-13, -20], [22, 91], [-8, 191], [28, 309], [8, 425]], '#101d1c', 42, 12);
+      thornVine(c, [[975, -20], [936, 112], [970, 224], [936, 344], [954, 425]], '#101d1c', 42, 12);
     }
     const ground = c.createLinearGradient(0, GROUND, 0, H); ground.addColorStop(0, p.ground); ground.addColorStop(1, p.soil);
     rect(c, 0, GROUND, W, H - GROUND, ground);
@@ -209,7 +253,7 @@
       ellipse(c, 230 + i * 256 + shift, 420 - i * 9, 258, 15 + i * 6, p.mist + (i === 0 ? '09' : '07'));
     }
     if (effects) {
-      for (let i = 0; i < 18; i++) {
+      for (let i = 0; i < (world === 5 ? 7 : 18); i++) {
         const x = ((i * 173.61 + Math.sin(t * .15 + i) * 17 + t * (world === 4 ? 4 : 1.3)) % 1040) - 40;
         const y = 270 + ((i * 57.31 - t * (world === 4 ? 8 : 1.1)) % 155 + 155) % 155;
         const opacity = .16 + Math.sin(t * 1.2 + i * 3.1) * .12;
@@ -312,11 +356,12 @@
     for (let i = 0; i < 5; i++) line(c, -9 + i * 4.5, -28, -9 + i * 4.5, -24, '#35404a', 1);
     line(c, -15, -49, -6, -49, '#ffffff66', 1.5);
   }
-  function drawZombie(c, dir, walk, t, boss) {
-    const skin = boss ? '#89ae67' : '#93aa78', outline = '#14232b';
+  function drawZombie(c, dir, walk, t, boss, enemy) {
+    const green = boss || enemy && (enemy.type === 'greenZombie' || enemy.archetype === 'greenZombie' || enemy.variant === 'green');
+    const skin = green ? (boss ? '#81ad5c' : '#75a457') : '#adb194', outline = '#14232b';
     rounded(c, -12 + walk, -14, 9, 13, 2, '#3c4340', outline, 2); rounded(c, 3 - walk, -14, 10, 13, 2, '#485247', outline, 2);
     rounded(c, -15 + walk, -5, 13, 5, 1, '#202b30'); rounded(c, 3 - walk, -5, 14, 5, 1, '#253032');
-    rounded(c, -19, -31, 38, 21, 3, '#3d5362', outline, 2.3);
+    rounded(c, -19, -31, 38, 21, 3, green ? '#385439' : '#3d5362', outline, 2.3);
     polygon(c, [[-16, -31], [-3, -25], [-8, -12], [-17, -17]], '#2a3c49'); polygon(c, [[7, -18], [14, -24], [19, -15], [12, -10]], '#627258');
     line(c, 0, -29, 0, -12, '#738376', 1); ellipse(c, 3, -22, 1, 1, '#afb097');
     line(c, dir * 13, -25, dir * 30, -26 - walk * .4, skin, 6); line(c, -dir * 15, -24, -dir * 25, -15 + walk * .2, skin, 5);
@@ -326,6 +371,90 @@
     line(c, -16, -32, -9, -30, '#657b54', 2); line(c, 7, -32, 15, -34, '#657b54', 1.5);
     rounded(c, -6, -30, 17, 5, 1, '#354a37'); rect(c, -3, -30, 3, 3, '#d3d0ab'); rect(c, 6, -28, 3, 3, '#d3d0ab');
     line(c, -11, -45, -4, -44, '#d4dbaa66', 1);
+  }
+  function drawGolem(c, dir, walk, t, boss, e, effects) {
+    e = e || {};
+    const state = e.golemState || 'approach', progress = Math.max(0, Math.min(1, e.swingProgress || 0)), rage = e.rageTime > 0;
+    const outline = '#15242a', stone = boss ? '#717365' : '#6c7567', wood = '#62513a', moss = boss ? '#668049' : '#657f4b';
+    const eyeColor = rage ? '#ffab70' : '#edd296';
+    const endAngle = boss ? 1.3 : 1.14;
+    let gripY = -29;
+    let clubAngle = .46;
+    if (state === 'windup' || state === 'combo-windup') clubAngle = -2.06;
+    if (state === 'rage-windup') clubAngle = -1.6;
+    if (state === 'swing' || state === 'combo-swing') { clubAngle = -2.06 + progress * (2.06 + endAngle); gripY = -29 - progress * 28; }
+    if (state === 'shock' || state === 'recover') { clubAngle = endAngle; gripY = -57; }
+    if (state === 'charge') clubAngle = -.15;
+    c.save(); c.scale(dir, 1);
+    // Heavy root joints support square blocks of ancient stone.
+    for (const side of [-1, 1]) {
+      const step = side * walk * .55;
+      line(c, side * 11, -20, side * 12 + step, -7, '#473f30', 9);
+      line(c, side * 10, -20, side * 14 + step, -7, '#8c8060', 2.1);
+      rounded(c, side < 0 ? -20 + step : 4 + step, -10, 17, 10, 2, '#6f7060', outline, 2);
+      polygon(c, [[side * 4 + step, -8], [side * 16 + step, -8], [side * 17 + step, -3], [side * 10 + step, -4]], moss);
+      line(c, side * 11 + step, -7, side * 16 + step, -2, '#aaa082', .8);
+    }
+    const backHandY = state === 'rage-windup' ? -51 : -19;
+    line(c, -20, -32, -28, backHandY, wood, 8);
+    rounded(c, -33, backHandY - 5, 13, 12, 3, '#696a54', outline, 1.7);
+    line(c, -29, backHandY - 3, -29, backHandY + 5, '#aaa079', 1);
+    line(c, -25, backHandY - 3, -25, backHandY + 5, '#aaa079', 1);
+    polygon(c, [[-21, -36], [20, -36], [24, -20], [17, -9], [-16, -9], [-23, -20]], stone, outline, 2.2);
+    polygon(c, [[-19, -34], [-4, -34], [-5, -22], [-16, -21]], '#899081');
+    polygon(c, [[2, -34], [19, -34], [21, -23], [5, -24]], '#5e675c');
+    polygon(c, [[-16, -18], [-4, -20], [1, -12], [-13, -10]], '#4e6050');
+    polygon(c, [[4, -21], [20, -20], [15, -11], [2, -11]], '#858373');
+    line(c, -2, -35, 2, -26, '#354439', 1.5); line(c, 2, -26, -3, -17, '#354439', 1.5);
+    line(c, -12, -20, -8, -14, '#354439', 1.2); line(c, 8, -30, 14, -24, '#354439', 1.2);
+    polygon(c, [[-21, -33], [-14, -37], [-7, -32], [-12, -28], [-20, -28]], moss);
+    polygon(c, [[7, -19], [15, -23], [21, -17], [14, -12], [9, -13]], moss);
+    for (const side of [-1, 1]) {
+      const shoulder = boss ? 29 : 24;
+      polygon(c, [[side * 13, -36], [side * shoulder, -42], [side * (shoulder + 4), -32], [side * 23, -23], [side * 16, -26]], boss ? '#8c8972' : '#737d67', outline, 1.7);
+      line(c, side * 18, -35, side * (shoulder - 1), -36, '#c2b48a', 1);
+      polygon(c, [[side * 18, -37], [side * shoulder, -40], [side * (shoulder + 1), -35], [side * 24, -33]], moss);
+    }
+    rounded(c, -16, -54, 32, 22, 3, '#7d8071', outline, 2.2);
+    polygon(c, [[-16, -54], [1, -54], [-1, -46], [-14, -47]], '#959884');
+    polygon(c, [[3, -53], [16, -53], [16, -38], [11, -38], [8, -45]], '#636e60');
+    polygon(c, [[-15, -53], [-5, -57], [3, -52], [-5, -48], [-14, -49]], moss);
+    rounded(c, -12, -46, 9, 5, 1, '#263632'); rounded(c, 4, -46, 9, 5, 1, '#263632');
+    if (rage) { ellipse(c, -7, -43, 8, 5, '#ffa46b26'); ellipse(c, 8, -43, 8, 5, '#ffa46b26'); }
+    rect(c, -10, -44, 6, 2.5, eyeColor); rect(c, 5, -44, 6, 2.5, eyeColor);
+    if (rage) { line(c, -14, -47, -4, -43, '#ffbc7977', 1.1); line(c, 4, -43, 14, -47, '#ffbc7977', 1.1); }
+    polygon(c, [[-1, -44], [-3, -38], [3, -38]], '#565f50');
+    line(c, -8, -35, 9, -35, '#354b40', 2); line(c, -3, -38, -2, -33, '#4c5b48', 1);
+    line(c, 10, -51, 7, -46, '#384b3d', 1); line(c, 7, -46, 10, -39, '#384b3d', 1);
+    if (boss) {
+      // Root antlers and ruined battlements make the king distinct from regular golems.
+      polygon(c, [[-17, -52], [-24, -65], [-12, -59], [-8, -68], [0, -62], [8, -69], [13, -59], [25, -65], [17, -52]], '#7a7653', outline, 1.6);
+      line(c, -21, -61, -15, -51, '#aec184', 1.5); line(c, 21, -61, 14, -52, '#aec184', 1.5);
+      rounded(c, -5, -59, 10, 6, 1, '#b0a271', '#4d5138', 1); ellipse(c, 0, -57, 1.6, 1.6, eyeColor);
+      line(c, -22, -28, -12, -16, '#415b39', 2); line(c, 18, -28, 10, -12, '#415b39', 2);
+    }
+    if (rage) {
+      line(c, -2, -31, 3, -25, '#edb47a', 1.4); line(c, 3, -25, -1, -18, '#edb47a', 1.2);
+      polygon(c, [[-5, -29], [0, -34], [5, -29], [1, -24]], '#d28d5270', '#efb677', .9);
+    }
+    // The club is actual timber: broad head, wood grain, binding and carved root spikes.
+    c.save(); c.translate(23, gripY); c.rotate(clubAngle);
+    if (effects && (state === 'swing' || state === 'combo-swing')) {
+      c.globalAlpha = .2; polygon(c, [[14, -1], [39, -15], [66, -17], [60, 7], [34, 15]], rage ? '#eab375' : '#d0be85'); c.globalAlpha = 1;
+    }
+    rounded(c, -1, -3, 42, 6, 2, '#8a7047', outline, 1.7); line(c, 5, -1, 33, -1, '#cab084', 1);
+    polygon(c, [[33, -9], [55, -11], [62, -5], [60, 8], [35, 11], [30, 5]], '#82643e', outline, 2);
+    polygon(c, [[34, -6], [56, -7], [55, -3], [34, -2]], '#b2935b');
+    line(c, 36, 5, 56, 3, '#4b3f2d', 1.3); line(c, 37, -2, 54, -1, '#4b3f2d', 1);
+    line(c, 42, -8, 42, 9, '#493f30', 3); line(c, 52, -9, 52, 9, '#493f30', 3);
+    for (const spikeX of [36, 46, 57]) {
+      polygon(c, [[spikeX - 3, -8], [spikeX + 1, -18], [spikeX + 4, -9]], '#b6a06d', outline, 1);
+      polygon(c, [[spikeX - 3, 8], [spikeX + 1, 18], [spikeX + 4, 8]], '#968259', outline, 1);
+    }
+    polygon(c, [[59, -5], [69, -1], [60, 5]], '#b6a06d', outline, 1); c.restore();
+    line(c, 18, -28, 26, gripY, wood, 8); ellipse(c, 25, gripY, 5, 5, '#7b775c');
+    line(c, 23, gripY - 4, 23, gripY + 4, '#aaa177', 1); line(c, 27, gripY - 3, 27, gripY + 3, '#aaa177', 1);
+    c.restore();
   }
   function drawSpider(c, dir, walk, t, boss) {
     const outline = '#111b25', shell = boss ? '#aa683f' : '#71514a';
@@ -527,10 +656,65 @@
       c.restore();
     }
   }
-  const monsterDrawers = { skeleton: drawSkeleton, zombie: drawZombie, spider: drawSpider, ghost: drawGhost, vampire: drawVampire };
+  function drawGroundCracks(c, cracks) {
+    for (const crack of cracks || []) {
+      const width = Math.max(20, crack.w || 120), y = Number.isFinite(crack.y) ? crack.y : GROUND;
+      const r = seedRandom(Math.floor(crack.x * 13 + width * 7)), points = [], opacity = Math.max(0, Math.min(1, crack.life / (crack.maxLife || 2)));
+      for (let i = 0; i <= 10; i++) points.push([crack.x - width / 2 + width * i / 10, y + 4 + r() * 8]);
+      c.save(); c.globalAlpha = opacity * .8;
+      for (let i = 1; i < points.length; i++) {
+        line(c, points[i - 1][0], points[i - 1][1], points[i][0], points[i][1], '#101913', 4);
+        line(c, points[i - 1][0], points[i - 1][1], points[i][0], points[i][1], '#e5b675', 1.3);
+        if (i % 2 === 0) {
+          const p = points[i], reach = 8 + r() * 17;
+          line(c, p[0], p[1], p[0] + (r() - .5) * 12, p[1] + reach, '#c7976177', 1.2);
+        }
+      }
+      c.restore();
+    }
+  }
+  function drawGolemZones(c, zones, t, effects) {
+    for (const zone of zones || []) {
+      if (zone.phase !== 'warning' && zone.phase !== 'impact') continue;
+      const width = Math.max(20, zone.w || 145), height = Math.max(8, zone.h || 54), x = zone.x, y = Number.isFinite(zone.y) ? zone.y : GROUND;
+      const left = x - width / 2, color = zone.kind === 'shock' ? '#f5d69a' : '#ecb87b';
+      c.save(); c.lineCap = 'round'; c.lineJoin = 'round';
+      if (zone.phase === 'warning') {
+        const remaining = Math.max(0, Number(zone.timer) || 0), total = Math.max(.01, Number(zone.total) || remaining || 1);
+        c.globalAlpha = .13; rect(c, left, y - height, width, height, color); c.globalAlpha = 1;
+        c.strokeStyle = color; c.lineWidth = 1.5; c.setLineDash([6, 5]); c.strokeRect(left, y - height, width, height); c.setLineDash([]);
+        for (const side of [-1, 1]) { line(c, x + side * width / 2, y - 10, x + side * width / 2, y + 3, color, 2.3); line(c, x + side * width / 2, y + 3, x + side * (width / 2 - 10), y + 3, color, 2.3); }
+        const text = zone.kind === 'shock' ? 'SÓNG CHẤN · NHẢY!' : zone.kind === 'slam' ? `DẬP ĐẤT ${zone.comboIndex || 1}/3` : 'VUNG CHÙY';
+        rounded(c, x - 82, y - height - 24, 164, 19, 4, '#152326ee', '#e7b47580', 1);
+        c.font = `600 10px ${font}`; c.textAlign = 'center'; c.fillStyle = '#f4d4a2'; c.fillText(`${text} · ${remaining.toFixed(1)}s`, x, y - height - 11);
+        rounded(c, left, y + 7, width, 3, 1, '#152326'); rounded(c, left, y + 7, Math.max(1, width * Math.min(1, Math.max(0, 1 - remaining / total))), 3, 1, color);
+      } else {
+        c.globalAlpha = .16; rect(c, left, y - height, width, height, color); c.globalAlpha = 1;
+        line(c, left, y + 1, left + width, y + 1, '#f5d2a0', 3);
+        if (zone.kind === 'shock') {
+          c.strokeStyle = '#f4d9a3'; c.lineWidth = 1.8; c.beginPath(); c.ellipse(x, y - 6, width / 2, 13, 0, 0, TAU); c.stroke();
+          for (let i = 0; i < 6; i++) polygon(c, [[left + width * i / 6, y], [left + width * (i + .35) / 6, y - height * .7], [left + width * (i + .75) / 6, y]], '#e4b77e5c');
+        } else {
+          for (let i = 0; i < 7; i++) {
+            const a = Math.PI + i * Math.PI / 6, reach = height * (.52 + (i % 2) * .3);
+            line(c, x + Math.cos(a) * 8, y + Math.sin(a) * 5, x + Math.cos(a) * width * .36, y + Math.sin(a) * reach, '#f3d0a1', i % 2 ? 2 : 1.2);
+          }
+        }
+        if (effects) for (let i = 0; i < 5; i++) {
+          const progress = Math.min(1, Math.max(0, 1 - (zone.timer || 0) / (zone.total || .3))), rx = left + width * (i + .5) / 5;
+          ellipse(c, rx, y - 4 - Math.sin(progress * Math.PI) * (12 + i % 2 * 7), 12 + progress * 14, 5 + progress * 4, '#a99b7740');
+          polygon(c, [[rx - 3, y - 5 - progress * 21], [rx, y - 11 - progress * 24], [rx + 5, y - 6 - progress * 21]], '#c8b387');
+        }
+      }
+      c.restore();
+    }
+  }
+  const monsterDrawers = { skeleton: drawSkeleton, zombie: drawZombie, greenZombie: drawZombie, spider: drawSpider, ghost: drawGhost, vampire: drawVampire, golem: drawGolem };
   function drawMonster(c, e, t, effects, world, viewTop = 0) {
     const boss = e.boss || e.type === 'boss';
-    const type = monsterDrawers[e.archetype] ? e.archetype : monsterDrawers[e.type] ? e.type : ['skeleton', 'spider', 'ghost', 'vampire', 'vampire'][e.world == null ? world : e.world];
+    const fallbackWorld = Math.max(0, Math.min(palettes.length - 1, e.world == null ? world : e.world));
+    const fallbackType = window.MM?.Campaign?.worlds?.[fallbackWorld]?.enemy || ['skeleton', 'spider', 'ghost', 'vampire', 'vampire', 'golem'][fallbackWorld] || 'skeleton';
+    const type = monsterDrawers[e.archetype] ? e.archetype : monsterDrawers[e.type] ? e.type : monsterDrawers[fallbackType] ? fallbackType : 'skeleton';
     const w = e.w || (boss ? 68 : 40), h = e.h || (boss ? 88 : 52), dir = e.dir || 1;
     drawPhantomTell(c, e, t, effects, viewTop);
     if (e.intangible) {
@@ -562,9 +746,9 @@
       c.save(); c.globalAlpha = .25;
       c.strokeStyle = palettes[world].glow; c.lineWidth = 1.2; c.beginPath(); c.ellipse(0, -32, 31, 37, 0, 0, TAU); c.stroke(); c.restore();
     }
-    monsterDrawers[type](c, dir, walk, t, boss);
+    monsterDrawers[type](c, dir, walk, t, boss, e, effects);
     drawBulletArmor(c, e, t, effects);
-    if (boss) {
+    if (boss && type !== 'golem') {
       polygon(c, [[-17, -52], [-23, -65], [-9, -59], [0, -69], [9, -59], [23, -65], [17, -52]], '#bea05d', '#251e25', 1.6);
       line(c, -15, -54, 15, -54, '#f4d493', 1.2); ellipse(c, 0, -60, 2.8, 2.8, '#f5927c');
       polygon(c, [[-21, -29], [-25, -36], [-16, -37], [-11, -29]], '#b9a574', '#211e2b'); polygon(c, [[21, -29], [25, -36], [16, -37], [11, -29]], '#b9a574', '#211e2b');
@@ -753,6 +937,10 @@
         const text = boss.hardenedTime > 0 ? `CƯỜNG HÓA · MIỄN ĐẠN ${boss.hardenedTime.toFixed(1)}s` : `GIÁP ${Math.max(0, boss.armorHits || 0)}/10`;
         c.lineWidth = 3; c.strokeStyle = '#13222aed'; c.strokeText(text, centre, armorY); c.fillText(text, centre, armorY);
       }
+      if ((boss.archetype === 'golem' || boss.type === 'golem') && boss.rageTime > 0) {
+        c.font = `600 11px ${font}`; c.fillStyle = '#f5bd89'; c.lineWidth = 3; c.strokeStyle = '#13222aed';
+        const text = `CUỒNG NỘ · ${boss.rageTime.toFixed(1)}s`; c.strokeText(text, centre, armorY); c.fillText(text, centre, armorY);
+      }
       c.restore();
     }
   }
@@ -761,23 +949,29 @@
     for (const f of floats || []) { c.globalAlpha = Math.min(1, Math.max(0, f.life * 2)); c.lineWidth = 3; c.strokeStyle = '#14202a'; c.strokeText(f.text, f.x, f.y); c.fillStyle = f.color || '#eadab1'; c.fillText(f.text, f.x, f.y); }
     c.restore();
   }
-  function drawHomeCast(c, t, effects, world) {
+  function drawHomeCast(c, t, effects, world, level) {
     // The empty centre leaves room for the home interface above the arena.
-    const cast = [{ x: 119, y: GROUND, w: 46, h: 60, type: 'skeleton', dir: 1 }, { x: 240, y: GROUND, w: 46, h: 60, type: 'zombie', dir: 1 }, { x: 729, y: GROUND, w: 47, h: 42, type: 'spider', dir: -1 }, { x: 836, y: GROUND - 14, w: 47, h: 58, type: 'ghost', dir: -1 }];
-    for (const e of cast) drawMonster(c, e, t, effects, world);
+    const types = (level && level.types || ['skeleton']).filter(type => monsterDrawers[type]);
+    const pool = types.length ? [...new Set(types)] : ['skeleton'], positions = [92, 215, 335, 624, 747, 870];
+    for (let i = 0; i < positions.length; i++) {
+      const type = pool[i % pool.length], stats = window.MM?.Campaign?.enemyTypes?.[type];
+      const w = type === 'golem' ? 58 : type === 'spider' ? 46 : 43, h = type === 'golem' ? 88 : type === 'spider' ? 32 : 61;
+      drawMonster(c, { x: positions[i], y: GROUND, w, h, type, archetype: stats && stats.archetype || type, dir: i < 3 ? 1 : -1 }, t, effects, world);
+    }
     drawHunter(c, { x: 477, y: GROUND, w: 45, h: 64, dir: 1, vx: 0 }, t, effects);
-    drawMonster(c, { x: 617, y: GROUND, w: 43, h: 57, type: 'vampire', dir: -1 }, t, effects, world);
   }
   function draw(c, game) {
-    const world = Math.max(0, Math.min(4, game.level && Number.isFinite(game.level.world) ? game.level.world : 0));
+    const world = Math.max(0, Math.min(palettes.length - 1, game.level && Number.isFinite(game.level.world) ? Math.trunc(game.level.world) : 0));
     const t = game.time || 0, settings = game.settings || {}, effects = settings.effects !== false && !settings.reducedMotion;
     if (!scenes.has(world)) scenes.set(world, createScene(world));
     c.save();
     if (effects && game.shake > 0) c.translate(Math.sin(t * 83) * game.shake, Math.cos(t * 97) * game.shake * .6);
     c.drawImage(scenes.get(world), 0, 0); drawAtmosphere(c, world, t, effects);
-    if (game.screen === 'home' && (!game.enemies || !game.enemies.length)) drawHomeCast(c, t, effects, world);
+    if (game.screen === 'home' && (!game.enemies || !game.enemies.length)) drawHomeCast(c, t, effects, world, game.level);
     else {
       drawBossHazards(c, game.bossHazards, t, effects, world);
+      drawGroundCracks(c, game.groundCracks);
+      drawGolemZones(c, game.golemZones, t, effects);
       drawPlatforms(c, game.enemies || [], t, effects);
       for (const p of game.pickups || []) drawPickup(c, p, t, effects);
       for (const crate of game.ammoCrates || []) drawAmmoCrate(c, crate, t, effects);

@@ -7,15 +7,18 @@
     { id: 1, name: 'Rừng tơ độc', subtitle: 'Giữ khoảng cách, chọn thời điểm', color: '#acd96a', enemy: 'spider' },
     { id: 2, name: 'Thành phố lãng quên', subtitle: 'Nhìn xuyên những làn sương', color: '#83c9ff', enemy: 'ghost' },
     { id: 3, name: 'Lâu đài trăng máu', subtitle: 'Nhanh tay trước cú lao tới', color: '#d5a0ff', enemy: 'vampire' },
-    { id: 4, name: 'Cổng nhật thực', subtitle: 'Trận chiến cho bình minh', color: '#ffb46c', enemy: 'vampire' }
+    { id: 4, name: 'Cổng nhật thực', subtitle: 'Trận chiến cho bình minh', color: '#ffb46c', enemy: 'vampire' },
+    { id: 5, name: 'Thung lũng nguyền rủa', subtitle: 'Ánh sáng giữa rừng gai', color: '#becd80', enemy: 'golem' }
   ];
 
   const enemyTypes = {
     skeleton: { w: 38, h: 68, speed: 46, health: 1, score: 80, damage: 1, ability: null },
     zombie: { w: 48, h: 76, speed: 33, health: 2, score: 120, damage: 1, ability: 'ledge-drop' },
+    greenZombie: { w: 48, h: 76, speed: 38, health: 3, score: 160, damage: 1, ability: 'ledge-drop', archetype: 'zombie', variant: 'green' },
     spider: { w: 58, h: 34, speed: 63, health: 1, score: 100, damage: 1, ability: 'silk-drop' },
     ghost: { w: 44, h: 64, speed: 44, health: 2, score: 150, damage: 1, ability: 'sine-drop' },
-    vampire: { w: 46, h: 78, speed: 55, health: 3, score: 190, damage: 1, ability: 'bat-morph' }
+    vampire: { w: 46, h: 78, speed: 55, health: 3, score: 190, damage: 1, ability: 'bat-morph' },
+    golem: { w: 74, h: 108, speed: 34, health: 4, score: 240, damage: 1, ability: 'club-swing' }
   };
 
   const chapters = [
@@ -87,19 +90,19 @@
         ['skeleton', 'zombie', 'spider'], ['skeleton', 'ghost'], ['skeleton', 'zombie', 'ghost'],
         ['skeleton', 'spider', 'ghost'], ['skeleton', 'zombie'], ['zombie', 'spider', 'ghost'],
         ['skeleton', 'ghost'], ['skeleton', 'spider', 'ghost'], ['zombie', 'spider', 'ghost'],
-        ['skeleton', 'ghost']
+        ['skeleton', 'zombie', 'spider', 'greenZombie']
       ]
     },
     {
       names: ['Sân lâu đài', 'Khách dưới trăng', 'Hành lang đỏ', 'Ban công đêm', 'Vườn hồng tĩnh lặng', 'Tiệc của bóng tối', 'Lưỡi gió lạnh', 'Trăng lên đỉnh tháp', 'Trước ngai đá', 'Bóng ma trắng'],
       stories: [
         'Sân lâu đài rộng mở. Một nhịp nhẹ giúp bạn sẵn sàng cho kẻ địch mới.',
-        'Ma cà rồng chịu nhiều đạn và biết lao tới. Chừa khoảng trống để né.',
-        'Hành lang đỏ có cả bóng ma và bộ xương. Bình tĩnh chọn mục tiêu.',
-        'Kẻ bay lẫn kẻ bò cùng xuất hiện. Nhảy để thoát khỏi nhóm sát mặt đất.',
+        'Thây ma xanh chịu nhiều đạn hơn và tiến nhanh hơn. Chừa khoảng trống để né.',
+        'Thây ma và bộ xương lấp đầy hành lang đỏ. Bình tĩnh chọn mục tiêu.',
+        'Nhện bò xen giữa hai loại thây ma. Nhảy để thoát khỏi nhóm sát mặt đất.',
         'Vườn hồng im lặng hơn. Luyện dùng khiên trước khi vào tháp.',
         'Những vị khách cuối cùng đang đến. Giữ đạn liên tục khi đổi vị trí.',
-        'Theo dõi nhịp lao của ma cà rồng. Dấu báo luôn xuất hiện trước địch.',
+        'Theo dõi thây ma trên bệ đá và nhện đu tơ. Dấu báo cho bạn thời gian tránh điểm đáp.',
         'Trăng máu lên cao, đám đông tiến nhanh hơn. Tận dụng cả hai phía sân.',
         'Ngai đá ở phía trước. Tích một khiên và giữ đường lui.',
         'Bóng ma trắng lượn trong lâu đài, biến mất mỗi 5 giây rồi đánh từ trên, trái hoặc phải. Trúng đòn khiến bạn ngã, mất 1 máu và 1 khiên; quan sát dấu báo để né.'
@@ -108,11 +111,11 @@
       intervals: [1.58, 1.31, 1.28, 1.25, 1.44, 1.21, 1.18, 1.15, 1.12, 1.22],
       caps: [4, 5, 5, 5, 4, 5, 6, 6, 6, 5],
       pools: [
-        ['skeleton', 'spider', 'ghost'], ['skeleton', 'vampire'], ['skeleton', 'ghost', 'vampire'],
-        ['spider', 'ghost', 'vampire'], ['skeleton', 'zombie', 'ghost'],
-        ['skeleton', 'zombie', 'vampire'], ['skeleton', 'spider', 'vampire'],
-        ['zombie', 'ghost', 'vampire'], ['skeleton', 'spider', 'ghost', 'vampire'],
-        ['skeleton', 'ghost', 'vampire']
+        ['skeleton', 'zombie', 'spider'], ['skeleton', 'greenZombie'], ['skeleton', 'zombie', 'greenZombie'],
+        ['spider', 'zombie', 'greenZombie'], ['skeleton', 'zombie'],
+        ['skeleton', 'zombie', 'spider', 'greenZombie'], ['skeleton', 'spider', 'greenZombie'],
+        ['zombie', 'spider', 'greenZombie'], ['skeleton', 'zombie', 'spider', 'greenZombie'],
+        ['skeleton', 'zombie', 'spider', 'greenZombie']
       ]
     },
     {
@@ -139,14 +142,38 @@
         ['skeleton', 'spider', 'vampire'], ['skeleton', 'zombie', 'spider', 'ghost', 'vampire'],
         ['skeleton', 'zombie', 'spider', 'ghost', 'vampire'], ['skeleton', 'ghost', 'vampire']
       ]
+    },
+    {
+      names: ['Lối vào rừng gai', 'Bước chân đá', 'Gậy gai dưới tán cây', 'Rễ cổ thức giấc', 'Vệt sáng le lói', 'Hẻm gai im lặng', 'Dấu nứt trên đất', 'Thung lũng thức tỉnh', 'Dưới bóng người khổng lồ', 'Golem chúa'],
+      stories: [
+        'Qua cổng nhật thực là khu rừng nguyên sinh đầy dây gai. Theo vệt sáng nhỏ và lấy lại nhịp di chuyển.',
+        'Golem mang gậy gỗ gai tiến vào giữa bộ xương. Nó nâng gậy trước khi quật: lùi ra hoặc nhảy qua đòn đánh.',
+        'Nhện luồn dưới những bước chân đá. Canh dấu báo của gậy gai và giữ một lối thoát.',
+        'Rễ cổ quấn quanh các phiến đá sống. Đừng để bộ xương ép bạn vào tầm quật của golem.',
+        'Một vệt sáng xuyên qua rừng gai. Đợt địch nhẹ hơn cho bạn nhặt đạn và chuẩn bị khiên.',
+        'Trong hẻm rừng, golem và nhện tiến theo hai nhịp khác nhau. Ưu tiên kẻ đang áp sát.',
+        'Những vết nứt báo hiệu sức mạnh dưới lòng đất. Giữ khoảng trống trước mỗi cây gậy đang nâng lên.',
+        'Cả thung lũng rung chuyển. Di chuyển giữa các nhóm xương, nhện và golem để tránh bị kẹp.',
+        'Bóng một người khổng lồ che ánh sáng cuối rừng. Nhặt thùng đạn và tích khiên trước khi đối mặt.',
+        'Golem chúa hóa điên mỗi 10 giây trong 5 giây: giáng đòn làm nứt đất và gây choáng, rồi lao tới đập 3 nhát. Mỗi nhát mất 3 máu nếu không bật khiên; né vùng báo động hoặc nhảy đúng lúc.'
+      ],
+      targets: [30, 33, 34, 35, 31, 36, 37, 38, 40, 42],
+      intervals: [1.3, 1.12, 1.09, 1.06, 1.24, 1.03, 1.0, 0.98, 0.96, 1.06],
+      caps: [5, 5, 6, 6, 5, 6, 6, 7, 7, 6],
+      pools: [
+        ['skeleton', 'golem'], ['skeleton', 'golem'], ['skeleton', 'golem', 'spider'],
+        ['skeleton', 'golem', 'spider'], ['skeleton', 'spider'], ['skeleton', 'golem', 'spider'],
+        ['golem', 'spider'], ['skeleton', 'golem', 'spider'], ['skeleton', 'golem', 'spider'],
+        ['skeleton', 'golem', 'spider']
+      ]
     }
   ];
 
-  const bossNames = ['Kẻ gác nghĩa địa', 'Thây ma xanh', 'Nhện chúa', 'Bóng ma trắng', 'Dracula'];
+  const bossNames = ['Kẻ gác nghĩa địa', 'Thây ma xanh', 'Nhện chúa', 'Bóng ma trắng', 'Dracula', 'Golem chúa'];
   // Boss identities follow their milestones independently of the world scenery.
-  const bossArchetypes = ['skeleton', 'zombie', 'spider', 'ghost', 'vampire'];
-  const bossAbilities = [['bone-volley'], ['ledge-drop'], ['silk-drop'], ['sine-drop'], ['bat-morph', 'shadow-drop']];
-  const bossSkills = [['bone-pillars'], ['hit-immunity'], ['web-stun', 'egg-hatch'], ['vanish-strike'], ['bat-drain', 'blood-clone']];
+  const bossArchetypes = ['skeleton', 'zombie', 'spider', 'ghost', 'vampire', 'golem'];
+  const bossAbilities = [['bone-volley'], ['ledge-drop'], ['silk-drop'], ['sine-drop'], ['bat-morph', 'shadow-drop'], ['club-swing']];
+  const bossSkills = [['bone-pillars'], ['hit-immunity'], ['web-stun', 'egg-hatch'], ['vanish-strike'], ['bat-drain', 'blood-clone'], ['rage-ground-slam', 'triple-smash']];
   const levels = [];
   chapters.forEach(function (chapter, world) {
     chapter.names.forEach(function (name, stage) {
@@ -181,7 +208,7 @@
         bossWarmup: 4,
         boss: stage === 9,
         bossArchetype: stage === 9 ? bossArchetypes[world] : null,
-        bossHealth: stage === 9 ? 18 + world * 4 : 0,
+        bossHealth: stage === 9 ? (world === 5 ? 54 : 18 + world * 4) : 0,
         bossAbilities: stage === 9 ? bossAbilities[world].slice() : [],
         bossSkills: stage === 9 ? bossSkills[world].slice() : [],
         story: chapter.stories[stage],
@@ -193,7 +220,9 @@
       if (config.id === 3) config.tutorial = 'Thây ma có thể đi trên bệ đá rồi rơi xuống. Quan sát dấu báo dưới bệ để tránh điểm đáp.';
       if (config.id === 12) config.tutorial = 'Nhện đu trên tơ, nhấp nhô rồi thả xuống. Né điểm đáp; nhặt thùng đạn trước khi bắn tiếp.';
       if (config.id === 22) config.tutorial = 'Bóng ma bay theo đường lượn sóng rồi hạ xuống. Giữ khoảng trống, chờ chúng vào tầm bắn.';
-      if (config.id === 32) config.tutorial = 'Ma cà rồng có thể hóa dơi, bay lên rồi đáp lại. Canh lúc chúng hạ thấp để tiết kiệm đạn.';
+      if (config.id === 32) config.tutorial = 'Thây ma xanh có nhiều máu hơn thây ma thường. Nhặt thùng đạn và giữ khoảng cách với bệ đá.';
+      if (config.id === 42) config.tutorial = 'Ma cà rồng có thể hóa dơi, bay lên rồi đáp lại. Canh lúc chúng hạ thấp để tiết kiệm đạn.';
+      if (config.id === 51) config.tutorial = 'Golem nâng gậy gỗ gai trước khi quật. Rời vùng báo động hoặc nhảy qua gậy; khiên đang bật có thể chặn đòn.';
       levels.push(config);
     });
   });
@@ -220,19 +249,21 @@
     const config = typeof level === 'object' && level && levels.includes(level) ? level : getLevel(level && level.id || level);
     const settings = tuning(difficulty);
     const boss = type === 'boss';
-    const archetype = boss ? (config.bossArchetype || bossArchetypes[config.world]) : (Object.prototype.hasOwnProperty.call(enemyTypes, type) ? type : 'skeleton');
-    const stats = enemyTypes[archetype];
+    const enemyType = boss ? (config.bossArchetype || bossArchetypes[config.world]) : (Object.prototype.hasOwnProperty.call(enemyTypes, type) ? type : 'skeleton');
+    const stats = enemyTypes[enemyType];
+    const archetype = stats.archetype || enemyType;
     const rawRandom = typeof rng === 'function' ? Number(rng()) : Math.random();
     const random = Number.isFinite(rawRandom) ? Math.max(0, Math.min(1, rawRandom)) : 0.5;
     const health = Math.max(1, Math.round((boss ? config.bossHealth || 18 + config.world * 4 : stats.health * config.healthMultiplier) * settings.enemyHealthMultiplier));
     return {
       x: side === -1 ? -50 : 1010,
       y: 438,
-      w: boss ? Math.max(96, stats.w * 1.85) : stats.w,
-      h: boss ? Math.max(94, stats.h * 1.5) : stats.h,
+      w: boss ? (archetype === 'golem' ? 156 : Math.max(96, stats.w * 1.85)) : stats.w,
+      h: boss ? (archetype === 'golem' ? 172 : Math.max(94, stats.h * 1.5)) : stats.h,
       dir: side === -1 ? 1 : -1,
-      type: boss ? 'boss' : archetype,
+      type: boss ? 'boss' : enemyType,
       archetype: archetype,
+      variant: stats.variant || null,
       ability: stats.ability,
       abilities: boss ? config.bossAbilities.slice() : (stats.ability ? [stats.ability] : []),
       bossSkills: boss ? config.bossSkills.slice() : [],

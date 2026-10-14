@@ -12,9 +12,12 @@
     const valid = value => Number.isFinite(value) && value >= 0;
     const settings = raw.settings && typeof raw.settings === 'object' ? raw.settings : {};
     const completed = Array.isArray(raw.completed) ? [...new Set(raw.completed.filter(id => Number.isInteger(id) && id >= 1 && id <= Campaign.levels.length))] : [];
+    const previousSize=Number.isInteger(raw.campaignSize)&&raw.campaignSize>0?raw.campaignSize:50;
+    const resume=valid(raw.resume)?Campaign.getLevel(raw.resume).id:1;
+    const newChapter=Campaign.levels.length>previousSize&&resume===previousSize&&completed.includes(previousSize);
     return {
-      version: 2, completed,
-      resume: valid(raw.resume) ? Campaign.getLevel(raw.resume).id : 1,
+      version: 2, campaignSize:Campaign.levels.length, completed,
+      resume: newChapter?previousSize+1:resume,
       best: valid(raw.best) ? Math.floor(raw.best) : 0,
       settings: { difficulty: ['story','normal','hard'].includes(settings.difficulty) ? settings.difficulty : 'normal', controls: ['both','gestures','buttons'].includes(settings.controls) ? settings.controls : 'both', sound: settings.sound === true, effects: settings.effects !== false, reducedMotion: settings.reducedMotion === true }
     };
@@ -48,7 +51,7 @@
       this.screen = 'home'; this.time = 0; this.levelTime = 0; this.lastTime = 0;
       this.enemies = []; this.bullets = []; this.particles = []; this.floats = []; this.pickups = [];
       this.ammoCrates = []; this.enemyShots = []; this.ammoTimer = 2.4;
-      this.bossHazards = []; this.bossEggs = [];
+      this.bossHazards = []; this.bossEggs = []; this.golemZones = []; this.groundCracks = [];
       this.keys = new Set(); this.pointers = new Map(); this.padInputs = new Map();
       this.score = 0; this.totalKills = 0; this.levelKills = 0; this.shieldCount = 0;
       this.regularSpawned = 0; this.spawnTimer = 1; this.bossSpawned = false; this.bossDefeated = false;
@@ -84,7 +87,7 @@
       this.checkpoint = {score:this.score,totalKills:this.totalKills,shieldCount:this.shieldCount,ammo:this.player.ammo};
       this.enemies = []; this.bullets = []; this.particles = []; this.floats = []; this.pickups = [];
       this.ammoCrates=[];this.enemyShots=[];this.ammoTimer=2.4;
-      this.bossHazards=[];this.bossEggs=[];
+      this.bossHazards=[];this.bossEggs=[];this.golemZones=[];this.groundCracks=[];
       this.levelKills = 0; this.regularSpawned = 0; this.spawnTimer = 2.2; this.levelTime = 0; this.restTimer = 0;
       this.bossSpawned = false; this.bossDefeated = false; this.shake = 0; this.flash = 0;
       this.screen = 'playing'; this.clearInputs(); this.sound.unlock();
@@ -103,7 +106,7 @@
       this.save.best = Math.max(this.save.best,this.score); this.persist();
       this.screen = 'home'; this.clearInputs(); this.enemies = []; this.bullets = []; this.particles = []; this.pickups = []; this.floats = [];
       this.ammoCrates=[];this.enemyShots=[];
-      this.bossHazards=[];this.bossEggs=[];
+      this.bossHazards=[];this.bossEggs=[];this.golemZones=[];this.groundCracks=[];
       this.level=Campaign.getLevel(this.save.resume);this.tuning=Campaign.tuning(this.settings.difficulty);this.player=this.makePlayer();
       this.levelKills=0;this.totalKills=0;this.shieldCount=0;this.score=0;this.bossSpawned=false;this.bossDefeated=false;
       if (!this.headless) { this.mobileView?.leave(); this.ui['home-overlay'].hidden = false; this.ui['result-overlay'].hidden = true; this.ui['stage-banner'].hidden = true; this.ui['toast'].hidden = true; }
@@ -241,6 +244,7 @@
       enemy.x = side === -1 ? 24 : W - 24;
       enemy.baseW=enemy.w;enemy.baseH=enemy.h;enemy.abilityState='ground';enemy.abilityTimer=enemy.boss?4:enemy.abilityCooldown||8;enemy.combatTime=0;
       if(enemy.boss)MM.BossCombat?.setup(this,enemy);
+      if(enemy.archetype==='golem')MM.GolemCombat?.setup(this,enemy);
       this.enemies.push(enemy); return enemy;
     }
     configureAbility(enemy, state) {
@@ -311,6 +315,7 @@
       const p=this.player,archetype=e.archetype||e.type,state=e.abilityState||'ground';
       e.combatTime=(e.combatTime||0)+dt;
       const pressure=e.pressure=this.getPressure(e);
+      if(archetype==='golem')return; // Club attacks own movement and their announced hit areas.
       if(e.phantomState)return; // The ghost's announced attack owns its position and collisions.
       e.flightPhase=(e.flightPhase||0)+dt*pressure.flightRate;
       // Patrol and cooldown clocks accelerate. The announced attack window uses real seconds.
@@ -368,6 +373,7 @@
     killEnemy(enemy) {
       if (this.screen !== 'playing' || enemy.dead) return; enemy.dead = true; enemy.health = 0;
       this.totalKills++; this.score += enemy.score || 100;
+      if(enemy.archetype==='golem')MM.GolemCombat?.cleanup(this,enemy);
       if (enemy.boss) {
         this.bossDefeated = !this.enemies.some(other=>other!==enemy&&other.boss&&!other.dead&&other.health>0);
         MM.BossCombat?.cleanup(this,enemy);
@@ -384,7 +390,7 @@
       this.save.best = Math.max(this.save.best,this.score); this.updateUI(); this.checkCompletion();
     }
     hurt(enemy) {
-      const p = this.player; if (p.invulnerable > 0 || this.screen !== 'playing') return;
+      const p = this.player; if ((p.invulnerable > 0 && !enemy.forceHit) || this.screen !== 'playing') return;
       if(enemy.phantomStrike){
         this.shieldCount=Math.max(0,this.shieldCount-1);p.shieldTime=0;p.shieldHits=0;
         p.knockdownTime=.75;p.stunTime=Math.max(p.stunTime,.75);this.clearInputs();
@@ -395,7 +401,10 @@
         this.burst(p.x,p.y-28,'#91e3d1',10,'ring'); this.sound.play('shield');
         if (p.shieldHits === 0) p.shieldTime = 0;
       } else {
-        p.health = Math.max(0,p.health-1); p.invulnerable = 1.35;
+        const damage=clamp(Number.isFinite(enemy.damage)?Math.trunc(enemy.damage):1,1,3);
+        p.health = Math.max(0,p.health-damage); p.invulnerable = 1.35;
+        if(enemy.stun>0){p.stunTime=Math.max(p.stunTime,Math.min(2,enemy.stun));this.clearInputs();}
+        if(damage>1)this.floating(p.x,p.y-p.h-16,`−${damage} MÁU`,'#ffb391');
         const dir = Math.sign(p.x-enemy.x || 1); p.x = clamp(p.x+dir*42,28,W-28); p.vy = -160; p.grounded = false;
         this.shake = 6; this.flash = .12; this.burst(p.x,p.y-26,'#ff9a87',14); this.sound.play('hit');
         if (p.health === 0) this.finish(false);
@@ -477,7 +486,7 @@
         }
         const side=this.random()<.5?-1:1, enemy=this.spawn(type,side);
         if(specialist){
-          const state={zombie:'ledge',spider:'hanging',ghost:'airborne',vampire:'bat'}[type];
+          const state={zombie:'ledge',spider:'hanging',ghost:'airborne',vampire:'bat'}[enemy.archetype];
           if(state)this.configureAbility(enemy,state);
         }
         this.regularSpawned++;
@@ -490,6 +499,7 @@
         this.updateEnemy(e,dt);
       }
       MM.BossCombat?.update(this,dt);
+      if(this.screen==='playing')MM.GolemCombat?.update(this,dt);
       if(this.screen!=='playing')return;
       for(const shot of this.enemyShots){
         shot.x+=shot.vx*dt;shot.y+=shot.vy*dt;shot.life-=dt;
@@ -542,7 +552,7 @@
       this.ui['result-kicker'].textContent=paused?'NGHỈ MỘT NHỊP':won?'BÌNH MINH GẦN HƠN MỘT CHÚT':'THỢ SĂN LUÔN CÓ CƠ HỘI THỨ HAI';
       this.ui['result-emblem'].textContent=paused?'Ⅱ':final?'♛':won?'✦':'☾';
       this.ui['result-title'].textContent=paused?'Cuộc săn tạm dừng':final?'Bình minh trở lại.':won?'Màn '+this.level.id+' hoàn thành':'Đêm này chưa kết thúc.';
-      this.ui['result-description'].textContent=paused?'Hít thở một chút. Khi sẵn sàng, trở lại cuộc săn.':final?'Bạn đã vượt qua cả 50 màn. Hành trình được lưu và tất cả vùng đất đang chờ bạn trở lại.':won?(this.level.boss?'Boss đã bị hạ. ':'')+'Qua màn hồi máu, giữ khiên và đạn còn lại; nhận một lượng đạn khởi đầu cho màn mới.':'Bắn chính xác, nhặt hòm AMMO rơi và quan sát dấu báo kỹ năng. Nhảy hoặc dùng khiên khi bị vây.';
+      this.ui['result-description'].textContent=paused?'Hít thở một chút. Khi sẵn sàng, trở lại cuộc săn.':final?`Bạn đã vượt qua cả ${Campaign.levels.length} màn. Hành trình được lưu và tất cả vùng đất đang chờ bạn trở lại.`:won?(this.level.boss?'Boss đã bị hạ. ':'')+'Qua màn hồi máu, giữ khiên và đạn còn lại; nhận một lượng đạn khởi đầu cho màn mới.':'Bắn chính xác, nhặt hòm AMMO rơi và quan sát dấu báo kỹ năng. Nhảy hoặc dùng khiên khi bị vây.';
       this.ui['result-stats'].innerHTML=`<span><b>${String(this.score).padStart(5,'0')}</b>ĐIỂM SỐ</span><span><b>${this.levelKills}/${this.level.target}</b>ĐỊCH ĐÃ HẠ</span><span><b>${Math.floor(this.levelTime)}s</b>THỜI GIAN</span>`;
       this.ui['result-primary'].innerHTML=(paused?'Trở lại cuộc săn':final?'Săn lại từ đầu':won?'Màn tiếp theo':'Thử lại màn này')+' <span>→</span>';
       this.resultAction=paused?()=>this.togglePause():final?()=>this.start(1):won?()=>this.start(this.level.id+1,{carry:true}):()=>this.start(this.level.id,{retry:true});
@@ -557,12 +567,14 @@
     }
     updateUI() {
       if(this.headless)return;
+      const campaignLabels={'campaign-total':Campaign.levels.length,'hero-level-total':Campaign.levels.length,'hero-world-total':Campaign.worlds.length,'campaign-range':`001—${String(Campaign.levels.length).padStart(3,'0')}`,'campaign-title':`${Campaign.levels.length} đêm trong bóng tối.`};
+      Object.entries(campaignLabels).forEach(([id,text])=>{if(this.ui[id])this.ui[id].textContent=text;});
       const home=this.screen==='home',p=this.player;document.body.className=home?'home':'playing';
       document.body.dataset.controls=this.settings.controls;
       this.ui['touch-controls'].hidden=this.screen!=='playing'||this.settings.controls==='gestures';
       this.ui['touch-guide'].textContent=this.settings.controls==='buttons'?'Giữ ← → để đi · ↑ NHẢY · ◇ KHIÊN · BẮN ← →':this.settings.controls==='gestures'?'↔ Vuốt & giữ để đi · ↑ Nhảy · ↓ Khiên · Chạm hai nửa để bắn':'↔ Vuốt hoặc giữ nút để đi · ↑ Nhảy · ↓ Khiên · Chạm / nút để bắn';
       this.mobileView?.sync();
-      this.ui['level-number'].textContent=String(this.level.id).padStart(2,'0');this.ui['world-label'].textContent=`VÙNG ${String(this.level.world+1).padStart(2,'0')} / 05 · ${Campaign.worlds[this.level.world].name.toUpperCase()}`;this.ui['level-name'].textContent=this.level.name;
+      this.ui['level-number'].textContent=String(this.level.id).padStart(2,'0');this.ui['world-label'].textContent=`VÙNG ${String(this.level.world+1).padStart(2,'0')} / ${String(Campaign.worlds.length).padStart(2,'0')} · ${Campaign.worlds[this.level.world].name.toUpperCase()}`;this.ui['level-name'].textContent=this.level.name;
       this.ui['kill-count'].textContent=`${this.levelKills} / ${this.level.target}`;this.ui['kill-progress'].style.width=clamp(this.levelKills/this.level.target*100,0,100)+'%';this.ui['mission-label'].textContent=this.bossSpawned&&!this.bossDefeated?'HẠ BOSS ĐỂ QUA MÀN':'ĐỊCH ĐÃ HẠ';
       this.ui.health.innerHTML=Array.from({length:p.maxHealth},(_,i)=>`<span class="${i<p.health?'':'empty'}" aria-hidden="true"><svg viewBox="0 0 24 24" style="width:.85em;height:1em;fill:currentColor;stroke:none"><path d="M12 21C9 18 2 13 2 7A5 5 0 0 1 12 5A5 5 0 0 1 22 7C22 13 15 18 12 21Z"/></svg></span>`).join('');this.ui.health.setAttribute('aria-label',`Sinh lực ${p.health} / ${p.maxHealth}`);
       this.updateAmmoUI();
@@ -571,7 +583,7 @@
       document.querySelector('[data-control="shield"]').classList.toggle('ready',this.shieldCount>0);
       this.ui['fullscreen-button'].disabled=!['home','playing'].includes(this.screen)&&!document.fullscreenElement;
       this.ui['score-label'].innerHTML=`${home?'KỶ LỤC':'ĐIỂM'} <b>${String(home?this.save.best:this.score).padStart(5,'0')}</b>`;this.ui['status-label'].textContent=home?'SẴN SÀNG CHO CUỘC SĂN':this.screen==='paused'?'CUỘC SĂN TẠM DỪNG':this.screen==='won'?'MÀN ĐÃ HOÀN THÀNH':this.screen==='lost'?'SẴN SÀNG THỬ LẠI':this.level.boss?'ĐÊM CỦA KẺ GIỮ CỔNG':'CUỘC SĂN ĐANG DIỄN RA';
-      this.ui['start-label'].textContent=this.save.resume>1?'Tiếp tục · Màn '+this.save.resume:'Bắt đầu cuộc săn';this.ui['save-label'].textContent=this.save.completed.length?`${this.save.completed.length} / 50 MÀN ĐÃ HOÀN THÀNH`:'CHƯA CÓ HÀNH TRÌNH';
+      this.ui['start-label'].textContent=this.save.resume>1?'Tiếp tục · Màn '+this.save.resume:'Bắt đầu cuộc săn';this.ui['save-label'].textContent=this.save.completed.length?`${this.save.completed.length} / ${Campaign.levels.length} MÀN ĐÃ HOÀN THÀNH`:'CHƯA CÓ HÀNH TRÌNH';
       this.ui['pause-button'].disabled=home;this.ui['shield-button'].disabled=home;
     }
     buildMap() {

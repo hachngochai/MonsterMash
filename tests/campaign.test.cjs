@@ -10,15 +10,15 @@ const context = vm.createContext({});
 vm.runInContext(fs.readFileSync(path.join(__dirname, '../js/campaign.js'), 'utf8'), context);
 const campaign = context.MM.Campaign;
 
-test('campaign has 50 sequential levels and five boss milestones', () => {
-  assert.equal(campaign.worlds.length, 5);
-  assert.equal(campaign.levels.length, 50);
+test('campaign has 60 sequential levels and six boss milestones', () => {
+  assert.equal(campaign.worlds.length, 6);
+  assert.equal(campaign.levels.length, 60);
   campaign.levels.forEach((level, index) => {
     assert.equal(level.id, index + 1);
     assert.equal(level.world, Math.floor(index / 10));
     assert.equal(level.boss, level.id % 10 === 0);
     assert.ok(level.name && level.story);
-    assert.ok(level.target >= 10 && level.target <= 38);
+    assert.ok(level.target >= 10 && level.target <= 42);
     assert.ok(level.spawnInterval >= 0.9 && level.spawnInterval <= 2.4);
     assert.ok(level.maxAlive >= 3 && level.maxAlive <= 7);
     assert.ok(level.types.length > 0);
@@ -26,12 +26,13 @@ test('campaign has 50 sequential levels and five boss milestones', () => {
     if (level.boss) assert.ok(Number.isInteger(level.bossHealth) && level.bossHealth >= 18);
   });
   assert.equal(campaign.getLevel(50).bossHealth, 34);
+  assert.equal(campaign.getLevel(60).bossHealth, 54);
 });
 
 test('saved level ids clamp safely, including invalid or obsolete saves', () => {
   assert.equal(campaign.getLevel(-50).id, 1);
-  assert.equal(campaign.getLevel(500).id, 50);
-  assert.equal(campaign.getLevel(Infinity).id, 50);
+  assert.equal(campaign.getLevel(500).id, 60);
+  assert.equal(campaign.getLevel(Infinity).id, 60);
   assert.equal(campaign.getLevel(-Infinity).id, 1);
   assert.equal(campaign.getLevel(undefined).id, 1);
   assert.equal(campaign.getLevel('broken').id, 1);
@@ -40,7 +41,7 @@ test('saved level ids clamp safely, including invalid or obsolete saves', () => 
 });
 
 test('new enemies arrive gradually and recovery levels reduce pressure', () => {
-  const firstAppearances = { skeleton: 1, zombie: 3, spider: 12, ghost: 22, vampire: 32 };
+  const firstAppearances = { skeleton: 1, zombie: 3, spider: 12, ghost: 22, greenZombie: 30, vampire: 42, golem: 51 };
   Object.entries(firstAppearances).forEach(([type, id]) => {
     assert.equal(campaign.levels.find(level => level.types.includes(type)).id, id);
   });
@@ -110,7 +111,7 @@ test('finite ammunition grows with enemy durability and remains collectible', ()
     assert.ok(Number.isInteger(level.initialAmmo) && level.initialAmmo >= 3);
     assert.ok(Number.isInteger(level.ammoCapacity) && level.ammoCapacity >= level.initialAmmo);
     assert.ok(Number.isInteger(level.ammoPerCrate) && level.ammoPerCrate >= 5 && level.ammoPerCrate < level.ammoCapacity);
-    assert.ok(level.ammoInterval >= 4.7 && level.ammoInterval <= 5.8);
+    assert.ok(level.ammoInterval >= 4.5 && level.ammoInterval <= 5.8);
     assert.ok(level.initialAmmo < level.target, `level ${level.id} requires collecting supplies`);
     ['story', 'normal', 'hard'].forEach(difficulty => {
       const settings = campaign.tuning(difficulty);
@@ -129,7 +130,7 @@ test('finite ammunition grows with enemy durability and remains collectible', ()
   assert.ok(campaign.tuning('normal').ammoMultiplier > campaign.tuning('hard').ammoMultiplier);
 });
 
-test('original enemy skills progress with the campaign and final boss combines skills', () => {
+test('original enemy skills progress with the campaign and Dracula combines skills', () => {
   assert.equal(campaign.enemyTypes.zombie.ability, 'ledge-drop');
   assert.equal(campaign.enemyTypes.spider.ability, 'silk-drop');
   assert.equal(campaign.enemyTypes.ghost.ability, 'sine-drop');
@@ -139,7 +140,7 @@ test('original enemy skills progress with the campaign and final boss combines s
   campaign.levels.forEach(level => {
     assert.ok([0, 3, 4].includes(level.abilitySpawnEvery));
     assert.ok(level.abilityWarning >= 1.5);
-    assert.ok(level.abilityInterval >= 7);
+    assert.ok(level.abilityInterval >= 6.5);
     if (level.recovery) assert.equal(level.abilitySpawnEvery, 4);
     if (level.boss) assert.ok(level.bossAbilities.length >= 1);
     else assert.equal(level.bossAbilities.length, 0);
@@ -157,7 +158,8 @@ test('boss milestones use their explicit identities and retain original native s
     [20, 'zombie', 'ledge-drop', 22],
     [30, 'spider', 'silk-drop', 26],
     [40, 'ghost', 'sine-drop', 30],
-    [50, 'vampire', 'bat-morph,shadow-drop', 34]
+    [50, 'vampire', 'bat-morph,shadow-drop', 34],
+    [60, 'golem', 'club-swing', 54]
   ];
   order.forEach(([id, archetype, abilities, health]) => {
     const level = campaign.getLevel(id);
@@ -174,10 +176,67 @@ test('boss milestones use their explicit identities and retain original native s
   assert.equal(campaign.getLevel(30).name, 'Nhện chúa');
   assert.equal(campaign.getLevel(40).name, 'Bóng ma trắng');
   assert.equal(campaign.getLevel(50).name, 'Dracula');
+  assert.equal(campaign.getLevel(60).name, 'Golem chúa');
   campaign.levels.filter(level => !level.boss).forEach(level => {
     assert.equal(level.bossArchetype, null);
     assert.equal(level.bossSkills.length, 0);
   });
+});
+
+test('levels 30–40 limit regular enemies while preserving both milestone bosses', () => {
+  const allowed = new Set(['skeleton', 'zombie', 'greenZombie', 'spider']);
+  const encountered = new Set();
+  for (let id = 30; id <= 40; id += 1) {
+    const level = campaign.getLevel(id);
+    level.types.forEach(type => {
+      assert.ok(allowed.has(type), `level ${id} includes forbidden regular ${type}`);
+      encountered.add(type);
+    });
+    assert.ok(!/ma cà rồng|hóa dơi/i.test(level.story));
+    assert.ok(!level.tutorial || !/ma cà rồng|hóa dơi/i.test(level.tutorial));
+  }
+  assert.deepEqual([...encountered].sort(), [...allowed].sort());
+  assert.equal(campaign.createEnemy('boss', 30, 'normal', 1, () => 0.5).archetype, 'spider');
+  assert.equal(campaign.createEnemy('boss', 40, 'normal', 1, () => 0.5).archetype, 'ghost');
+
+  const regular = campaign.createEnemy('zombie', 32, 'normal', 1, () => 0.5);
+  const green = campaign.createEnemy('greenZombie', 32, 'normal', 1, () => 0.5);
+  assert.equal(green.type, 'greenZombie');
+  assert.equal(green.archetype, 'zombie');
+  assert.equal(green.variant, 'green');
+  assert.equal(green.ability, 'ledge-drop');
+  assert.ok(green.health > regular.health);
+  assert.ok(green.speed > regular.speed);
+  assert.equal(green.boss, false);
+  assert.equal(green.bossSkills.length, 0, 'regular green zombies do not inherit the level 20 boss immunity');
+});
+
+test('cursed valley has its own restricted cast, collectible ammunition and giant final boss', () => {
+  const world = campaign.worlds[5];
+  assert.equal(world.name, 'Thung lũng nguyền rủa');
+  assert.equal(world.enemy, 'golem');
+  const allowed = new Set(['skeleton', 'golem', 'spider']);
+  for (let id = 51; id <= 60; id += 1) {
+    const level = campaign.getLevel(id);
+    assert.equal(level.world, 5);
+    level.types.forEach(type => assert.ok(allowed.has(type), `level ${id}: ${type}`));
+    assert.equal(level.initialAmmo, 8);
+    assert.equal(level.ammoCapacity, 38);
+    assert.equal(level.ammoPerCrate, 15);
+    assert.ok(level.ammoInterval >= 4.5 && level.ammoInterval <= 4.8);
+  }
+  assert.equal(campaign.getLevel(51).recovery, true);
+  assert.equal(campaign.getLevel(55).recovery, true);
+  const golem = campaign.createEnemy('golem', 51, 'normal', -1, () => 0.5);
+  const boss = campaign.createEnemy('boss', 60, 'normal', -1, () => 0.5);
+  assert.equal(golem.ability, 'club-swing');
+  assert.equal(golem.w, 74);
+  assert.equal(golem.h, 108);
+  assert.equal(boss.w, 156);
+  assert.equal(boss.h, 172);
+  assert.equal(boss.maxHealth, 54);
+  assert.equal(boss.bossSkills.join(','), 'rage-ground-slam,triple-smash');
+  assert.ok(boss.w > golem.w * 2 && boss.h > golem.h * 1.5);
 });
 
 test('elapsed attack pressure has gradual world transitions and conservative caps', () => {
@@ -186,11 +245,11 @@ test('elapsed attack pressure has gradual world transitions and conservative cap
   assert.equal(campaign.getLevel(10).bossPressureCap, 1.7);
   assert.equal(campaign.getLevel(50).bossPressureCap, 1.85);
   campaign.levels.forEach((level, index) => {
-    assert.ok(level.enemyPressureCap >= 1.5 && level.enemyPressureCap <= 1.65);
-    assert.ok(level.bossPressureCap >= 1.7 && level.bossPressureCap <= 1.85);
+    assert.ok(level.enemyPressureCap >= 1.5 && level.enemyPressureCap <= 1.6875);
+    assert.ok(level.bossPressureCap >= 1.7 && level.bossPressureCap <= 1.8875);
     assert.ok(level.bossPressureCap > level.enemyPressureCap);
-    assert.ok(level.pressureRampSeconds >= 85 && level.pressureRampSeconds <= 100);
-    assert.ok(level.bossRampSeconds >= 65 && level.bossRampSeconds <= 75);
+    assert.ok(level.pressureRampSeconds >= 81.25 && level.pressureRampSeconds <= 100);
+    assert.ok(level.bossRampSeconds >= 62.5 && level.bossRampSeconds <= 75);
     assert.ok(level.pressureWarmup >= 12);
     assert.equal(level.bossWarmup, 4);
     if (level.recovery) assert.ok(level.pressureWarmup > 12);
@@ -205,9 +264,9 @@ test('elapsed attack pressure has gradual world transitions and conservative cap
       const settings = campaign.tuning(difficulty);
       const enemyCap = 1 + (level.enemyPressureCap - 1) * settings.pressureMultiplier;
       const bossCap = 1 + (level.bossPressureCap - 1) * settings.pressureMultiplier;
-      assert.ok(enemyCap < 1.72 && bossCap < 1.94);
-      assert.ok(1 + 0.35 * (bossCap - 1) < 1.33, 'bounded pressure movement growth');
-      assert.ok(level.abilityInterval / bossCap >= 3.5, 'skills retain time for reactions');
+      assert.ok(enemyCap < 1.76 && bossCap < 1.98);
+      assert.ok(1 + 0.35 * (bossCap - 1) < 1.35, 'bounded pressure movement growth');
+      assert.ok(level.abilityInterval / bossCap >= 3.25, 'skills retain time for reactions');
     });
   });
   assert.equal(campaign.tuning('story').pressureMultiplier, 0.75);
