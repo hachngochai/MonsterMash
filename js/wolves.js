@@ -2,7 +2,7 @@
 (function (root) {
   'use strict';
   const MM = root.MM = root.MM || {};
-  const W = 960, GROUND = 438, EPSILON = 1e-8;
+  const W = 960, GROUND = 438, EPSILON = 1e-8, BLOOD_INTERVAL = 3;
   const clamp = (value, low, high) => Math.max(low, Math.min(high, value));
   const isWolf = enemy => (enemy?.archetype || enemy?.type) === 'werewolf';
   const alive = enemy => enemy && !enemy.dead && enemy.health > 0;
@@ -29,7 +29,7 @@
     game.wolfZones = game.wolfZones || [];
     enemy.baseW = enemy.baseW || enemy.w; enemy.baseH = enemy.baseH || enemy.h;
     enemy.wolfActiveTime = 0; enemy.wolfCooldown = enemy.boss ? 3 : 1.8;
-    enemy.bloodActiveTime = 0; enemy.nextBloodAt = 10;
+    enemy.bloodActiveTime = 0; enemy.nextBloodAt = BLOOD_INTERVAL;
     enemy.bloodMoon = false; enemy.bloodPhaseTriggered = false; enemy.transformTime = 0;
     enemy.clawIndex = 0; enemy.intangible = false; enemy.wolfZone = null;
     enemy.y = GROUND; state(enemy, 'approach');
@@ -70,7 +70,7 @@
     const margin = Math.max(26, enemy.w / 2);
     enemy.wolfEndX = clamp(enemy.wolfTargetX - enemy.dir * (enemy.w / 2 + (blood ? 28 : 14)), margin, W - margin);
     enemy.wolfLeapHeight = blood ? 180 : enemy.boss ? 150 : 130;
-    state(enemy, blood ? 'blood-leap' : 'leap', blood ? .75 : .62);
+    state(enemy, blood ? 'blood-leap' : 'leap', blood ? .65 : .62);
   }
 
   function impact(game, enemy, kind) {
@@ -88,7 +88,7 @@
     enemy.w = enemy.baseW * 2; enemy.h = enemy.baseH * 2;
     enemy.x = clamp(enemy.x, enemy.w / 2, W - enemy.w / 2); enemy.y = GROUND;
     enemy.intangible = true; enemy.transformTime = 1.2; enemy.clawIndex = 0;
-    enemy.bloodActiveTime = 0; enemy.nextBloodAt = 10;
+    enemy.bloodActiveTime = 0; enemy.nextBloodAt = BLOOD_INTERVAL;
     state(enemy, 'transform', 1.2, 'TRĂNG MÁU · LANG VƯƠNG HỒI ĐẦY MÁU');
     if (game.player) { game.player.weaponMode = 'sniper'; game.player.shotTimer = 0; }
     game.burst?.(enemy.x, enemy.y - enemy.h / 2, '#e56878', 28, 'ring');
@@ -114,7 +114,7 @@
     if (enemy.wolfState !== 'transform' && enemy.bloodMoon) {
       enemy.bloodActiveTime += dt;
       if (enemy.bloodActiveTime + EPSILON >= enemy.nextBloodAt) {
-        enemy.nextBloodAt += 10; beginPounce(game, enemy, true);
+        enemy.nextBloodAt += BLOOD_INTERVAL; beginPounce(game, enemy, true);
         return;
       }
     }
@@ -158,8 +158,10 @@
           enemy.clawIndex = 2;
           // Both claws keep the target announced before the leap, so a player
           // can escape the complete combo instead of being tracked mid-attack.
-          zone(game, enemy, 'claw', .55, 2, 2);
-          state(enemy, 'claw-windup', .55, 'SONG TRẢO · 2/2 · 2 MÁU');
+          // Fit both strikes inside the three-second cycle, including at 20 FPS,
+          // so the next leap never cancels the second claw's impact.
+          zone(game, enemy, 'claw', .45, 2, 2);
+          state(enemy, 'claw-windup', .45, 'SONG TRẢO · 2/2 · 2 MÁU');
         } else if (current === 'pounce' || current === 'claw') {
           clearZones(game, enemy); state(enemy, 'recover', .65); enemy.wolfCooldown = enemy.boss ? 4.2 : 3.3;
         } else if (current === 'recover') state(enemy, 'approach');

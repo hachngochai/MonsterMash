@@ -182,7 +182,7 @@
         'Người sói bám sát hai phía. Đọc dấu báo, né cú vồ và canh phát bắn khi đường đạn thoáng.',
         'Bộ xương, golem nhỏ và người sói tạo thành vòng vây. Ưu tiên kẻ sắp ra đòn rồi thoát khỏi mép sân.',
         'Tiếng hú của Lang Vương vọng qua tán cây. Nhặt thùng đạn và tích khiên trước khi tiến lên đỉnh trăng máu.',
-        'Khi còn nửa máu, Lang Vương hóa trăng máu một lần: lớn gấp đôi, hồi đầy máu và nhuộm đỏ khu rừng dưới mặt trăng góc phải. Mỗi 10 giây nó nhảy tới cào 2 nhát, mỗi nhát mất 2 máu nếu không bật khiên. Súng ngắm mở trong pha này: mỗi phát dùng 5 viên, gây 5 sát thương và hồi 1 giây.'
+        'Khi còn nửa máu, Lang Vương hóa trăng máu một lần: lớn gấp đôi, hồi đầy máu và nhuộm đỏ khu rừng dưới mặt trăng góc phải. Mỗi 3 giây nó nhảy tới cào 2 nhát, mỗi nhát mất 2 máu nếu không bật khiên. Súng ngắm mở trong pha này: mỗi phát dùng 5 viên, gây 5 sát thương và hồi 1 giây.'
       ],
       targets: [34, 36, 37, 38, 35, 39, 40, 42, 44, 46],
       intervals: [1.22, 1.1, 1.07, 1.04, 1.2, 1.01, 0.99, 0.97, 0.93, 1.03],
@@ -252,7 +252,7 @@
       if (config.id === 51) config.tutorial = 'Golem nâng gậy trước khi quật và lấy đà ném đá khi ở xa. Né đường báo vàng hoặc bật khiên; đá không đổi hướng sau khi ném.';
       if (config.id === 61) config.tutorial = 'Golem nhỏ chịu nhiều đạn hơn bộ xương, quật gậy khi gần và ném đá khi xa. Né dấu báo hoặc bật khiên trước khi áp sát.';
       if (config.id === 62) config.tutorial = 'Người sói lấy đà rồi nhảy lên vồ xuống. Rời vùng báo trước, nhảy qua cú vồ và canh bắn khi nó dừng lại.';
-      if (config.id === 70) config.tutorial = 'Trăng máu mở súng ngắm tự động: cần ít nhất 5 viên, mỗi phát dùng 5 viên và gây 5 sát thương; hồi chiêu 1 giây. Lang Vương hồi đầy máu và lớn gấp đôi một lần khi còn nửa máu. Bật khiên hoặc né dấu báo của đòn cào kép mỗi 10 giây.';
+      if (config.id === 70) config.tutorial = 'Trăng máu mở súng ngắm tự động: cần ít nhất 5 viên, mỗi phát dùng 5 viên và gây 5 sát thương; hồi chiêu 1 giây. Lang Vương hồi đầy máu và lớn gấp đôi một lần khi còn nửa máu. Bật khiên hoặc né dấu báo của đòn cào kép mỗi 3 giây.';
       levels.push(config);
     });
   });

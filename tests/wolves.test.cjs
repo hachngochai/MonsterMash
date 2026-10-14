@@ -145,22 +145,27 @@ test('a lethal shot and simultaneous follow-up bullets cannot skip the blood moo
   assert.equal(game.bossDefeated, false);
 });
 
-test('blood moon combos start every ten active seconds with two two-HP claw hits on all difficulties', () => {
-  for (const difficulty of ['story', 'normal', 'hard']) {
+test('blood moon repeats every three seconds and completes both claws before the next leap at 60 and 20 FPS', () => {
+  for (const difficulty of ['story', 'normal', 'hard']) for (const step of [1/60,.05]) {
     const {game, enemy, hits} = enterBlood(fresh({boss:true, difficulty}));
-    advance(game, 9.99); assert.equal(game.wolfZones.length, 0);
-    advance(game, .01);
-    assert.equal(enemy.wolfState, 'blood-windup'); assert.equal(enemy.nextBloodAt, 20);
-    assert.ok(enemy.wolfTimer >= game.getPressure(enemy).warningFloor);
-    advance(game, 4);
-    const claws = hits.filter(hit => hit.kind === 'wolf-claw');
-    assert.equal(claws.length, 2, difficulty);
-    assert.deepEqual(claws.map(hit => hit.clawIndex), [1, 2]);
-    assert.ok(claws.every(hit => hit.damage === 2 && hit.forceHit));
-    assert.ok(claws[1].time - claws[0].time >= .7);
-    assert.equal(game.player.health, 26);
-    advance(game, 5.99); assert.equal(enemy.nextBloodAt, 20);
-    advance(game, .01); assert.equal(enemy.nextBloodAt, 30); assert.equal(enemy.wolfState, 'blood-windup');
+    advance(game, 2.99,step); assert.equal(game.wolfZones.length, 0);
+    advance(game, .01,step);
+    for(let cycle=1;cycle<=4;cycle++){
+      const start=cycle*3;
+      assert.equal(enemy.wolfState,'blood-windup');
+      assert.equal(enemy.nextBloodAt,start+3);
+      assert.ok(enemy.wolfTimer>=game.getPressure(enemy).warningFloor);
+      advance(game,2.99,step);
+      const claws=hits.filter(hit=>hit.kind==='wolf-claw');
+      assert.equal(claws.length,cycle*2,`${difficulty}, dt=${step}, cycle=${cycle}`);
+      const pair=claws.slice(-2);
+      assert.deepEqual(pair.map(hit=>hit.clawIndex),[1,2]);
+      assert.ok(pair.every(hit=>hit.damage===2&&hit.forceHit&&hit.time>start&&hit.time<start+3));
+      assert.ok(pair[1].time-pair[0].time>=.6);
+      assert.equal(game.player.health,30-cycle*4);
+      assert.equal(enemy.wolfState,'recover','the second impact completes before the next cycle');
+      if(cycle<4)advance(game,.01,step);
+    }
   }
 });
 
@@ -175,15 +180,20 @@ test('both blood claws can be blocked despite shield invulnerability between str
   assert.equal(game.player.health, 30); assert.equal(game.player.shieldHits, 1);
 });
 
-test('blood claws keep their original target and cannot chase a player who escapes the warning', () => {
+test('blood claws hold the target through both strikes and reacquire it for the next three-second cycle', () => {
   const {game, enemy, hits} = enterBlood(fresh({boss:true}));
   waitFor(game, () => enemy.wolfState === 'blood-windup');
   const target = enemy.wolfTargetX; game.player.x = 850;
   advance(game, 1.3); assert.equal(enemy.wolfState, 'blood-leap');
   advance(game, 1); assert.equal(game.wolfZones[0].x, target);
-  advance(game, 1.5);
+  advance(game, .69);
   assert.equal(enemy.wolfTargetX, target);
   assert.equal(hits.length, 0); assert.equal(game.player.health, 30);
+  advance(game,.01);
+  assert.equal(enemy.wolfState,'blood-windup');
+  assert.equal(enemy.wolfTargetX,850);
+  assert.equal(game.wolfZones[0].x,850);
+  assert.ok(enemy.wolfTimer>=game.getPressure(enemy).warningFloor);
 });
 
 test('sniper consumes five ammo, deals five HP, and recharges for one real second', () => {
