@@ -9,7 +9,8 @@
     { sky: '#102030', horizon: '#304d62', far: '#233c4e', near: '#162d3d', ground: '#1b3039', soil: '#14252d', edge: '#679199', glow: '#8ee7ee', mist: '#9bcfdc', moon: '#d5f1e9', name: 'city' },
     { sky: '#261524', horizon: '#6b364b', far: '#422433', near: '#291b2a', ground: '#291c29', soil: '#18141f', edge: '#82605f', glow: '#ff9a9d', mist: '#b97f8f', moon: '#f2a690', name: 'castle' },
     { sky: '#171624', horizon: '#514039', far: '#3d3035', near: '#28232d', ground: '#292729', soil: '#181820', edge: '#927950', glow: '#ffc878', mist: '#c09968', moon: '#e5b770', name: 'eclipse' },
-    { sky: '#141b20', horizon: '#343d32', far: '#22302c', near: '#1c2623', ground: '#242a25', soil: '#171b20', edge: '#727650', glow: '#d4cd89', mist: '#8c9b7f', moon: '#b4bca0', name: 'cursed-valley' }
+    { sky: '#141b20', horizon: '#343d32', far: '#22302c', near: '#1c2623', ground: '#242a25', soil: '#171b20', edge: '#727650', glow: '#d4cd89', mist: '#8c9b7f', moon: '#b4bca0', name: 'cursed-valley' },
+    { sky: '#141b20', horizon: '#343d32', far: '#22302c', near: '#1c2623', ground: '#242a25', soil: '#171b20', edge: '#727650', glow: '#d4cd89', mist: '#8c9b7f', moon: '#b4bca0', name: 'blood-valley' }
   ];
   const scenes = new Map();
   function seedRandom(seed) {
@@ -278,7 +279,8 @@
     c.save(); c.translate(x, y - bob); c.scale((player.w || 38) / 38, (player.h || 54) / 54); c.lineJoin = 'round'; c.lineCap = 'round';
     if (knocked) c.rotate(-1.16 * dir);
     if (player.invulnerable > 0 && effects) c.globalAlpha = .72 + Math.sin(t * 37) * .18;
-    const outline = '#101923', skin = '#d8b47d', empty = player.ammo === 0 && !(player.shotTimer > .001);
+    const sniper = player.weaponMode === 'sniper';
+    const outline = '#101923', skin = '#d8b47d', empty = (sniper ? player.ammo < 5 : player.ammo === 0) && !(player.shotTimer > .001);
     // Combat boots and articulated legs under the original square camo body.
     rounded(c, -13 + stride, -13, 9, 13, 2, '#283e3a', outline, 2);
     rounded(c, 4 - stride, -13, 9, 13, 2, '#35493d', outline, 2);
@@ -297,8 +299,28 @@
     eye(c, -7, -40, 7, '#f4ebd1', dir); eye(c, 7, -40, 7, '#f4ebd1', dir);
     line(c, -12, -46, -3, -44, '#805c42', 1.5); line(c, 3, -44, 12, -46, '#805c42', 1.5);
     line(c, -4, -31, 5, -31, '#765941', 1.7); ellipse(c, 12, -33, 2, 1, '#eecc9f');
-    // Dual pistols retain the distinctive original left/right shooting pose.
-    for (const side of [-1, 1]) {
+    if (sniper) {
+      c.save(); c.scale(dir, 1);
+      // Both hands brace a long rifle; its glass scope remains clear at mobile scale.
+      rounded(c, -24, -31, 18, 11, 3, '#4e673f', outline, 2);
+      line(c, -16, -25, 9, -27, '#607c48', 8); rounded(c, 4, -30, 10, 8, 2, skin, outline, 1.4);
+      line(c, 15, -24, 30, -29, '#607c48', 7); rounded(c, 26, -31, 10, 7, 2, skin, outline, 1.4);
+      polygon(c, [[-15, -33], [-3, -33], [2, -29], [-3, -24], [-16, -24]], '#647256', outline, 1.7);
+      rounded(c, -3, -33, 37, 8, 2, empty ? '#667376' : '#aab9b3', outline, 1.6);
+      rect(c, 4, -33, 25, 2, '#d3d9c6'); rounded(c, 7, -26, 6, 8, 1, '#40564c', outline, 1);
+      rounded(c, 29, -31, 29, 4, 1, '#a0ada9', outline, 1.4); rounded(c, 53, -33, 11, 7, 1, '#445752', outline, 1.4);
+      line(c, 35, -29, 59, -29, '#d9e0c8', .8);
+      line(c, 10, -34, 10, -39, '#344b45', 2); line(c, 23, -34, 23, -39, '#344b45', 2);
+      rounded(c, 5, -43, 25, 7, 3, '#526965', outline, 1.5); ellipse(c, 28, -39.5, 3.2, 3.2, '#b1e1cf');
+      line(c, 8, -41, 24, -41, '#c8d8c2', .9); rounded(c, 14, -46, 6, 4, 1, '#89998a', outline, .8);
+      if (empty) rect(c, 19, -31, 5, 3, '#d69774');
+      if (effects && player.shotTimer > (player.shotCooldown || 1) - .08) {
+        polygon(c, [[64, -29], [77, -35], [72, -30], [84, -29], [72, -27], [76, -22]], '#fff0b4');
+        line(c, 63, -29, 79, -29, '#ffffff', 2);
+      }
+      c.restore();
+    } else for (const side of [-1, 1]) {
+      // Dual pistols retain the distinctive original left/right shooting pose.
       rounded(c, side < 0 ? -26 : 14, -28, 12, 9, 3, '#607c48', outline, 2);
       rounded(c, side < 0 ? -29 : 22, -28, 8, 8, 3, skin, outline, 1.7);
       c.save();
@@ -454,6 +476,85 @@
     polygon(c, [[59, -5], [69, -1], [60, 5]], '#b6a06d', outline, 1); c.restore();
     line(c, 18, -28, 26, gripY, wood, 8); ellipse(c, 25, gripY, 5, 5, '#7b775c');
     line(c, 23, gripY - 4, 23, gripY + 4, '#aaa177', 1); line(c, 27, gripY - 3, 27, gripY + 3, '#aaa177', 1);
+    c.restore();
+  }
+  function drawWerewolf(c, dir, walk, t, boss, e, effects) {
+    e = e || {};
+    const state = e.wolfState || 'approach', progress = Math.max(0, Math.min(1, e.wolfProgress || 0));
+    const blood = !!e.bloodMoon, preparing = state === 'windup' || state === 'blood-windup' || state === 'claw-windup';
+    const leaping = state === 'leap' || state === 'blood-leap', attacking = state === 'pounce' || state === 'claw';
+    const outline = '#17252a', fur = blood ? '#b1a99f' : boss ? '#9a9d99' : '#77766d';
+    const shade = blood ? '#59464a' : boss ? '#536465' : '#515b56', mane = blood ? '#ddd0bf' : boss ? '#c4c4b0' : '#99937f';
+    const claw = blood ? '#ffe1c3' : '#dedcca', eyeColor = blood ? '#ff6257' : boss ? '#f7c67a' : '#d6db95';
+    c.save(); c.scale(dir, boss ? 54 / 66 : 54 / 61); c.translate(preparing ? -2 : 0, preparing ? 3 : 0);
+    // Digitigrade legs, rough fur and a forward muzzle give the new creature its own silhouette.
+    for (const side of [-1, 1]) {
+      const step = leaping ? side * 4 : side * walk, hip = side * 8;
+      line(c, hip, -21, hip - 3 + step, -10, shade, 9);
+      line(c, hip - 3 + step, -10, hip + 4 + step, -5, fur, 6);
+      polygon(c, [[hip - 3 + step, -8], [hip + 6 + step, -7], [hip + 13 + step, -2], [hip + 11 + step, 0], [hip - 3 + step, 0]], shade, outline, 1.5);
+      for (let toe = 0; toe < 3; toe++) polygon(c, [[hip + 7 + step + toe * 2, -3], [hip + 12 + step + toe * 2, -1], [hip + 8 + step + toe * 2, 0]], claw, outline, .5);
+      polygon(c, [[hip - 5 + step, -16], [hip - 2 + step, -11], [hip - 8 + step, -8]], mane);
+    }
+    polygon(c, [[-14, -22], [-28, -19], [-34, -26], [-33, -16], [-23, -12], [-12, -15]], shade, outline, 1.3);
+    polygon(c, [[-13, -41], [-20, -34], [-15, -24], [-13, -16], [12, -14], [20, -26], [13, -39]], fur, outline, 2);
+    polygon(c, [[-15, -39], [-25, -36], [-20, -30], [-24, -28], [-17, -25], [-18, -20], [-10, -22], [-7, -34]], mane, outline, 1.4);
+    polygon(c, [[-7, -35], [6, -36], [14, -28], [8, -19], [-6, -21]], mane);
+    polygon(c, [[-8, -29], [-4, -32], [1, -28], [6, -31], [9, -26], [4, -18], [-4, -21]], '#c4b99b44');
+    line(c, -9, -19, 4, -17, '#504d43', 1.2);
+    // Shredded hunting trousers keep the monster recognisably humanoid.
+    polygon(c, [[-13, -19], [12, -17], [14, -10], [8, -12], [4, -7], [0, -12], [-5, -8], [-8, -12], [-13, -11]], '#464646', outline, 1.4);
+    line(c, -8, -16, 8, -15, '#938f75', 1.2);
+    const forwardX = leaping ? 29 : state === 'pounce' ? 33 : state === 'claw' ? 20 + progress * 20 : preparing ? 24 : 24;
+    const forwardY = leaping ? -38 : state === 'pounce' ? -8 : state === 'claw' ? -45 + progress * 30 : preparing ? -39 : -24 + walk * .3;
+    for (const back of [true, false]) {
+      const shoulderX = back ? -13 : 12, shoulderY = -33;
+      const handX = back ? (leaping ? 15 : preparing ? -21 : -23) : forwardX;
+      const handY = back ? (leaping ? -35 : preparing ? -43 : -18) : forwardY;
+      line(c, shoulderX, shoulderY, back ? -22 : 22, (shoulderY + handY) / 2, shade, 8);
+      line(c, back ? -22 : 22, (shoulderY + handY) / 2, handX, handY, fur, 7);
+      polygon(c, [[shoulderX - 4, -37], [shoulderX + 7, -34], [shoulderX + 5, -26], [shoulderX, -30]], mane);
+      rounded(c, handX - 5, handY - 4, 10, 8, 2, fur, outline, 1.3);
+      for (let finger = 0; finger < 3; finger++) {
+        const fingerY = handY - 3 + finger * 2.8;
+        polygon(c, [[handX + 2, fingerY], [handX + (blood ? 12 : 10), fingerY + 3], [handX + 4, fingerY + 2]], claw, outline, .6);
+      }
+    }
+    polygon(c, [[-15, -51], [-15, -61], [-5, -54], [3, -57], [13, -53], [18, -45], [17, -34], [7, -29], [-5, -32], [-12, -39]], fur, outline, 2);
+    polygon(c, [[-14, -58], [-8, -54], [-13, -48]], '#ac9c8e', outline, .8);
+    polygon(c, [[5, -53], [13, -61], [17, -47]], mane, outline, 1.2);
+    polygon(c, [[11, -54], [13, -58], [14, -50]], '#77635d');
+    polygon(c, [[-13, -49], [-19, -46], [-15, -39], [-18, -36], [-11, -35], [-7, -42]], mane);
+    polygon(c, [[8, -44], [23, -43], [28, -37], [24, -33], [12, -32], [4, -37]], mane, outline, 1.5);
+    polygon(c, [[24, -43], [30, -40], [27, -36], [23, -38]], '#1d282b');
+    line(c, 11, -35, 25, -35, '#403631', 1.5);
+    polygon(c, [[12, -35], [16, -35], [15, -28]], '#f3e3c9', outline, .6);
+    polygon(c, [[21, -35], [24, -35], [22, -30]], '#f3e3c9', outline, .6);
+    rounded(c, 3, -47, 12, 5, 2, '#23332f'); ellipse(c, 10, -45, 3.5, 2, eyeColor);
+    ellipse(c, 11, -45, .7, 1.7, '#222626'); line(c, 2, -49, 15, -46, shade, 2.1);
+    line(c, -8, -52, -3, -54, '#e1dfc477', 1); line(c, -9, -40, -5, -36, '#e1dfc477', 1);
+    if (boss) {
+      // Crown-like fur, a broken bronze collar and scars belong only to Lang Vương.
+      polygon(c, [[-15, -50], [-22, -57], [-11, -56], [-10, -64], [-4, -58], [0, -66], [5, -57], [11, -62], [13, -53]], mane, outline, 1.3);
+      line(c, -6, -49, 2, -35, '#d8a994', 1.5); line(c, -9, -43, -3, -47, '#6e514e', .9);
+      line(c, 3, -48, 8, -37, '#f0c6a4', 1.3); line(c, 1, -43, 7, -46, '#6e514e', .8);
+      line(c, -9, -32, 10, -30, '#75664a', 4); line(c, -9, -33, 10, -31, '#bcaa72', 1.3);
+      polygon(c, [[-2, -30], [3, -31], [7, -26], [2, -22], [-3, -26]], '#ac9464', outline, .9);
+      ellipse(c, 2, -26, 1.8, 1.8, blood ? '#ff7067' : '#e5b177');
+    }
+    if (blood) {
+      line(c, -11, -30, -6, -24, '#c28b828c', 1.1); line(c, 4, -24, 8, -20, '#c28b828c', 1.1);
+      if (effects) halo(c, 10, -45, 8, '#ff6157', .3);
+    }
+    if (attacking) {
+      // The three claw grooves communicate the attack even when particles are disabled.
+      const reach = blood ? 38 : 31;
+      for (let clawIndex = 0; clawIndex < 3; clawIndex++) {
+        const offset = clawIndex * 4, upper = e.clawIndex === 2 ? -24 : -43;
+        c.beginPath(); c.moveTo(forwardX - 6, upper + offset); c.quadraticCurveTo(reach + 14, upper + offset - 5, reach + 5, -6 + offset); c.strokeStyle = blood ? '#ffdec3' : '#eee5c9'; c.lineWidth = blood ? 1.7 : 1.2; c.stroke();
+        if (effects) { c.beginPath(); c.moveTo(forwardX - 7, upper + offset); c.quadraticCurveTo(reach + 13, upper + offset - 6, reach + 4, -6 + offset); c.strokeStyle = '#e4655860'; c.lineWidth = 4; c.stroke(); }
+      }
+    }
     c.restore();
   }
   function drawSpider(c, dir, walk, t, boss) {
@@ -709,15 +810,80 @@
       c.restore();
     }
   }
-  const monsterDrawers = { skeleton: drawSkeleton, zombie: drawZombie, greenZombie: drawZombie, spider: drawSpider, ghost: drawGhost, vampire: drawVampire, golem: drawGolem };
+  function drawWolfZones(c, zones, t, effects) {
+    for (const zone of zones || []) {
+      if (zone.phase !== 'warning' && zone.phase !== 'impact') continue;
+      const x = zone.x, y = Number.isFinite(zone.y) ? zone.y : GROUND, width = Math.max(20, zone.w || 118), height = Math.max(8, zone.h || 52);
+      const left = x - width / 2, color = zone.kind === 'claw' ? '#ffb5a1' : '#eed59e';
+      c.save(); c.lineCap = 'round'; c.lineJoin = 'round';
+      c.globalAlpha = zone.phase === 'warning' ? .13 : .2; rect(c, left, y - height, width, height, color); c.globalAlpha = 1;
+      if (zone.phase === 'warning') {
+        const remaining = Math.max(0, Number(zone.timer) || 0), total = Math.max(.01, Number(zone.total) || remaining || 1);
+        const progress = Math.max(0, Math.min(1, 1 - remaining / total));
+        c.strokeStyle = color; c.lineWidth = 1.7; c.setLineDash([6, 4]); c.strokeRect(left, y - height, width, height); c.setLineDash([]);
+        for (const side of [-1, 1]) {
+          line(c, x + side * width / 2, y - 9, x + side * width / 2, y + 3, color, 2.5);
+          line(c, x + side * width / 2, y + 3, x + side * (width / 2 - 10), y + 3, color, 2.5);
+        }
+        const label = zone.kind === 'claw' ? `CÀO ${zone.clawIndex || 1}/2 · NÉ HOẶC KHIÊN` : 'VỒ XUỐNG · NÉ!';
+        const labelWidth = zone.kind === 'claw' ? 210 : 156;
+        rounded(c, x - labelWidth / 2, y - height - 25, labelWidth, 20, 4, '#17242aee', color + 'a0', 1);
+        c.font = `600 10px ${font}`; c.textAlign = 'center'; c.fillStyle = color;
+        c.fillText(`${label} · ${remaining.toFixed(1)}s`, x, y - height - 12);
+        rounded(c, left, y + 7, width, 3, 1, '#18262a'); rounded(c, left, y + 7, Math.max(1, width * progress), 3, 1, color);
+      } else {
+        line(c, left, y + 1, left + width, y + 1, color, 3);
+        for (let i = 0; i < 3; i++) {
+          const clawX = left + width * (.23 + i * .23), lean = zone.clawIndex === 2 ? -1 : 1;
+          c.beginPath(); c.moveTo(clawX - lean * 8, y - height + 5); c.quadraticCurveTo(clawX + lean * 18, y - height * .5, clawX + lean * 4, y - 5);
+          c.strokeStyle = '#ffd8b9'; c.lineWidth = 3; c.stroke();
+          c.beginPath(); c.moveTo(clawX - lean * 11, y - height + 5); c.quadraticCurveTo(clawX + lean * 15, y - height * .5, clawX + lean, y - 5);
+          c.strokeStyle = '#da655b'; c.lineWidth = 1.2; c.stroke();
+        }
+        if (effects) for (let i = 0; i < 4; i++) {
+          const progress = Math.max(0, Math.min(1, 1 - (zone.timer || 0) / (zone.total || .3)));
+          ellipse(c, left + width * (i + .5) / 4, y - 3 - Math.sin(progress * Math.PI) * 11, 12 + progress * 10, 5 + progress * 3, '#bcb79830');
+        }
+      }
+      c.restore();
+    }
+  }
+  function drawBloodMoon(c, game, t, effects) {
+    const boss = (game.enemies || []).find(e => e.boss && e.health > 0 && e.bloodMoon);
+    if (!boss) return;
+    const x = W - 103, y = Math.min(GROUND - 136, (game.viewTop || 0) + 83);
+    c.save();
+    // The moon and wash indicate the combat phase, so cosmetic settings never remove them.
+    const wash = c.createLinearGradient(0, 0, 0, H); wash.addColorStop(0, '#98152170'); wash.addColorStop(.55, '#8419274d'); wash.addColorStop(1, '#640e191e');
+    rect(c, 0, 0, W, H, wash);
+    halo(c, x, y, effects ? 103 + Math.sin(t * 1.1) * 4 : 103, '#f04a40', .24);
+    halo(c, x, y, 64, '#ff7157', .22);
+    ellipse(c, x, y, 42, 42, '#ef7460'); ellipse(c, x - 2, y - 1, 39, 39, '#bb3b3b');
+    ellipse(c, x - 10, y - 10, 21, 25, '#da594a'); ellipse(c, x + 13, y + 11, 14, 11, '#8c2b37');
+    ellipse(c, x - 14, y + 17, 8, 7, '#a02e39'); ellipse(c, x + 16, y - 20, 6, 5, '#ec8060');
+    line(c, x - 32, y - 15, x - 24, y - 27, '#efb082', 1.4);
+    c.font = `600 10px ${font}`; c.textAlign = 'center'; c.lineWidth = 3; c.strokeStyle = '#341e28'; c.fillStyle = '#ffcfb5';
+    c.strokeText('TRĂNG MÁU', x, y + 59); c.fillText('TRĂNG MÁU', x, y + 59);
+    if (boss.wolfState === 'transform') {
+      const remaining = Math.max(0, Number(boss.transformTime) || 0);
+      c.strokeStyle = '#ffbc9f'; c.lineWidth = 1.8; c.beginPath(); c.ellipse(boss.x, boss.y - boss.h * .45, boss.w * .62, boss.h * .61, 0, 0, TAU); c.stroke();
+      c.font = `700 13px ${font}`; c.textAlign = 'center'; c.fillStyle = '#ffe0bd'; c.lineWidth = 3; c.strokeStyle = '#3d262c';
+      const label = `LANG VƯƠNG THỨC TỈNH · ${remaining.toFixed(1)}s`;
+      c.strokeText(label, boss.x, Math.max((game.viewTop || 0) + 142, boss.y - boss.h - 18)); c.fillText(label, boss.x, Math.max((game.viewTop || 0) + 142, boss.y - boss.h - 18));
+    }
+    c.restore();
+  }
+  const monsterDrawers = { skeleton: drawSkeleton, zombie: drawZombie, greenZombie: drawZombie, spider: drawSpider, ghost: drawGhost, vampire: drawVampire, golem: drawGolem, miniGolem: drawGolem, werewolf: drawWerewolf };
   function drawMonster(c, e, t, effects, world, viewTop = 0) {
     const boss = e.boss || e.type === 'boss';
     const fallbackWorld = Math.max(0, Math.min(palettes.length - 1, e.world == null ? world : e.world));
-    const fallbackType = window.MM?.Campaign?.worlds?.[fallbackWorld]?.enemy || ['skeleton', 'spider', 'ghost', 'vampire', 'vampire', 'golem'][fallbackWorld] || 'skeleton';
+    const fallbackType = window.MM?.Campaign?.worlds?.[fallbackWorld]?.enemy || ['skeleton', 'spider', 'ghost', 'vampire', 'vampire', 'golem', 'werewolf'][fallbackWorld] || 'skeleton';
     const type = monsterDrawers[e.archetype] ? e.archetype : monsterDrawers[e.type] ? e.type : monsterDrawers[fallbackType] ? fallbackType : 'skeleton';
-    const w = e.w || (boss ? 68 : 40), h = e.h || (boss ? 88 : 52), dir = e.dir || 1;
+    const transforming = type === 'werewolf' && e.wolfState === 'transform';
+    const growth = transforming ? .5 + .5 * Math.max(0, Math.min(1, 1 - (e.transformTime || 0) / 1.2)) : 1;
+    const w = (e.w || (boss ? 68 : 40)) * growth, h = (e.h || (boss ? 88 : 52)) * growth, dir = e.dir || 1;
     drawPhantomTell(c, e, t, effects, viewTop);
-    if (e.intangible) {
+    if (e.intangible && !transforming) {
       if (effects) { c.save(); c.globalAlpha = .045; ellipse(c, e.x, e.y - h * .42, 17, 5, '#c5eeeb'); c.restore(); }
       return;
     }
@@ -744,11 +910,11 @@
     const walk = effects ? Math.sin((e.age || t) * (type === 'spider' ? 13 : 8) + e.x * .007) * 2.7 : 0;
     if (boss) {
       c.save(); c.globalAlpha = .25;
-      c.strokeStyle = palettes[world].glow; c.lineWidth = 1.2; c.beginPath(); c.ellipse(0, -32, 31, 37, 0, 0, TAU); c.stroke(); c.restore();
+      c.strokeStyle = e.bloodMoon ? '#ffa68d' : palettes[world].glow; c.lineWidth = 1.2; c.beginPath(); c.ellipse(0, -32, 31, 37, 0, 0, TAU); c.stroke(); c.restore();
     }
     monsterDrawers[type](c, dir, walk, t, boss, e, effects);
     drawBulletArmor(c, e, t, effects);
-    if (boss && type !== 'golem') {
+    if (boss && type !== 'golem' && type !== 'werewolf') {
       polygon(c, [[-17, -52], [-23, -65], [-9, -59], [0, -69], [9, -59], [23, -65], [17, -52]], '#bea05d', '#251e25', 1.6);
       line(c, -15, -54, 15, -54, '#f4d493', 1.2); ellipse(c, 0, -60, 2.8, 2.8, '#f5927c');
       polygon(c, [[-21, -29], [-25, -36], [-16, -37], [-11, -29]], '#b9a574', '#211e2b'); polygon(c, [[21, -29], [25, -36], [16, -37], [11, -29]], '#b9a574', '#211e2b');
@@ -778,6 +944,12 @@
   function drawBullet(c, b, effects) {
     const direction = b.dir || (b.vx < 0 ? -1 : 1);
     c.save(); c.lineCap = 'round';
+    if (b.kind === 'sniper') {
+      if (effects) line(c, b.x - direction * 76, b.y, b.x, b.y, '#fff1bb38', 6);
+      line(c, b.x - direction * 56, b.y, b.x, b.y, '#d9be77', 2.8);
+      line(c, b.x - direction * 48, b.y, b.x, b.y, '#fffde4', 1.2);
+      ellipse(c, b.x, b.y, 5, 1.7, '#ffffff'); c.restore(); return;
+    }
     if (effects) { line(c, b.x - direction * 26, b.y, b.x, b.y, '#f2ce8159', 4); line(c, b.x - direction * 14, b.y, b.x, b.y, '#ffd791', 2.5); }
     ellipse(c, b.x, b.y, 4.2, 2, '#fff1bb'); c.restore();
   }
@@ -911,9 +1083,9 @@
       const name = split ? 'DRACULA ' + owner : (game.level.bossName || 'KẺ GIỮ CỔNG').toUpperCase();
       c.save(); c.textAlign = 'center'; c.font = `600 11px ${font}`; c.fillStyle = '#eadbc2';
       c.fillText(name, centre, top + 31);
-      if (!boss.intangible) {
+      if (!boss.intangible || boss.wolfState === 'transform') {
         rounded(c, x, top + 42, width, 5, 2, '#071018bb');
-        rounded(c, x, top + 42, width * Math.max(.01, boss.health / boss.maxHealth), 5, 2, attackRate > 1.3 ? '#d28b72' : '#d9a174');
+        rounded(c, x, top + 42, width * Math.max(.01, boss.health / boss.maxHealth), 5, 2, boss.bloodMoon ? '#f28d78' : attackRate > 1.3 ? '#d28b72' : '#d9a174');
         c.font = `400 9px ${font}`; c.fillStyle = '#b7c4ba'; c.fillText(`${boss.health} / ${boss.maxHealth}`, centre, top + 63);
       } else { c.font = `600 10px ${font}`; c.fillStyle = '#b7d5d1'; c.fillText('ĐÃ BIẾN MẤT', centre, top + 56); }
       c.font = `600 10px ${font}`; c.fillStyle = attackRate > 1.3 ? '#dfa180' : '#9ea99b';
@@ -941,6 +1113,10 @@
         c.font = `600 11px ${font}`; c.fillStyle = '#f5bd89'; c.lineWidth = 3; c.strokeStyle = '#13222aed';
         const text = `CUỒNG NỘ · ${boss.rageTime.toFixed(1)}s`; c.strokeText(text, centre, armorY); c.fillText(text, centre, armorY);
       }
+      if (boss.bloodMoon) {
+        c.font = `600 10px ${font}`; c.fillStyle = '#ffd3b4'; c.lineWidth = 3; c.strokeStyle = '#34232bed';
+        const text = boss.wolfState === 'transform' ? 'THỨC TỈNH · MIỄN ĐẠN' : 'TRĂNG MÁU · SÚNG NGẮM 5 ĐẠN / PHÁT'; c.strokeText(text, centre, armorY); c.fillText(text, centre, armorY);
+      }
       c.restore();
     }
   }
@@ -955,23 +1131,28 @@
     const pool = types.length ? [...new Set(types)] : ['skeleton'], positions = [92, 215, 335, 624, 747, 870];
     for (let i = 0; i < positions.length; i++) {
       const type = pool[i % pool.length], stats = window.MM?.Campaign?.enemyTypes?.[type];
-      const w = type === 'golem' ? 58 : type === 'spider' ? 46 : 43, h = type === 'golem' ? 88 : type === 'spider' ? 32 : 61;
-      drawMonster(c, { x: positions[i], y: GROUND, w, h, type, archetype: stats && stats.archetype || type, dir: i < 3 ? 1 : -1 }, t, effects, world);
+      const w = type === 'miniGolem' ? 38 : type === 'werewolf' ? 48 : type === 'golem' ? 58 : type === 'spider' ? 46 : 43;
+      const h = type === 'miniGolem' ? 68 : type === 'werewolf' ? 72 : type === 'golem' ? 88 : type === 'spider' ? 32 : 61;
+      drawMonster(c, { x: positions[i], y: GROUND, w, h, type, variant: stats && stats.variant, archetype: stats && stats.archetype || type, dir: i < 3 ? 1 : -1 }, t, effects, world);
     }
     drawHunter(c, { x: 477, y: GROUND, w: 45, h: 64, dir: 1, vx: 0 }, t, effects);
   }
   function draw(c, game) {
     const world = Math.max(0, Math.min(palettes.length - 1, game.level && Number.isFinite(game.level.world) ? Math.trunc(game.level.world) : 0));
     const t = game.time || 0, settings = game.settings || {}, effects = settings.effects !== false && !settings.reducedMotion;
-    if (!scenes.has(world)) scenes.set(world, createScene(world));
+    const scenery = window.MM?.Campaign?.worlds?.[world]?.scenery;
+    const sceneWorld = Number.isFinite(scenery) ? Math.max(0, Math.min(palettes.length - 1, Math.trunc(scenery))) : world === 6 ? 5 : world;
+    if (!scenes.has(sceneWorld)) scenes.set(sceneWorld, createScene(sceneWorld));
     c.save();
     if (effects && game.shake > 0) c.translate(Math.sin(t * 83) * game.shake, Math.cos(t * 97) * game.shake * .6);
-    c.drawImage(scenes.get(world), 0, 0); drawAtmosphere(c, world, t, effects);
+    c.drawImage(scenes.get(sceneWorld), 0, 0); drawAtmosphere(c, sceneWorld, t, effects);
+    drawBloodMoon(c, game, t, effects);
     if (game.screen === 'home' && (!game.enemies || !game.enemies.length)) drawHomeCast(c, t, effects, world, game.level);
     else {
       drawBossHazards(c, game.bossHazards, t, effects, world);
       drawGroundCracks(c, game.groundCracks);
       drawGolemZones(c, game.golemZones, t, effects);
+      drawWolfZones(c, game.wolfZones, t, effects);
       drawPlatforms(c, game.enemies || [], t, effects);
       for (const p of game.pickups || []) drawPickup(c, p, t, effects);
       for (const crate of game.ammoCrates || []) drawAmmoCrate(c, crate, t, effects);

@@ -8,7 +8,7 @@ const test = require('node:test');
 
 function loadGame(globals = {}, afterLoad = () => {}) {
   const context = vm.createContext(globals);
-  for (const file of ['campaign.js', 'golem.js', 'game.js']) {
+  for (const file of ['campaign.js', 'golem.js', 'wolves.js', 'game.js']) {
     vm.runInContext(fs.readFileSync(path.join(__dirname, '../js', file), 'utf8'), context, { filename: file });
   }
   afterLoad(context);
@@ -315,15 +315,22 @@ test('quota overshoot completes regular stages; milestone stages require exactly
   game.checkCompletion();
   game.killEnemy(game.enemies.find(enemy => enemy.boss));
   assert.equal(game.screen, 'won');
-  assert.equal(game.save.resume, 60);
+  assert.equal(game.save.resume, 61);
   assert.ok(game.save.completed.includes(60));
+  game.start(70);
+  game.levelKills = game.level.target;
+  game.checkCompletion();
+  game.killEnemy(game.enemies.find(enemy => enemy.boss));
+  assert.equal(game.screen, 'won');
+  assert.equal(game.save.resume, 70);
+  assert.ok(game.save.completed.includes(70));
 });
 
 test('completed old campaign saves continue into the new chapter while explicit replays stay selected', () => {
   const MM=loadGame();
   const old=MM.readSave(storage({version:2,resume:50,completed:Array.from({length:50},(_,i)=>i+1),best:12345,settings:{controls:'buttons',difficulty:'hard'}}));
   assert.equal(old.resume,51);
-  assert.equal(old.campaignSize,60);
+  assert.equal(old.campaignSize,70);
   assert.equal(old.completed.length,50);
   assert.equal(old.best,12345);
   assert.equal(old.settings.controls,'buttons');
@@ -332,6 +339,49 @@ test('completed old campaign saves continue into the new chapter while explicit 
   assert.equal(replay.resume,50);
   const unfinished=MM.readSave(storage({resume:50,completed:[49]}));
   assert.equal(unfinished.resume,50);
+  const completed60=MM.readSave(storage({campaignSize:60,resume:60,completed:Array.from({length:60},(_,i)=>i+1),best:23456}));
+  assert.equal(completed60.resume,61);
+  assert.equal(completed60.completed.length,60);
+  assert.equal(completed60.best,23456);
+  const replay60=MM.readSave(storage({...completed60,resume:60}));
+  assert.equal(replay60.resume,60);
+});
+
+test('held mobile fire follows sniper cooldown and consumes only five ammo per successful shot', () => {
+  const {game,MM}=fresh(70);
+  const boss=game.spawn('boss',1);
+  Object.assign(boss,{phase:'active',x:850,speed:0});
+  MM.WolfCombat.hit(game,boss,boss.maxHealth/2);
+  tick(game,1.2);
+  game.player.ammo=25;
+  let shots=0;
+  const shoot=game.shoot.bind(game);
+  game.shoot=dir=>{const fired=shoot(dir);if(fired)shots++;return fired;};
+  const button={dataset:{control:'fire-right'},classList:{add(){},remove(){}},setPointerCapture(){},releasePointerCapture(){}};
+  game.padDown(pointer(1,0,0),button);
+  tick(game,3.05);
+  game.padUp(pointer(1,0,0),button);
+  assert.equal(shots,4);
+  assert.equal(game.player.ammo,5);
+  tick(game,1.1);
+  assert.equal(shots,4,'releasing the button stops fire');
+});
+
+test('mini golems match skeleton size and announce a smaller jumpable club area', () => {
+  const {game,MM}=fresh(61);
+  const mini=game.spawn('miniGolem',-1),skeleton=MM.Campaign.createEnemy('skeleton',61,'normal',-1);
+  assert.equal(mini.w,skeleton.w);
+  assert.equal(mini.h,skeleton.h);
+  Object.assign(mini,{phase:'active',x:game.player.x-70,speed:0,golemCooldown:0});
+  game.update(.01);
+  assert.equal(mini.golemState,'windup');
+  assert.equal(game.golemZones[0].w,95);
+  assert.equal(game.golemZones[0].h,44);
+  assert.ok(game.golemZones[0].w<145,'mini club is shorter than a full golem club');
+  const health=game.player.health;
+  game.player.invulnerable=0;
+  tick(game,.9);
+  assert.equal(game.player.health,health-1);
 });
 
 test('carry restores health and preserves resources; retry restores the start checkpoint', () => {
@@ -473,10 +523,10 @@ test('malformed and denied saves fall back safely; progress and options survive 
   const denied = { getItem() { throw new Error('Denied'); }, setItem() { throw new Error('Denied'); } };
   const game = new MM.Game({ headless: true, storage: denied });
   assert.doesNotThrow(() => { game.start(); game.finish(true); });
-  const unsafe = MM.readSave(storage({ resume: 900, best: -1, completed: [1, 1, 50, 51, 61, '2', null], settings: { difficulty: 'bogus', sound: 'true', effects: false } }));
-  assert.equal(unsafe.resume, 60);
+  const unsafe = MM.readSave(storage({ resume: 900, best: -1, completed: [1, 1, 50, 51, 61, 71, '2', null], settings: { difficulty: 'bogus', sound: 'true', effects: false } }));
+  assert.equal(unsafe.resume, 70);
   assert.equal(unsafe.best, 0);
-  assert.equal(JSON.stringify(unsafe.completed), '[1,50,51]');
+  assert.equal(JSON.stringify(unsafe.completed), '[1,50,51,61]');
   assert.equal(unsafe.settings.difficulty, 'normal');
   assert.equal(unsafe.settings.sound, false);
   assert.equal(unsafe.settings.effects, false);

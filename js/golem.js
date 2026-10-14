@@ -64,8 +64,9 @@
     const distance = game.player.x - enemy.x;
     if (Math.abs(distance) > 4) enemy.dir = Math.sign(distance);
     const seconds = warning(game, enemy, enemy.boss ? 1.05 : .9);
-    const x = enemy.x + enemy.dir * (enemy.w / 2 + (enemy.boss ? 58 : 44));
-    zone(game, enemy, 'club', x, enemy.boss ? 175 : 145, 54, seconds, 1);
+    const mini=enemy.variant==='mini';
+    const x = enemy.x + enemy.dir * (enemy.w / 2 + (enemy.boss ? 58 : mini ? 30 : 44));
+    zone(game, enemy, 'club', x, enemy.boss ? 175 : mini ? 95 : 145, mini ? 44 : 54, seconds, 1);
     state(enemy, 'windup', seconds, 'CHÙY GỖ GAI');
   }
 
@@ -128,7 +129,7 @@
       const movement = pressure(game, enemy);
       const distance = game.player.x - enemy.x;
       if (Math.abs(distance) > 4) enemy.dir = Math.sign(distance);
-      const standOff = enemy.w / 2 + (enemy.boss ? 78 : 65);
+      const standOff = enemy.w / 2 + (enemy.boss ? 78 : enemy.variant==='mini' ? 44 : 65);
       if (Math.abs(distance) > standOff) {
         const step = Math.min(Math.abs(distance) - standOff, enemy.speed * (movement.moveRate || 1) * dt);
         enemy.x = clamp(enemy.x + Math.sign(distance) * step, 26, W - 26);

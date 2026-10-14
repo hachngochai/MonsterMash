@@ -10,15 +10,15 @@ const context = vm.createContext({});
 vm.runInContext(fs.readFileSync(path.join(__dirname, '../js/campaign.js'), 'utf8'), context);
 const campaign = context.MM.Campaign;
 
-test('campaign has 60 sequential levels and six boss milestones', () => {
-  assert.equal(campaign.worlds.length, 6);
-  assert.equal(campaign.levels.length, 60);
+test('campaign has 70 sequential levels and seven boss milestones', () => {
+  assert.equal(campaign.worlds.length, 7);
+  assert.equal(campaign.levels.length, 70);
   campaign.levels.forEach((level, index) => {
     assert.equal(level.id, index + 1);
     assert.equal(level.world, Math.floor(index / 10));
     assert.equal(level.boss, level.id % 10 === 0);
     assert.ok(level.name && level.story);
-    assert.ok(level.target >= 10 && level.target <= 42);
+    assert.ok(level.target >= 10 && level.target <= 46);
     assert.ok(level.spawnInterval >= 0.9 && level.spawnInterval <= 2.4);
     assert.ok(level.maxAlive >= 3 && level.maxAlive <= 7);
     assert.ok(level.types.length > 0);
@@ -27,12 +27,13 @@ test('campaign has 60 sequential levels and six boss milestones', () => {
   });
   assert.equal(campaign.getLevel(50).bossHealth, 34);
   assert.equal(campaign.getLevel(60).bossHealth, 54);
+  assert.equal(campaign.getLevel(70).bossHealth, 50);
 });
 
 test('saved level ids clamp safely, including invalid or obsolete saves', () => {
   assert.equal(campaign.getLevel(-50).id, 1);
-  assert.equal(campaign.getLevel(500).id, 60);
-  assert.equal(campaign.getLevel(Infinity).id, 60);
+  assert.equal(campaign.getLevel(500).id, 70);
+  assert.equal(campaign.getLevel(Infinity).id, 70);
   assert.equal(campaign.getLevel(-Infinity).id, 1);
   assert.equal(campaign.getLevel(undefined).id, 1);
   assert.equal(campaign.getLevel('broken').id, 1);
@@ -41,7 +42,7 @@ test('saved level ids clamp safely, including invalid or obsolete saves', () => 
 });
 
 test('new enemies arrive gradually and recovery levels reduce pressure', () => {
-  const firstAppearances = { skeleton: 1, zombie: 3, spider: 12, ghost: 22, greenZombie: 30, vampire: 42, golem: 51 };
+  const firstAppearances = { skeleton: 1, zombie: 3, spider: 12, ghost: 22, greenZombie: 30, vampire: 42, golem: 51, miniGolem: 61, werewolf: 62 };
   Object.entries(firstAppearances).forEach(([type, id]) => {
     assert.equal(campaign.levels.find(level => level.types.includes(type)).id, id);
   });
@@ -111,7 +112,7 @@ test('finite ammunition grows with enemy durability and remains collectible', ()
     assert.ok(Number.isInteger(level.initialAmmo) && level.initialAmmo >= 3);
     assert.ok(Number.isInteger(level.ammoCapacity) && level.ammoCapacity >= level.initialAmmo);
     assert.ok(Number.isInteger(level.ammoPerCrate) && level.ammoPerCrate >= 5 && level.ammoPerCrate < level.ammoCapacity);
-    assert.ok(level.ammoInterval >= 4.5 && level.ammoInterval <= 5.8);
+    assert.ok(level.ammoInterval >= 4.3 && level.ammoInterval <= 5.8);
     assert.ok(level.initialAmmo < level.target, `level ${level.id} requires collecting supplies`);
     ['story', 'normal', 'hard'].forEach(difficulty => {
       const settings = campaign.tuning(difficulty);
@@ -120,7 +121,10 @@ test('finite ammunition grows with enemy durability and remains collectible', ()
       // Crates keep arriving after the final regular spawn. Verify that the
       // expected mixed wave has a finite, practical supply time in every mode.
       const regularDemand = Array.from({ length: level.target }, (_, index) => campaign.createEnemy(level.types[index % level.types.length], level, difficulty, -1, () => 0.5).health).reduce((sum, health) => sum + health, 0);
-      const demand = regularDemand + (level.boss ? campaign.createEnemy('boss', level, difficulty, -1, () => 0.5).health : 0);
+      const bossHealth = level.boss ? campaign.createEnemy('boss', level, difficulty, -1, () => 0.5).health : 0;
+      // Lang Vương takes half its first health bar before the one-time refill.
+      // Sniper rounds exchange five cartridges for five damage in that phase.
+      const demand = regularDemand + bossHealth + (level.id === 70 ? Math.ceil(bossHealth / 2) : 0);
       const cratesNeeded = Math.max(0, Math.ceil((demand - initial - (level.boss ? crate : 0)) / crate));
       assert.ok(cratesNeeded * level.ammoInterval <= 75, `level ${level.id} ${difficulty}: expected supply takes ${cratesNeeded * level.ammoInterval}s`);
       assert.ok(crate >= campaign.createEnemy(level.types[0], level, difficulty, -1, () => 0.5).health);
@@ -159,7 +163,8 @@ test('boss milestones use their explicit identities and retain original native s
     [30, 'spider', 'silk-drop', 26],
     [40, 'ghost', 'sine-drop', 30],
     [50, 'vampire', 'bat-morph,shadow-drop', 34],
-    [60, 'golem', 'club-swing', 54]
+    [60, 'golem', 'club-swing', 54],
+    [70, 'werewolf', 'pounce', 50]
   ];
   order.forEach(([id, archetype, abilities, health]) => {
     const level = campaign.getLevel(id);
@@ -177,6 +182,7 @@ test('boss milestones use their explicit identities and retain original native s
   assert.equal(campaign.getLevel(40).name, 'Bóng ma trắng');
   assert.equal(campaign.getLevel(50).name, 'Dracula');
   assert.equal(campaign.getLevel(60).name, 'Golem chúa');
+  assert.equal(campaign.getLevel(70).name, 'Lang Vương');
   campaign.levels.filter(level => !level.boss).forEach(level => {
     assert.equal(level.bossArchetype, null);
     assert.equal(level.bossSkills.length, 0);
@@ -239,17 +245,67 @@ test('cursed valley has its own restricted cast, collectible ammunition and gian
   assert.ok(boss.w > golem.w * 2 && boss.h > golem.h * 1.5);
 });
 
+test('blood moon valley uses small golems, skeletons and wolves while retaining boss 60', () => {
+  const world = campaign.worlds[6];
+  assert.equal(world.name, 'Thung lũng trăng máu');
+  assert.equal(world.enemy, 'werewolf');
+  assert.equal(world.scenery, 5, 'the existing thorn valley scenery continues');
+  const allowed = new Set(['skeleton', 'miniGolem', 'werewolf']);
+  const encountered = new Set();
+  for (let id = 61; id <= 70; id += 1) {
+    const level = campaign.getLevel(id);
+    assert.equal(level.world, 6);
+    level.types.forEach(type => {
+      assert.ok(allowed.has(type), `level ${id}: ${type}`);
+      encountered.add(type);
+    });
+    assert.equal(level.initialAmmo, 9);
+    assert.equal(level.ammoCapacity, 42);
+    assert.equal(level.ammoPerCrate, 17);
+    assert.equal(level.ammoInterval, level.recovery ? 4.3 : 4.6);
+  }
+  assert.deepEqual([...encountered].sort(), [...allowed].sort());
+  assert.equal(campaign.getLevel(61).recovery, true);
+  assert.equal(campaign.getLevel(65).recovery, true);
+  assert.ok(campaign.getLevel(61).tutorial.includes('Golem nhỏ'));
+  assert.ok(campaign.getLevel(62).tutorial.includes('nhảy lên vồ xuống'));
+  assert.ok(campaign.getLevel(70).tutorial.includes('5 viên'));
+
+  const mini = campaign.createEnemy('miniGolem', 61, 'normal', -1, () => 0.5);
+  const skeleton = campaign.createEnemy('skeleton', 61, 'normal', -1, () => 0.5);
+  const wolf = campaign.createEnemy('werewolf', 62, 'normal', -1, () => 0.5);
+  const boss = campaign.createEnemy('boss', 70, 'normal', -1, () => 0.5);
+  assert.equal(mini.type, 'miniGolem');
+  assert.equal(mini.archetype, 'golem');
+  assert.equal(mini.variant, 'mini');
+  assert.equal(mini.ability, 'club-swing');
+  assert.equal(mini.w, skeleton.w);
+  assert.equal(mini.h, skeleton.h);
+  assert.equal(mini.boss, false);
+  assert.ok(mini.health > skeleton.health);
+  assert.equal(wolf.archetype, 'werewolf');
+  assert.equal(wolf.ability, 'pounce');
+  assert.equal(wolf.w, 48);
+  assert.equal(wolf.h, 72);
+  assert.equal(wolf.bossSkills.length, 0);
+  assert.equal(boss.w, 80);
+  assert.equal(boss.h, 108);
+  assert.equal(boss.maxHealth, 50);
+  assert.equal(boss.bossSkills.join(','), 'blood-moon,double-claw');
+  assert.equal(campaign.createEnemy('boss', 60, 'normal', -1, () => 0.5).archetype, 'golem');
+});
+
 test('elapsed attack pressure has gradual world transitions and conservative caps', () => {
   assert.equal(campaign.getLevel(1).enemyPressureCap, 1.5);
   assert.equal(campaign.getLevel(50).enemyPressureCap, 1.65);
   assert.equal(campaign.getLevel(10).bossPressureCap, 1.7);
   assert.equal(campaign.getLevel(50).bossPressureCap, 1.85);
   campaign.levels.forEach((level, index) => {
-    assert.ok(level.enemyPressureCap >= 1.5 && level.enemyPressureCap <= 1.6875);
-    assert.ok(level.bossPressureCap >= 1.7 && level.bossPressureCap <= 1.8875);
+    assert.ok(level.enemyPressureCap >= 1.5 && level.enemyPressureCap <= 1.725);
+    assert.ok(level.bossPressureCap >= 1.7 && level.bossPressureCap <= 1.925);
     assert.ok(level.bossPressureCap > level.enemyPressureCap);
-    assert.ok(level.pressureRampSeconds >= 81.25 && level.pressureRampSeconds <= 100);
-    assert.ok(level.bossRampSeconds >= 62.5 && level.bossRampSeconds <= 75);
+    assert.ok(level.pressureRampSeconds >= 77.5 && level.pressureRampSeconds <= 100);
+    assert.ok(level.bossRampSeconds >= 60 && level.bossRampSeconds <= 75);
     assert.ok(level.pressureWarmup >= 12);
     assert.equal(level.bossWarmup, 4);
     if (level.recovery) assert.ok(level.pressureWarmup > 12);
@@ -264,8 +320,8 @@ test('elapsed attack pressure has gradual world transitions and conservative cap
       const settings = campaign.tuning(difficulty);
       const enemyCap = 1 + (level.enemyPressureCap - 1) * settings.pressureMultiplier;
       const bossCap = 1 + (level.bossPressureCap - 1) * settings.pressureMultiplier;
-      assert.ok(enemyCap < 1.76 && bossCap < 1.98);
-      assert.ok(1 + 0.35 * (bossCap - 1) < 1.35, 'bounded pressure movement growth');
+      assert.ok(enemyCap < 1.8 && bossCap < 2.02);
+      assert.ok(1 + 0.35 * (bossCap - 1) < 1.36, 'bounded pressure movement growth');
       assert.ok(level.abilityInterval / bossCap >= 3.25, 'skills retain time for reactions');
     });
   });

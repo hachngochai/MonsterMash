@@ -8,7 +8,8 @@
     { id: 2, name: 'Thành phố lãng quên', subtitle: 'Nhìn xuyên những làn sương', color: '#83c9ff', enemy: 'ghost' },
     { id: 3, name: 'Lâu đài trăng máu', subtitle: 'Nhanh tay trước cú lao tới', color: '#d5a0ff', enemy: 'vampire' },
     { id: 4, name: 'Cổng nhật thực', subtitle: 'Trận chiến cho bình minh', color: '#ffb46c', enemy: 'vampire' },
-    { id: 5, name: 'Thung lũng nguyền rủa', subtitle: 'Ánh sáng giữa rừng gai', color: '#becd80', enemy: 'golem' }
+    { id: 5, name: 'Thung lũng nguyền rủa', subtitle: 'Ánh sáng giữa rừng gai', color: '#becd80', enemy: 'golem' },
+    { id: 6, name: 'Thung lũng trăng máu', subtitle: 'Tiếng hú dưới tán gai', color: '#d6ac91', enemy: 'werewolf', scenery: 5 }
   ];
 
   const enemyTypes = {
@@ -18,7 +19,9 @@
     spider: { w: 58, h: 34, speed: 63, health: 1, score: 100, damage: 1, ability: 'silk-drop' },
     ghost: { w: 44, h: 64, speed: 44, health: 2, score: 150, damage: 1, ability: 'sine-drop' },
     vampire: { w: 46, h: 78, speed: 55, health: 3, score: 190, damage: 1, ability: 'bat-morph' },
-    golem: { w: 74, h: 108, speed: 34, health: 4, score: 240, damage: 1, ability: 'club-swing' }
+    golem: { w: 74, h: 108, speed: 34, health: 4, score: 240, damage: 1, ability: 'club-swing' },
+    miniGolem: { w: 38, h: 68, speed: 44, health: 2, score: 170, damage: 1, ability: 'club-swing', archetype: 'golem', variant: 'mini' },
+    werewolf: { w: 48, h: 72, speed: 58, health: 3, score: 210, damage: 1, ability: 'pounce' }
   };
 
   const chapters = [
@@ -166,14 +169,38 @@
         ['golem', 'spider'], ['skeleton', 'golem', 'spider'], ['skeleton', 'golem', 'spider'],
         ['skeleton', 'golem', 'spider']
       ]
+    },
+    {
+      names: ['Vết chân trong rừng', 'Tiếng hú trên sườn dốc', 'Móng vuốt trong sương', 'Lối mòn trăng đỏ', 'Ánh lửa giữa khe đá', 'Rừng gai dậy sóng', 'Săn đuổi dưới trăng', 'Vòng vây bầy sói', 'Trước đỉnh trăng máu', 'Lang Vương'],
+      stories: [
+        'Rừng gai vẫn bao quanh thung lũng. Golem nhỏ đi giữa bộ xương: canh cây gậy đang nâng lên để tìm lối thoát.',
+        'Người sói xuất hiện theo tiếng hú. Nó lấy đà trước khi lao vồ; rời dấu báo và bắn khi nó hạ chân.',
+        'Móng vuốt len giữa những chiếc gậy gai. Giữ khoảng cách với người sói rồi hạ nhóm xương gần nhất.',
+        'Trăng đỏ soi lối mòn cũ. Một cú nhảy đúng lúc giúp bạn tránh gậy và cú vồ trong cùng một nhịp.',
+        'Ánh lửa le lói giữa khe đá cho bạn một đợt nhẹ. Nhặt đạn, lấy lại máu và giữ khiên cho cuộc săn tiếp theo.',
+        'Rừng gai rung lên theo bước bầy sói. Đổi hướng sau mỗi đợt vồ để giữ đường lui.',
+        'Người sói bám sát hai phía. Đọc dấu báo, né cú vồ và canh phát bắn khi đường đạn thoáng.',
+        'Bộ xương, golem nhỏ và người sói tạo thành vòng vây. Ưu tiên kẻ sắp ra đòn rồi thoát khỏi mép sân.',
+        'Tiếng hú của Lang Vương vọng qua tán cây. Nhặt thùng đạn và tích khiên trước khi tiến lên đỉnh trăng máu.',
+        'Khi còn nửa máu, Lang Vương hóa trăng máu một lần: lớn gấp đôi, hồi đầy máu và nhuộm đỏ khu rừng dưới mặt trăng góc phải. Mỗi 10 giây nó nhảy tới cào 2 nhát, mỗi nhát mất 2 máu nếu không bật khiên. Súng ngắm mở trong pha này: mỗi phát dùng 5 viên, gây 5 sát thương và hồi 1 giây.'
+      ],
+      targets: [34, 36, 37, 38, 35, 39, 40, 42, 44, 46],
+      intervals: [1.22, 1.1, 1.07, 1.04, 1.2, 1.01, 0.99, 0.97, 0.93, 1.03],
+      caps: [5, 5, 6, 6, 5, 6, 6, 7, 7, 6],
+      pools: [
+        ['skeleton', 'miniGolem'], ['skeleton', 'werewolf'], ['skeleton', 'miniGolem', 'werewolf'],
+        ['miniGolem', 'werewolf'], ['skeleton', 'miniGolem'], ['skeleton', 'miniGolem', 'werewolf'],
+        ['skeleton', 'werewolf'], ['skeleton', 'miniGolem', 'werewolf'], ['miniGolem', 'werewolf'],
+        ['skeleton', 'miniGolem', 'werewolf']
+      ]
     }
   ];
 
-  const bossNames = ['Kẻ gác nghĩa địa', 'Thây ma xanh', 'Nhện chúa', 'Bóng ma trắng', 'Dracula', 'Golem chúa'];
+  const bossNames = ['Kẻ gác nghĩa địa', 'Thây ma xanh', 'Nhện chúa', 'Bóng ma trắng', 'Dracula', 'Golem chúa', 'Lang Vương'];
   // Boss identities follow their milestones independently of the world scenery.
-  const bossArchetypes = ['skeleton', 'zombie', 'spider', 'ghost', 'vampire', 'golem'];
-  const bossAbilities = [['bone-volley'], ['ledge-drop'], ['silk-drop'], ['sine-drop'], ['bat-morph', 'shadow-drop'], ['club-swing']];
-  const bossSkills = [['bone-pillars'], ['hit-immunity'], ['web-stun', 'egg-hatch'], ['vanish-strike'], ['bat-drain', 'blood-clone'], ['rage-ground-slam', 'triple-smash']];
+  const bossArchetypes = ['skeleton', 'zombie', 'spider', 'ghost', 'vampire', 'golem', 'werewolf'];
+  const bossAbilities = [['bone-volley'], ['ledge-drop'], ['silk-drop'], ['sine-drop'], ['bat-morph', 'shadow-drop'], ['club-swing'], ['pounce']];
+  const bossSkills = [['bone-pillars'], ['hit-immunity'], ['web-stun', 'egg-hatch'], ['vanish-strike'], ['bat-drain', 'blood-clone'], ['rage-ground-slam', 'triple-smash'], ['blood-moon', 'double-claw']];
   const levels = [];
   chapters.forEach(function (chapter, world) {
     chapter.names.forEach(function (name, stage) {
@@ -196,7 +223,7 @@
         ammoInterval: Number((5.8 - world * 0.2 - (recovery ? 0.3 : 0)).toFixed(1)),
         // Keep original overhead skills, introducing one before mixing the others.
         abilitySpawnEvery: chapter.pools[stage].some(type => enemyTypes[type].ability) ? (recovery || stage < 3 ? 4 : 3) : 0,
-        abilityInterval: Number((9 - world * 0.5 + (recovery ? 1 : 0)).toFixed(1)),
+        abilityInterval: Number((Math.max(world > 5 ? 6.6 : 6.5, 9 - world * 0.5) + (recovery ? 1 : 0)).toFixed(1)),
         abilityWarning: recovery ? 1.7 : 1.5,
         // Ramp duration starts after warmup. Difficulty scales only the added
         // pressure, preserving the starting attack cadence and movement speed.
@@ -208,7 +235,7 @@
         bossWarmup: 4,
         boss: stage === 9,
         bossArchetype: stage === 9 ? bossArchetypes[world] : null,
-        bossHealth: stage === 9 ? (world === 5 ? 54 : 18 + world * 4) : 0,
+        bossHealth: stage === 9 ? (world === 5 ? 54 : world === 6 ? 50 : 18 + world * 4) : 0,
         bossAbilities: stage === 9 ? bossAbilities[world].slice() : [],
         bossSkills: stage === 9 ? bossSkills[world].slice() : [],
         story: chapter.stories[stage],
@@ -223,6 +250,9 @@
       if (config.id === 32) config.tutorial = 'Thây ma xanh có nhiều máu hơn thây ma thường. Nhặt thùng đạn và giữ khoảng cách với bệ đá.';
       if (config.id === 42) config.tutorial = 'Ma cà rồng có thể hóa dơi, bay lên rồi đáp lại. Canh lúc chúng hạ thấp để tiết kiệm đạn.';
       if (config.id === 51) config.tutorial = 'Golem nâng gậy gỗ gai trước khi quật. Rời vùng báo động hoặc nhảy qua gậy; khiên đang bật có thể chặn đòn.';
+      if (config.id === 61) config.tutorial = 'Golem nhỏ có kích thước như bộ xương nhưng chịu nhiều đạn hơn. Né vùng quật của gậy gai hoặc bật khiên trước khi áp sát.';
+      if (config.id === 62) config.tutorial = 'Người sói lấy đà rồi nhảy lên vồ xuống. Rời vùng báo trước, nhảy qua cú vồ và canh bắn khi nó dừng lại.';
+      if (config.id === 70) config.tutorial = 'Trăng máu mở súng ngắm tự động: cần ít nhất 5 viên, mỗi phát dùng 5 viên và gây 5 sát thương; hồi chiêu 1 giây. Lang Vương hồi đầy máu và lớn gấp đôi một lần khi còn nửa máu. Bật khiên hoặc né dấu báo của đòn cào kép mỗi 10 giây.';
       levels.push(config);
     });
   });
@@ -258,8 +288,8 @@
     return {
       x: side === -1 ? -50 : 1010,
       y: 438,
-      w: boss ? (archetype === 'golem' ? 156 : Math.max(96, stats.w * 1.85)) : stats.w,
-      h: boss ? (archetype === 'golem' ? 172 : Math.max(94, stats.h * 1.5)) : stats.h,
+      w: boss ? (archetype === 'golem' ? 156 : archetype === 'werewolf' ? 80 : Math.max(96, stats.w * 1.85)) : stats.w,
+      h: boss ? (archetype === 'golem' ? 172 : archetype === 'werewolf' ? 108 : Math.max(94, stats.h * 1.5)) : stats.h,
       dir: side === -1 ? 1 : -1,
       type: boss ? 'boss' : enemyType,
       archetype: archetype,

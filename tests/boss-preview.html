@@ -1,8 +1,8 @@
 <!doctype html><html lang="vi"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Kiểm tra hiệu ứng boss · 2.2.0</title><link rel="stylesheet" href="../assets/fonts/fonts.css?v=2.2.0">
+<title>Kiểm tra hiệu ứng boss · 2.3.0</title><link rel="stylesheet" href="../assets/fonts/fonts.css?v=2.3.0">
 <style>body{margin:20px;background:#101714;color:#e9eade;font:14px/1.5 'Noto Sans',sans-serif}main{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}h1{font-size:20px}h2{font-size:14px;margin:0 0 6px}canvas{display:block;width:100%;border:1px solid #ffffff25;border-radius:8px}@media(max-width:700px){main{grid-template-columns:1fr}}</style>
-<h1>Kiểm tra hiệu ứng và dấu tiếng Việt · 2.2.0</h1><main id="previews"></main>
-<script src="../js/typography.js?v=2.2.0"></script><script src="../js/campaign.js?v=2.2.0"></script><script src="../js/bosses.js?v=2.2.0"></script><script src="../js/golem.js?v=2.2.0"></script><script src="../js/renderer.js?v=2.2.0"></script><script src="../js/game.js?v=2.2.0"></script>
+<h1>Kiểm tra hiệu ứng và dấu tiếng Việt · 2.3.0</h1><main id="previews"></main>
+<script src="../js/typography.js?v=2.3.0"></script><script src="../js/campaign.js?v=2.3.0"></script><script src="../js/bosses.js?v=2.3.0"></script><script src="../js/golem.js?v=2.3.0"></script><script src="../js/wolves.js?v=2.3.0"></script><script src="../js/renderer.js?v=2.3.0"></script><script src="../js/game.js?v=2.3.0"></script>
 <script>
 (async()=>{
 await MM.Typography.ready;
@@ -21,6 +21,17 @@ const samples=[
  [60,'60 · Sóng chấn — đất nứt và đá bật lên',(g,b)=>{b.x=680;b.dir=-1;b.rageTime=4.5;b.golemState='shock';b.swingProgress=1;g.golemZones=[{owner:b,kind:'shock',x:480,y:438,w:360,h:38,phase:'impact',timer:.15,total:.3}];g.groundCracks=[{owner:b,x:480,y:438,w:375,life:1.8,maxLife:2}];}]
 ];
 for(let index=1;index<=3;index++)samples.push([60,`60 · Liên hoàn chùy ${index}/3${index===3?' — hiệu ứng tắt':''}`,(g,b)=>{b.x=680;b.dir=-1;b.rageTime=4.3-index*.6;b.golemState='combo-swing';b.comboIndex=index;b.swingProgress=index/3;g.golemZones=[{owner:b,kind:'slam',x:445,y:438,w:210,h:60,phase:'impact',timer:.14,total:.28,comboIndex:index}];g.groundCracks=[{owner:b,x:445,y:438,w:220+index*12,life:1.5,maxLife:2}];if(index===3)g.settings.effects=false;}]);
+const bloodMoon=(g,b)=>{b.bloodMoon=true;b.w=160;b.h=216;b.health=b.maxHealth;b.x=680;b.dir=-1;g.player.weaponMode='sniper';g.player.ammo=25;g.player.shotCooldown=1;};
+samples.push(
+ [61,'61 · Rừng gai cũ — Golem mini cao bằng bộ xương',(g,b)=>{b.x=280;b.dir=1;b.golemState='windup';const skeleton=g.spawn('skeleton');skeleton.phase='active';skeleton.x=150;skeleton.y=438;skeleton.abilityState='ground';skeleton.platform=null;g.golemZones=[{owner:b,kind:'club',x:330,y:438,w:95,h:44,phase:'warning',timer:.6,total:1}];},'miniGolem'],
+ [62,'62 · Người sói báo vị trí vồ xuống',(g,b)=>{b.x=660;b.dir=-1;b.wolfState='windup';b.wolfProgress=.4;g.wolfZones=[{owner:b,kind:'pounce',x:440,y:438,w:118,h:52,phase:'warning',timer:.7,total:1.1}];},'werewolf'],
+ [62,'62 · Người sói nhảy lên trước khi vồ',(g,b)=>{b.x=565;b.y=308;b.dir=-1;b.wolfState='leap';b.wolfProgress=.5;g.wolfZones=[{owner:b,kind:'pounce',x:440,y:438,w:118,h:52,phase:'warning',timer:.25,total:.55}];},'werewolf'],
+ [62,'62 · Người sói tiếp đất và vồ xuống',(g,b)=>{b.x=480;b.dir=-1;b.wolfState='pounce';b.wolfProgress=.6;g.wolfZones=[{owner:b,kind:'pounce',x:440,y:438,w:118,h:52,phase:'impact',timer:.15,total:.3}];},'werewolf'],
+ [70,'70 · Lang Vương — giai đoạn thường',(g,b)=>{b.dir=-1;b.wolfState='windup';b.wolfProgress=.3;b.skillWarning={name:'LANG VƯƠNG VỒ XUỐNG',remaining:.9,total:1.1};g.wolfZones=[{owner:b,kind:'pounce',x:440,y:438,w:164,h:60,phase:'warning',timer:.9,total:1.1}];}],
+ [70,'70 · Trăng máu — Lang Vương lớn gấp đôi và hồi đầy máu',(g,b)=>{bloodMoon(g,b);b.wolfState='transform';b.intangible=true;b.transformTime=.7;b.skillWarning={name:'TRĂNG MÁU · THỨC TỈNH',remaining:.7,total:1.2};}],
+ [70,'70 · Súng ngắm — vệt đạn xuyên màn đêm đỏ',(g,b)=>{bloodMoon(g,b);b.wolfState='approach';b.health=b.maxHealth-5;g.player.dir=1;g.player.shotTimer=.97;g.bullets=[{x:564,y:409,vx:1280,dir:1,kind:'sniper',damage:5}];}]
+);
+for(let index=1;index<=2;index++)samples.push([70,`70 · Trăng máu — cào ${index}/2${index===2?' · hiệu ứng tắt':''}`,(g,b)=>{bloodMoon(g,b);b.x=555;b.wolfState=index===1?'claw-windup':'claw';b.wolfProgress=index===1?0:.6;b.clawIndex=index;b.skillWarning={name:`LIÊN HOÀN CÀO ${index}/2`,remaining:.6,total:1.1};g.wolfZones=[{owner:b,kind:'claw',x:440,y:438,w:210,h:64,phase:index===1?'warning':'impact',timer:index===1?.6:.17,total:index===1?1.1:.3,damage:2,clawIndex:index}];if(index===2)g.settings.effects=false;}]);
 for(const[id,title,configure,type='boss']of samples){
  const g=new MM.Game({headless:true,random:()=>.5,storage:{getItem:()=>null,setItem:()=>{}}});g.start(id);g.levelKills=type==='boss'?g.level.target:0;g.bossSpawned=type==='boss';g.time=7;
  const b=g.spawn(type);b.phase='active';b.x=680;b.y=438;g.player.x=440;g.player.invulnerable=0;configure(g,b);
