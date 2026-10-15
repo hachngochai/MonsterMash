@@ -10,9 +10,10 @@ const context = vm.createContext({});
 vm.runInContext(fs.readFileSync(path.join(__dirname, '../js/campaign.js'), 'utf8'), context);
 const campaign = context.MM.Campaign;
 
-test('campaign has 80 sequential levels and eight boss milestones', () => {
-  assert.equal(campaign.worlds.length, 8);
-  assert.equal(campaign.levels.length, 80);
+test('campaign has 100 sequential levels and ten boss milestones', () => {
+  assert.equal(campaign.worlds.length, 10);
+  assert.equal(campaign.levels.length, 100);
+  assert.equal(campaign.levels.filter(level => level.boss).length, 10);
   campaign.levels.forEach((level, index) => {
     assert.equal(level.id, index + 1);
     assert.equal(level.world, Math.floor(index / 10));
@@ -29,12 +30,14 @@ test('campaign has 80 sequential levels and eight boss milestones', () => {
   assert.equal(campaign.getLevel(60).bossHealth, 54);
   assert.equal(campaign.getLevel(70).bossHealth, 50);
   assert.equal(campaign.getLevel(80).bossHealth, 72);
+  assert.equal(campaign.getLevel(90).bossHealth, 100);
+  assert.equal(campaign.getLevel(100).bossHealth, 120);
 });
 
 test('saved level ids clamp safely, including invalid or obsolete saves', () => {
   assert.equal(campaign.getLevel(-50).id, 1);
-  assert.equal(campaign.getLevel(500).id, 80);
-  assert.equal(campaign.getLevel(Infinity).id, 80);
+  assert.equal(campaign.getLevel(500).id, 100);
+  assert.equal(campaign.getLevel(Infinity).id, 100);
   assert.equal(campaign.getLevel(-Infinity).id, 1);
   assert.equal(campaign.getLevel(undefined).id, 1);
   assert.equal(campaign.getLevel('broken').id, 1);
@@ -43,7 +46,7 @@ test('saved level ids clamp safely, including invalid or obsolete saves', () => 
 });
 
 test('new enemies arrive gradually and recovery levels reduce pressure', () => {
-  const firstAppearances = { skeleton: 1, zombie: 3, spider: 12, ghost: 22, greenZombie: 30, vampire: 42, golem: 51, miniGolem: 61, werewolf: 62, miniKingKong: 71, wolfPup: 74 };
+  const firstAppearances = { skeleton: 1, zombie: 3, spider: 12, ghost: 22, greenZombie: 30, vampire: 42, golem: 51, miniGolem: 61, werewolf: 62, miniKingKong: 71, wolfPup: 74, fireDragon:81, windDragon:81, iceDragon:84, earthDragon:84, lightningDragon:87, lionMan:91, medusa:91, goatman:91 };
   Object.entries(firstAppearances).forEach(([type, id]) => {
     assert.equal(campaign.levels.find(level => level.types.includes(type)).id, id);
   });
@@ -121,12 +124,18 @@ test('finite ammunition grows with enemy durability and remains collectible', ()
       const initial = Math.max(1, Math.round(level.initialAmmo * settings.ammoMultiplier));
       // Crates keep arriving after the final regular spawn. Verify that the
       // expected mixed wave has a finite, practical supply time in every mode.
-      const regularDemand = Array.from({ length: level.target }, (_, index) => campaign.createEnemy(level.types[index % level.types.length], level, difficulty, -1, () => 0.5).health).reduce((sum, health) => sum + health, 0);
+      const regularDemand = Array.from({ length: level.target }, (_, index) => {
+        const enemy=campaign.createEnemy(level.types[index % level.types.length], level, difficulty, -1, () => 0.5);
+        return Math.ceil(enemy.health / (enemy.archetype === 'dragon' ? 2 : 1));
+      }).reduce((sum, rounds) => sum + rounds, 0);
       const bossHealth = level.boss ? campaign.createEnemy('boss', level, difficulty, -1, () => 0.5).health : 0;
-      // Both new bosses refill once after half a bar. Lang Vương's sniper
-      // exchanges five cartridges for five damage; airborne KingKong takes
-      // two damage per cartridge. Its last rage phase requires survival only.
-      const bossDemand = level.id === 80 ? Math.ceil(bossHealth / 2) * 2 : bossHealth + (level.id === 70 ? Math.ceil(bossHealth / 2) : 0);
+      // Include phase refills and real weapon damage: aerial rounds deal two
+      // HP; Lang Vương's sniper exchanges five rounds for five HP. Chimera's
+      // three final bodies contribute another 30 + 20 + 40 ground HP.
+      const bossDemand = level.id === 80 ? Math.ceil(bossHealth / 2) * 2
+        : level.id === 90 ? Math.ceil(bossHealth / 2) + bossHealth
+        : level.id === 100 ? Math.ceil(bossHealth / 2) + Math.ceil((bossHealth - 10) / 2) + 90
+        : bossHealth + (level.id === 70 ? Math.ceil(bossHealth / 2) : 0);
       const demand = regularDemand + bossDemand;
       const cratesNeeded = Math.max(0, Math.ceil((demand - initial - (level.boss ? crate : 0)) / crate));
       assert.ok(cratesNeeded * level.ammoInterval <= 75, `level ${level.id} ${difficulty}: expected supply takes ${cratesNeeded * level.ammoInterval}s`);
@@ -168,7 +177,9 @@ test('boss milestones use their explicit identities and retain original native s
     [50, 'vampire', 'bat-morph,shadow-drop', 34],
     [60, 'golem', 'club-swing,rock-throw', 54],
     [70, 'werewolf', 'pounce', 50],
-    [80, 'kong', 'banana-throw', 72]
+    [80, 'kong', 'banana-throw', 72],
+    [90, 'dragon', 'five-elements', 100],
+    [100, 'chimera', 'chimera-hunt', 120]
   ];
   order.forEach(([id, archetype, abilities, health]) => {
     const level = campaign.getLevel(id);
@@ -188,6 +199,8 @@ test('boss milestones use their explicit identities and retain original native s
   assert.equal(campaign.getLevel(60).name, 'Golem chúa');
   assert.equal(campaign.getLevel(70).name, 'Lang Vương');
   assert.equal(campaign.getLevel(80).name, 'KingKong');
+  assert.equal(campaign.getLevel(90).name, 'Rồng ngàn tuổi');
+  assert.equal(campaign.getLevel(100).name, 'Chimera');
   campaign.levels.filter(level => !level.boss).forEach(level => {
     assert.equal(level.bossArchetype, null);
     assert.equal(level.bossSkills.length, 0);
@@ -401,4 +414,57 @@ test('wolf pups stay small running enemies with one health on every difficulty',
   assert.ok(campaign.getLevel(70).story.includes('hú 4 giây'));
   assert.ok(campaign.getLevel(70).story.includes('1,5 giây'));
   assert.ok(campaign.getLevel(70).tutorial.includes('6 giây thường / 4 giây Trăng Máu'));
+});
+
+test('sky realm introduces the exact approved dragon casts at 81, 84 and 87', () => {
+  const world=campaign.worlds[8];
+  assert.equal(world.enemy,'fireDragon');
+  assert.equal(world.scenery,8);
+  const early=['fireDragon','windDragon','golem','miniKingKong','werewolf'];
+  const middle=['fireDragon','windDragon','iceDragon','earthDragon','miniKingKong','werewolf'];
+  const late=['fireDragon','windDragon','iceDragon','earthDragon','lightningDragon','miniKingKong'];
+  for(let id=81;id<=90;id++) {
+    const level=campaign.getLevel(id),expected=id<84?early:id<87?middle:late;
+    assert.equal(level.world,8);
+    assert.deepEqual(Array.from(level.types).sort(),expected.slice().sort(),`strict regular cast at ${id}`);
+    assert.equal(level.recovery,id===81||id===85);
+    assert.equal(level.enemyPressureCap,campaign.getLevel(80).enemyPressureCap);
+    assert.equal(level.bossPressureCap,campaign.getLevel(80).bossPressureCap);
+  }
+  for(const [type,variant,ability] of [
+    ['fireDragon','fire','fire-breath'],['iceDragon','ice','ice-fall'],['windDragon','wind','wind-lift'],
+    ['earthDragon','earth','lava-tiles'],['lightningDragon','lightning','lightning-strike']
+  ]) {
+    const enemy=campaign.createEnemy(type,88,'normal',-1,()=>.5);
+    assert.equal(enemy.type,type);assert.equal(enemy.archetype,'dragon');
+    assert.equal(enemy.variant,variant);assert.equal(enemy.ability,ability);
+    assert.equal(enemy.boss,false);assert.equal(enemy.bossSkills.length,0);
+    assert.ok(enemy.w>38&&enemy.h>54,'each dragon has its own large winged body');
+  }
+  const boss=campaign.createEnemy('boss',90,'normal',1,()=>.5);
+  assert.equal(boss.archetype,'dragon');assert.equal(boss.variant,'yinYang');
+  assert.equal(boss.w,252);assert.equal(boss.h,190);assert.equal(boss.maxHealth,100);
+  assert.equal(boss.bossSkills.join(','),'five-elements,yin-yang-reincarnation,dragon-knight');
+});
+
+test('mythic ruins contain only the three new humanoids and an independent Chimera boss', () => {
+  assert.equal(campaign.worlds[9].enemy,'lionMan');
+  assert.equal(campaign.worlds[9].scenery,9);
+  for(let id=91;id<=100;id++) {
+    const level=campaign.getLevel(id);
+    assert.equal(level.world,9);
+    assert.deepEqual(Array.from(level.types).sort(),['goatman','lionMan','medusa']);
+    assert.equal(level.recovery,id===91||id===95);
+  }
+  const lion=campaign.createEnemy('lionMan',91,'normal',-1,()=>.5);
+  const medusa=campaign.createEnemy('medusa',91,'normal',-1,()=>.5);
+  const goat=campaign.createEnemy('goatman',91,'normal',-1,()=>.5);
+  assert.equal(lion.archetype,'lion');assert.equal(lion.ability,'spear');
+  assert.equal(medusa.ability,'petrify');assert.equal(goat.ability,'axe');
+  for(const enemy of [lion,medusa]){assert.equal(enemy.w,38);assert.equal(enemy.h,54);assert.equal(enemy.boss,false);}
+  assert.equal(goat.w,57);assert.equal(goat.h,81);
+  const boss=campaign.createEnemy('boss',100,'normal',1,()=>.5);
+  assert.equal(boss.archetype,'chimera');assert.equal(boss.maxHealth,120);
+  assert.equal(boss.w,180);assert.equal(boss.h,126);
+  assert.equal(boss.bossSkills.join(','),'laser,giant-bite,aerial-hunt,three-forms');
 });

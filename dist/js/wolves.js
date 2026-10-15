@@ -29,6 +29,7 @@
     game.wolfZones = game.wolfZones || [];
     enemy.baseW = enemy.baseW || enemy.w; enemy.baseH = enemy.baseH || enemy.h;
     enemy.wolfPup = Boolean(isPup(enemy));
+    if (enemy.wolfPup) enemy.pupRunDir = enemy.dir === -1 ? -1 : 1;
     enemy.wolfActiveTime = 0; enemy.wolfCooldown = enemy.boss ? 3 : 1.8;
     enemy.bloodActiveTime = 0; enemy.nextBloodAt = BLOOD_INTERVAL; enemy.bloodCombo = null;
     enemy.bloodMoon = false; enemy.bloodPhaseTriggered = false; enemy.transformTime = 0;
@@ -39,8 +40,14 @@
     enemy.y = GROUND; state(enemy, enemy.wolfPup ? 'run' : 'approach');
   }
   // Retreating summons never call killEnemy: they award neither score nor quota.
-  function retirePup(game, pup) {
+  function retirePup(game, pup, escaped = false) {
     clearZones(game, pup); pup.dead = true; pup.health = 0;
+    if (escaped && !pup.minion && !pup.ownerBoss && !pup.waveReservationReleased) {
+      // A dodged runner leaves the quota open for a replacement; no kill rewards.
+      pup.waveReservationReleased = true;
+      game.regularSpawned = Math.max(game.levelKills || 0, (game.regularSpawned || 0) - 1);
+      game.spawnTimer = Math.min(Number.isFinite(game.spawnTimer) ? game.spawnTimer : .8, .8);
+    }
     game.burst?.(pup.x, GROUND - 10, '#a99d8d', 5);
   }
   function cleanup(game, enemy) {
@@ -200,10 +207,9 @@
       enemy.summonLife -= dt;
       if (!alive(enemy.ownerBoss) || enemy.summonLife <= 0) { retirePup(game, enemy); return; }
     }
-    const distance = game.player.x - enemy.x;
-    if (Math.abs(distance) > 4) enemy.dir = Math.sign(distance);
-    const step = Math.min(Math.abs(distance), enemy.speed * (pressure(game, enemy).moveRate || 1) * dt);
-    enemy.x = clamp(enemy.x + Math.sign(distance) * step, 18, W - 18);
+    enemy.dir = enemy.pupRunDir;
+    enemy.x += enemy.pupRunDir * enemy.speed * (pressure(game, enemy).moveRate || 1) * dt;
+    if (enemy.x < -45 || enemy.x > W + 45) { retirePup(game, enemy, true); return; }
     if (overlaps(game.player, {x:enemy.x, y:GROUND, w:enemy.w * .72, h:enemy.h * .88})) game.hurt({x:enemy.x, owner:enemy, kind:'wolf-pup', damage:1});
   }
   function updateEntity(game, enemy, dt) {

@@ -8,7 +8,7 @@ const test = require('node:test');
 
 function loadGame(globals = {}, afterLoad = () => {}) {
   const context = vm.createContext(globals);
-  for (const file of ['campaign.js', 'golem.js', 'wolves.js', 'kong.js', 'game.js']) {
+  for (const file of ['campaign.js', 'golem.js', 'wolves.js', 'kong.js', 'dragons.js', 'mythic.js', 'game.js']) {
     vm.runInContext(fs.readFileSync(path.join(__dirname, '../js', file), 'utf8'), context, { filename: file });
   }
   afterLoad(context);
@@ -342,7 +342,7 @@ test('quota overshoot completes regular stages; milestone stages require exactly
   assert.equal(game.screen, 'playing');
   tick(game, .1);
   assert.equal(game.screen, 'won');
-  assert.equal(game.save.resume, 80);
+  assert.equal(game.save.resume, 81);
   assert.ok(game.save.completed.includes(80));
 });
 
@@ -350,7 +350,7 @@ test('completed old campaign saves continue into the new chapter while explicit 
   const MM=loadGame();
   const old=MM.readSave(storage({version:2,resume:50,completed:Array.from({length:50},(_,i)=>i+1),best:12345,settings:{controls:'buttons',difficulty:'hard'}}));
   assert.equal(old.resume,51);
-  assert.equal(old.campaignSize,80);
+  assert.equal(old.campaignSize,100);
   assert.equal(old.completed.length,50);
   assert.equal(old.best,12345);
   assert.equal(old.settings.controls,'buttons');
@@ -367,35 +367,58 @@ test('completed old campaign saves continue into the new chapter while explicit 
   assert.equal(replay60.resume,60);
   const completed70=MM.readSave(storage({campaignSize:70,resume:70,completed:Array.from({length:70},(_,i)=>i+1),best:34567,settings:{controls:'gestures',difficulty:'story'}}));
   assert.equal(completed70.resume,71);
-  assert.equal(completed70.campaignSize,80);
+  assert.equal(completed70.campaignSize,100);
   assert.equal(completed70.completed.length,70);
   assert.equal(completed70.best,34567);
   assert.equal(completed70.settings.controls,'gestures');
   assert.equal(completed70.settings.difficulty,'story');
   const replay70=MM.readSave(storage({...completed70,resume:70}));
   assert.equal(replay70.resume,70);
+  const completed80=MM.readSave(storage({campaignSize:80,resume:80,completed:Array.from({length:80},(_,i)=>i+1),best:45678,settings:{controls:'buttons',difficulty:'hard',sound:true}}));
+  assert.equal(completed80.resume,81);
+  assert.equal(completed80.campaignSize,100);
+  assert.equal(completed80.completed.length,80);
+  assert.equal(completed80.best,45678);
+  assert.equal(completed80.settings.controls,'buttons');
+  assert.equal(completed80.settings.difficulty,'hard');
+  assert.equal(completed80.settings.sound,true);
+  const replay80=MM.readSave(storage({...completed80,resume:80}));
+  assert.equal(replay80.resume,80);
+  const unfinished80=MM.readSave(storage({campaignSize:80,resume:80,completed:[79]}));
+  assert.equal(unfinished80.resume,80);
+  const current100=MM.readSave(storage({campaignSize:100,resume:100,completed:Array.from({length:100},(_,i)=>i+1)}));
+  assert.equal(current100.resume,100,'finishing the current campaign stays at its final stage');
 });
 
-test('held mobile fire follows sniper cooldown and consumes only five ammo per successful shot', () => {
-  const {game,MM}=fresh(70);
-  const boss=game.spawn('boss',1);
-  Object.assign(boss,{phase:'active',x:850,speed:0});
-  MM.WolfCombat.hit(game,boss,boss.maxHealth/2);
-  tick(game,1.2);
-  // This test measures the held-fire input, not the independent claw damage.
-  game.player.health=game.player.maxHealth=100;
-  game.player.ammo=25;
-  let shots=0;
-  const shoot=game.shoot.bind(game);
-  game.shoot=dir=>{const fired=shoot(dir);if(fired)shots++;return fired;};
-  const button={dataset:{control:'fire-right'},classList:{add(){},remove(){}},setPointerCapture(){},releasePointerCapture(){}};
-  game.padDown(pointer(1,0,0),button);
-  tick(game,3.05);
-  game.padUp(pointer(1,0,0),button);
-  assert.equal(shots,4);
-  assert.equal(game.player.ammo,5);
-  tick(game,1.1);
-  assert.equal(shots,4,'releasing the button stops fire');
+test('keyboard and mobile sniper fire every half second, costing five ammo per successful shot', () => {
+  for(const input of ['keyboard','mobile']) {
+    const {game,MM}=fresh(70);
+    game.ammoTimer=10000;
+    const boss=game.spawn('boss',1);
+    Object.assign(boss,{phase:'active',x:850,speed:0});
+    MM.WolfCombat.hit(game,boss,boss.maxHealth/2);
+    tick(game,1.2);
+    // Isolate held-fire cadence from the independent double-claw damage.
+    game.player.health=game.player.maxHealth=100;
+    game.player.ammo=40;
+    const shots=[];
+    const shoot=game.shoot.bind(game);
+    game.shoot=dir=>{const fired=shoot(dir);if(fired)shots.push({time:game.time,...game.bullets.at(-1)});return fired;};
+    const button={dataset:{control:'fire-right'},classList:{add(){},remove(){}},setPointerCapture(){},releasePointerCapture(){}};
+    if(input==='keyboard')game.keyDown(key('KeyD'));
+    else game.padDown(pointer(1,0,0),button);
+    tick(game,3.05);
+    if(input==='keyboard')game.keyUp(key('KeyD'));
+    else game.padUp(pointer(1,0,0),button);
+    assert.equal(shots.length,7,`${input} fires immediately and six more times over three seconds`);
+    assert.equal(game.player.ammo,5);
+    for(let i=0;i<shots.length;i++) {
+      assert.equal(shots[i].kind,'sniper');assert.equal(shots[i].damage,5);
+      if(i>0)assert.ok(Math.abs(shots[i].time-shots[i-1].time-.5)<=1/60+1e-8,`${input} maintains the 0.5-second cooldown`);
+    }
+    tick(game,1.1);
+    assert.equal(shots.length,7,`${input} release stops fire with a full shot still available`);
+  }
 });
 
 test('keyboard and mobile held fire aim at airborne KingKong while movement and release stay independent', () => {
@@ -605,10 +628,10 @@ test('malformed and denied saves fall back safely; progress and options survive 
   const denied = { getItem() { throw new Error('Denied'); }, setItem() { throw new Error('Denied'); } };
   const game = new MM.Game({ headless: true, storage: denied });
   assert.doesNotThrow(() => { game.start(); game.finish(true); });
-  const unsafe = MM.readSave(storage({ resume: 900, best: -1, completed: [1, 1, 50, 51, 61, 71, 80, 81, '2', null], settings: { difficulty: 'bogus', sound: 'true', effects: false } }));
-  assert.equal(unsafe.resume, 80);
+  const unsafe = MM.readSave(storage({ resume: 900, best: -1, completed: [1, 1, 50, 51, 61, 71, 80, 81, 90, 100, 101, '2', null], settings: { difficulty: 'bogus', sound: 'true', effects: false } }));
+  assert.equal(unsafe.resume, 100);
   assert.equal(unsafe.best, 0);
-  assert.equal(JSON.stringify(unsafe.completed), '[1,50,51,61,71,80]');
+  assert.equal(JSON.stringify(unsafe.completed), '[1,50,51,61,71,80,81,90,100]');
   assert.equal(unsafe.settings.difficulty, 'normal');
   assert.equal(unsafe.settings.sound, false);
   assert.equal(unsafe.settings.effects, false);

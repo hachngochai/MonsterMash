@@ -167,13 +167,13 @@ test('Phàm ăn leaps from a ledge and its pursuit can overlap the periodic fift
     assert.equal(boss.hardenedTime, 0, 'ten bullets do not create a defensive shield');
     advance(game, .3, skills);
     assert.equal(boss.gluttonState, 'chase');
-    assert.equal(boss.health, boss.maxHealth - 3, 'the periodic ward independently heals two HP');
-    assert.equal(boss.hardenedTime, 2); assert.equal(skills.hit(game, boss), false);
+    assert.equal(boss.health, boss.maxHealth - 4, 'the periodic ward independently heals one HP');
+    assert.equal(boss.hardenedTime, 1); assert.equal(skills.hit(game, boss), false);
     advance(game, .5, skills);
     assert.equal(game.player.health, shielded ? 30 : 28);
     assert.equal(game.player.shieldHits, shielded ? 2 : 0);
     assert.equal(boss.gluttonState, null); assert.equal(boss.y, 438); assert.equal(boss.platform, null);
-    assert.ok(boss.hardenedTime > 1.49 && boss.hardenedTime < 1.51);
+    assert.ok(boss.hardenedTime > .49 && boss.hardenedTime < .51);
   }
 });
 

@@ -64,6 +64,7 @@
       this.ammoCrates = []; this.enemyShots = []; this.ammoTimer = 2.4;
       this.bossHazards = []; this.bossEggs = []; this.golemZones = []; this.groundCracks = []; this.wolfZones = [];
       this.kongZones=[];this.bananaPeels=[];
+      this.dragonZones=[];this.dragonShots=[];this.mythicZones=[];this.mythicShots=[];
       this.keys = new Set(); this.pointers = new Map(); this.padInputs = new Map();
       this.score = 0; this.totalKills = 0; this.levelKills = 0; this.shieldCount = 0;
       this.regularSpawned = 0; this.spawnTimer = 1; this.bossSpawned = false; this.bossDefeated = false;
@@ -83,7 +84,7 @@
     }
     makePlayer(health = this.tuning.health) {
       const ammo=Math.max(1,Math.round((this.level.initialAmmo||3)*(this.tuning.ammoMultiplier||1)));
-      return {x:W/2,y:GROUND,w:38,h:54,dir:1,vx:0,vy:0,grounded:true,health,maxHealth:this.tuning.health,ammo,maxAmmo:this.level.ammoCapacity||18,shieldTime:0,shieldHits:0,invulnerable:1.5,shotTimer:0,shotCooldown:.17,weaponMode:'normal',dryCooldown:0,jumpBuffer:0,coyote:.1,stunTime:0,stunGrace:0,knockdownTime:0};
+      return {x:W/2,y:GROUND,w:38,h:54,dir:1,vx:0,vy:0,grounded:true,health,maxHealth:this.tuning.health,ammo,maxAmmo:this.level.ammoCapacity||18,shieldTime:0,shieldHits:0,invulnerable:1.5,shotTimer:0,shotCooldown:.17,weaponMode:'normal',dryCooldown:0,jumpBuffer:0,coyote:.1,stunTime:0,stunGrace:0,stunStyle:'web',knockdownTime:0,rollTime:0,rollCooldown:0,rollDuration:.32,rollProgress:0,rollDir:1,petrifyTime:0,petrifyGrace:0,burnTime:0,burnTick:1};
     }
     persist() { try { this.storage?.setItem(SAVE_KEY,JSON.stringify(this.save)); } catch { /* Game remains playable without localStorage. */ } }
     start(id = this.save.resume, options = {}) {
@@ -101,6 +102,7 @@
       this.ammoCrates=[];this.enemyShots=[];this.ammoTimer=2.4;
       this.bossHazards=[];this.bossEggs=[];this.golemZones=[];this.groundCracks=[];this.wolfZones=[];
       this.kongZones=[];this.bananaPeels=[];
+      this.dragonZones=[];this.dragonShots=[];this.mythicZones=[];this.mythicShots=[];
       this.levelKills = 0; this.regularSpawned = 0; this.spawnTimer = 2.2; this.levelTime = 0; this.restTimer = 0;
       this.bossSpawned = false; this.bossDefeated = false; this.shake = 0; this.flash = 0;
       this.screen = 'playing'; this.clearInputs(); this.sound.unlock();
@@ -121,6 +123,7 @@
       this.ammoCrates=[];this.enemyShots=[];
       this.bossHazards=[];this.bossEggs=[];this.golemZones=[];this.groundCracks=[];this.wolfZones=[];
       this.kongZones=[];this.bananaPeels=[];
+      this.dragonZones=[];this.dragonShots=[];this.mythicZones=[];this.mythicShots=[];
       this.level=Campaign.getLevel(this.save.resume);this.tuning=Campaign.tuning(this.settings.difficulty);this.player=this.makePlayer();
       this.levelKills=0;this.totalKills=0;this.shieldCount=0;this.score=0;this.bossSpawned=false;this.bossDefeated=false;
       if (!this.headless) { this.mobileView?.leave(); this.ui['home-overlay'].hidden = false; this.ui['result-overlay'].hidden = true; this.ui['stage-banner'].hidden = true; this.ui['toast'].hidden = true; }
@@ -129,6 +132,7 @@
     clearInputs() {
       this.keys.clear(); this.pointers.clear(); this.padInputs.clear();
       this.player.vx = 0; this.player.jumpBuffer = 0;
+      this.moveTapDir=0;this.moveTapTime=-Infinity;
       if(!this.headless)document.querySelectorAll('[data-control].held').forEach(button=>button.classList.remove('held'));
     }
     keyDown(event) {
@@ -138,6 +142,7 @@
       if (['Escape','KeyP'].includes(code)) { event.preventDefault?.(); if (!event.repeat) this.togglePause(); return; }
       if (this.screen !== 'playing') return;
       if (['ArrowLeft','ArrowRight','ArrowUp','KeyW','KeyA','KeyD','KeyJ','KeyL','Space'].includes(code)) event.preventDefault?.();
+      if(!event.repeat&&!this.keys.has(code)&&['ArrowLeft','ArrowRight'].includes(code))this.moveTap(code==='ArrowLeft'?-1:1);
       this.keys.add(code); this.sound.unlock();
       if (!event.repeat && ['ArrowUp','KeyW'].includes(code)) this.jump();
       if (!event.repeat && code === 'Space') this.activateShield();
@@ -164,7 +169,7 @@
       const dx = pointer.x-pointer.startX, dy = pointer.y-pointer.startY;
       // Pixel thresholds work on both narrow mobile screens and large desktops.
       if (pointer.mode === 'pending' && Math.max(Math.abs(dx),Math.abs(dy)) >= 22) {
-        if (Math.abs(dx) > Math.abs(dy)*1.15) { pointer.mode = 'move'; pointer.move = Math.sign(dx); }
+        if (Math.abs(dx) > Math.abs(dy)*1.15) { pointer.mode = 'move'; pointer.move = Math.sign(dx); this.moveTap(pointer.move); }
         else if (Math.abs(dy) > Math.abs(dx)*1.15) { pointer.mode = 'vertical'; if (dy < 0) this.jump(); else this.activateShield(); }
       } else if (pointer.mode === 'move') { pointer.move = Math.abs(dx) > 12 ? Math.sign(dx) : 0; }
     }
@@ -180,6 +185,7 @@
       this.sound.unlock();
       this.canvas?.focus({preventScroll:true});
       const action = button.dataset.control;
+      if(action==='left'||action==='right')this.moveTap(action==='left'?-1:1);
       this.padInputs.set(event.pointerId, action);
       button.classList?.add('held');
       try { button.setPointerCapture(event.pointerId); } catch { /* Optional capture. */ }
@@ -192,23 +198,43 @@
       if(![...this.padInputs.values()].includes(button.dataset.control))button.classList?.remove('held');
       try { button.releasePointerCapture(event.pointerId); } catch { /* Optional capture. */ }
     }
-    jump() { if (this.screen === 'playing' && this.player.stunTime <= 0) this.player.jumpBuffer = .14; }
+    jump() { if (this.screen === 'playing' && this.player.stunTime <= 0 && this.player.petrifyTime <= 0 && this.player.rollTime <= 0) this.player.jumpBuffer = .14; }
+    moveTap(dir) {
+      if(this.moveTapDir===dir&&this.time-this.moveTapTime<=.28){this.tryRoll(dir);this.moveTapDir=0;this.moveTapTime=-Infinity;}
+      else{this.moveTapDir=dir;this.moveTapTime=this.time;}
+    }
+    tryRoll(dir) {
+      const p=this.player,blood=this.enemies.some(e=>e.boss&&e.archetype==='werewolf'&&e.bloodMoon&&!e.dead&&e.health>0&&e.wolfState!=='transform');
+      if(this.screen!=='playing'||!blood||p.rollCooldown>1e-8||p.stunTime>0||p.petrifyTime>0||p.rollTime>0)return false;
+      p.rollTime=p.rollDuration=.32;p.rollCooldown=.9;p.rollProgress=0;p.rollDir=dir<0?-1:1;p.dir=p.rollDir;p.vx=p.rollDir*850;p.jumpBuffer=0;
+      this.burst(p.x,p.y-22,'#e5c39c',12);return true;
+    }
     activateShield() {
       if (this.screen !== 'playing' || this.player.shieldTime > 0) return false;
       if (this.shieldCount <= 0) { this.toast(`Còn ${10 - this.totalKills % 10} địch để có khiên`); return false; }
       this.shieldCount--; this.player.shieldTime = 5; this.player.shieldHits = 3;
+      this.player.petrifyTime=0;this.player.petrifyGrace=.6;this.player.burnTime=0;this.player.burnTick=1;
       this.player.invulnerable = Math.max(this.player.invulnerable,.25);
       this.burst(this.player.x,this.player.y-28,'#91e3d1',22,'ring'); this.sound.play('shield'); this.toast('Khiên bật · 5 giây / 3 lần chặn'); this.updateUI(); return true;
     }
-    getWeaponProfile() {
+    getWeaponProfile(dir=this.player.dir) {
       const aerialBoss=this.enemies.find(e=>e.boss&&e.archetype==='kong'&&e.vinePhase&&!e.kongFinalTriggered&&!e.dead&&e.health>0);
       if(aerialBoss)return {kind:'highAim',cost:1,damage:2,cooldown:.22,speed:1050,locked:aerialBoss.kongState==='vine-rise',target:aerialBoss};
       const bloodBoss=this.enemies.find(e=>e.boss&&e.archetype==='werewolf'&&e.bloodMoon&&!e.dead&&e.health>0);
-      return bloodBoss?{kind:'sniper',cost:5,damage:5,cooldown:1,speed:1280,locked:bloodBoss.wolfState==='transform'}:{kind:'normal',cost:1,damage:1,cooldown:.17,speed:780,locked:false};
+      if(bloodBoss)return {kind:'sniper',cost:5,damage:5,cooldown:.5,speed:1280,locked:bloodBoss.wolfState==='transform'};
+      const air=this.enemies.filter(e=>!e.dead&&e.health>0&&e.phase==='active'&&((e.archetype==='dragon'&&e.dragonForm!=='knight')||(e.archetype==='chimera'&&e.mythicAir)));
+      if(air.length){
+        const side=air.filter(e=>(e.x-this.player.x)*dir>=0),pool=side.length?side:air;
+        const target=pool.sort((a,b)=>Math.abs(a.x-this.player.x)-Math.abs(b.x-this.player.x))[0];
+        const ground=this.enemies.filter(e=>!e.dead&&e.health>0&&e.phase==='active'&&!e.intangible&&e.archetype!=='dragon'&&!e.mythicAir&&(e.x-this.player.x)*dir>=0).sort((a,b)=>Math.abs(a.x-this.player.x)-Math.abs(b.x-this.player.x))[0];
+        // A nearby ground enemy remains shootable in a mixed dragon wave.
+        if(!ground||Math.abs(ground.x-this.player.x)>200||target.boss)return {kind:'highAim',cost:1,damage:2,cooldown:.22,speed:1050,locked:!!target.intangible,target};
+      }
+      return {kind:'normal',cost:1,damage:1,cooldown:.17,speed:780,locked:false};
     }
     shoot(dir) {
-      if (this.screen !== 'playing' || this.player.shotTimer > .001 || this.player.stunTime > 0) return false;
-      const p = this.player,weapon=this.getWeaponProfile(); p.dir = dir;p.weaponMode=weapon.kind;
+      if (this.screen !== 'playing' || this.player.shotTimer > .001 || this.player.stunTime > 0 || this.player.petrifyTime > 0 || this.player.rollTime > 0) return false;
+      const p = this.player,weapon=this.getWeaponProfile(dir); p.dir = dir;p.weaponMode=weapon.kind;
       if(weapon.locked)return false;
       if(p.ammo<weapon.cost){
         if(p.dryCooldown<=0){this.toast(weapon.kind==='sniper'?'Súng ngắm cần 5 đạn · nhặt hòm AMMO':'Hết đạn · di chuyển nhặt hòm AMMO');this.sound.play('empty');p.dryCooldown=1.2;}
@@ -220,7 +246,7 @@
       if(weapon.kind==='highAim'){
         const target=weapon.target,angle=Math.atan2(target.y-target.h*.55-y,target.x-x);
         bullet.vx=Math.cos(angle)*weapon.speed;bullet.vy=Math.sin(angle)*weapon.speed;bullet.angle=angle;
-        p.aimAngle=angle;p.dir=Math.sign(bullet.vx)||dir;MM.KongCombat?.recordShot(this,target);
+        p.aimAngle=angle;p.dir=Math.sign(bullet.vx)||dir;if(target.archetype==='kong')MM.KongCombat?.recordShot(this,target);
       }else p.aimAngle=null;
       this.bullets.push(bullet); this.burst(x,y,'#ffdc93',weapon.kind==='sniper'?9:4,'spark'); this.sound.play(weapon.kind==='sniper'?'sniper':'shot'); return true;
     }
@@ -253,8 +279,8 @@
       this.ui['ammo-status'].classList.toggle('low',p.ammo>=weapon.cost&&p.ammo<=(sniper?10:3));
       this.ui['ammo-status'].classList.toggle('empty',p.ammo<weapon.cost);
       this.ui['ammo-status'].classList.toggle('sniper',sniper);
-      this.ui['ammo-status'].setAttribute('aria-label',`${sniper?'Súng ngắm: 5 đạn / 5 sát thương. ':high?'Bắn tầm cao: 1 đạn / 2 sát thương, mỗi 5 phát nhận 1 khiên. ':''}Đạn ${p.ammo} / ${p.maxAmmo}. Nhặt hòm AMMO để tiếp tế.`);
-      if(this.ui['ammo-mode'])this.ui['ammo-mode'].textContent=sniper?(weapon.locked?'NGẮM · CHỜ':p.shotTimer>0?`NGẮM ${p.shotTimer.toFixed(1)}s`:'NGẮM · 5 ĐẠN'):high?(weapon.locked?'TẦM CAO · CHỜ':`TẦM CAO · ${weapon.target.highAimShots%5}/5`):'ĐẠN';
+      this.ui['ammo-status'].setAttribute('aria-label',`${sniper?'Súng ngắm: 5 đạn / 5 sát thương. ':high?`Bắn tầm cao: 1 đạn / 2 sát thương.${weapon.target.archetype==='kong'?' Mỗi 5 phát nhận 1 khiên.':''} `:''}Đạn ${p.ammo} / ${p.maxAmmo}. Nhặt hòm AMMO để tiếp tế.`);
+      if(this.ui['ammo-mode'])this.ui['ammo-mode'].textContent=sniper?(weapon.locked?'NGẮM · CHỜ':p.shotTimer>0?`NGẮM ${p.shotTimer.toFixed(1)}s`:'NGẮM · 5 ĐẠN'):high?(weapon.locked?'TẦM CAO · CHỜ':weapon.target.archetype==='kong'?`TẦM CAO · ${weapon.target.highAimShots%5}/5`:'TẦM CAO · 2 SÁT THƯƠNG'):'ĐẠN';
       this.ui['touch-controls']?.classList.toggle('empty',p.ammo<weapon.cost);
       document.querySelectorAll('.fire-control').forEach(button=>{button.querySelector('small').textContent=sniper?'NGẮM':high?'BẮN CAO':'BẮN';button.setAttribute('aria-label',`${sniper?'Bắn ngắm':high?'Bắn tầm cao':'Bắn'} ${button.dataset.control==='fire-left'?'trái':'phải'}`);});
     }
@@ -277,6 +303,8 @@
       if(enemy.archetype==='golem')MM.GolemCombat?.setup(this,enemy);
       if(enemy.archetype==='werewolf')MM.WolfCombat?.setup(this,enemy);
       if(enemy.archetype==='kong')MM.KongCombat?.setup(this,enemy);
+      if(enemy.archetype==='dragon')MM.DragonCombat?.setup(this,enemy);
+      if(['lion','medusa','goatman','chimera'].includes(enemy.archetype))MM.MythicCombat?.setup(this,enemy);
       this.enemies.push(enemy); return enemy;
     }
     configureAbility(enemy, state) {
@@ -349,7 +377,7 @@
       e.combatTime=(e.combatTime||0)+dt;
       const pressure=e.pressure=this.getPressure(e);
       if(e.gluttonState)return;
-      if(archetype==='golem'||archetype==='werewolf'||archetype==='kong')return; // Announced weapon attacks own movement and collisions.
+      if(['golem','werewolf','kong','dragon','lion','medusa','goatman','chimera'].includes(archetype))return; // Announced weapon attacks own movement and collisions.
       if(e.phantomState)return; // The ghost's announced attack owns its position and collisions.
       e.flightPhase=(e.flightPhase||0)+dt*pressure.flightRate;
       // Patrol and cooldown clocks accelerate. The announced attack window uses real seconds.
@@ -412,6 +440,8 @@
       if(enemy.archetype==='golem')MM.GolemCombat?.cleanup(this,enemy);
       if(enemy.archetype==='werewolf')MM.WolfCombat?.cleanup(this,enemy);
       if(enemy.archetype==='kong')MM.KongCombat?.cleanup(this,enemy);
+      if(enemy.archetype==='dragon')MM.DragonCombat?.cleanup(this,enemy);
+      if(['lion','medusa','goatman','chimera'].includes(enemy.archetype))MM.MythicCombat?.cleanup(this,enemy);
       if (enemy.boss) {
         this.bossDefeated = !this.enemies.some(other=>other!==enemy&&other.boss&&!other.dead&&other.health>0);
         MM.BossCombat?.cleanup(this,enemy);
@@ -428,7 +458,7 @@
       this.save.best = Math.max(this.save.best,this.score); this.updateUI(); this.checkCompletion();
     }
     hurt(enemy) {
-      const p = this.player; if ((p.invulnerable > 0 && !enemy.forceHit) || this.screen !== 'playing') return;
+      const p = this.player; if ((p.invulnerable > 0 && !enemy.forceHit) || p.rollTime>0 || this.screen !== 'playing') return;
       if(enemy.phantomStrike){
         this.shieldCount=Math.max(0,this.shieldCount-1);p.shieldTime=0;p.shieldHits=0;
         p.knockdownTime=.75;p.stunTime=Math.max(p.stunTime,.75);this.clearInputs();
@@ -441,13 +471,47 @@
       } else {
         const damage=clamp(Number.isFinite(enemy.damage)?Math.trunc(enemy.damage):1,1,3);
         p.health = Math.max(0,p.health-damage); p.invulnerable = 1.35;
-        if(enemy.stun>0){p.stunTime=Math.max(p.stunTime,Math.min(2,enemy.stun));this.clearInputs();}
+        if(enemy.stun>0){p.stunTime=Math.max(p.stunTime,Math.min(2,enemy.stun));p.stunStyle=enemy.kind==='web'?'web':'stars';this.clearInputs();}
         if(damage>1)this.floating(p.x,p.y-p.h-16,`−${damage} MÁU`,'#ffb391');
         const dir = Math.sign(p.x-enemy.x || 1); p.x = clamp(p.x+dir*42,28,W-28); p.vy = -160; p.grounded = false;
         this.shake = 6; this.flash = .12; this.burst(p.x,p.y-26,'#ff9a87',14); this.sound.play('hit');
         if (p.health === 0) this.finish(false);
       }
       this.updateUI();
+    }
+    applyCombatEffect(spec={}) {
+      const p=this.player;
+      if(this.screen!=='playing'||p.rollTime>0||(p.invulnerable>0&&!spec.forceHit))return false;
+      const damage=clamp(Number.isFinite(spec.damage)?Math.trunc(spec.damage):0,0,3);
+      if(p.shieldTime>0&&p.shieldHits>0){
+        p.shieldHits--;if(p.shieldHits===0)p.shieldTime=0;p.invulnerable=.45;
+        this.burst(p.x,p.y-28,'#91e3d1',10,'ring');this.sound.play('shield');
+        const pierced=clamp(Number(spec.pierceShield)||0,0,3);
+        if(pierced>0){p.health=Math.max(0,p.health-pierced);this.floating(p.x,p.y-p.h-15,`−${pierced} MÁU · KHIÊN GIẢM ĐÒN`,'#ffd9a2');if(p.health===0)this.finish(false);}
+        this.updateUI();return pierced>0;
+      }
+      let applied=false;
+      if(damage>0){p.health=Math.max(0,p.health-damage);p.invulnerable=1.35;this.flash=.12;this.sound.play('hit');applied=true;}
+      if(spec.petrify>0&&p.petrifyTime<=0&&p.petrifyGrace<=0){p.petrifyTime=Math.min(1.5,spec.petrify);this.clearInputs();applied=true;}
+      if(spec.stun>0&&p.stunTime<=0&&p.stunGrace<=0){p.stunTime=Math.min(2,spec.stun);p.stunStyle='stars';this.clearInputs();applied=true;}
+      if(spec.burn>0){if(p.burnTime<=0)p.burnTick=1;p.burnTime=Math.max(p.burnTime,Math.min(2,spec.burn));applied=true;}
+      if(spec.knockup){p.vy=typeof spec.knockup==='number'?spec.knockup:-620;p.grounded=false;applied=true;}
+      if(applied){this.burst(p.x,p.y-24,damage?'#f4ae83':'#b5d9e4',10);if(damage>1)this.floating(p.x,p.y-p.h-14,`−${damage} MÁU`,'#ffb391');}
+      if(p.health===0)this.finish(false);
+      if(applied)this.updateUI();return applied;
+    }
+    updatePlayerEffects(dt) {
+      const p=this.player,wasPetrified=p.petrifyTime>0;
+      p.petrifyTime=Math.max(0,p.petrifyTime-dt);p.petrifyGrace=Math.max(0,p.petrifyGrace-dt);
+      if(p.petrifyTime<1e-8)p.petrifyTime=0;
+      if(wasPetrified&&p.petrifyTime===0)p.petrifyGrace=.6;
+      if(p.burnTime>0){
+        const elapsed=Math.min(dt,p.burnTime);p.burnTime=Math.max(0,p.burnTime-elapsed);p.burnTick-=elapsed;
+        while(p.burnTick<=1e-8&&this.screen==='playing'){p.burnTick+=1;this.applyCombatEffect({kind:'burn',damage:1,forceHit:true});}
+        if(p.burnTime<1e-8)p.burnTime=0;
+      }
+      p.rollCooldown=Math.max(0,p.rollCooldown-dt);
+      if(p.rollTime>0){p.rollTime=Math.max(0,p.rollTime-dt);if(p.rollTime<1e-8)p.rollTime=0;p.rollProgress=1-p.rollTime/p.rollDuration;}
     }
     drainTarget(owner) {
       if(this.screen!=='playing'||owner.dead||owner.health<=0)return;
@@ -488,6 +552,7 @@
       p.stunTime=Math.max(0,p.stunTime-dt);p.knockdownTime=Math.max(0,p.knockdownTime-dt);p.stunGrace=Math.max(0,p.stunGrace-dt);
       if(p.stunTime<1e-8)p.stunTime=0;if(p.knockdownTime<1e-8)p.knockdownTime=0;
       if(wasStunned&&p.stunTime===0)p.stunGrace=.6;
+      this.updatePlayerEffects(dt);if(this.screen!=='playing')return;
       let move = (this.keys.has('ArrowRight')?1:0)-(this.keys.has('ArrowLeft')?1:0);
       let fire = this.keys.has('KeyA')||this.keys.has('KeyJ') ? -1 : this.keys.has('KeyD')||this.keys.has('KeyL') ? 1 : 0;
       this.pointers.forEach(pointer => {
@@ -501,9 +566,10 @@
         if(action==='fire-left'||action==='fire-right')fire=action==='fire-left'?-1:1;
       });
       if(movingWithPad)move=clamp(padMove,-1,1);
-      if(p.stunTime>0){move=0;fire=0;p.vx=0;p.jumpBuffer=0;}
+      if(p.stunTime>0||p.petrifyTime>0){move=0;fire=0;p.vx=0;p.jumpBuffer=0;}
       const speed=285, acceleration=2100;
       const desired=move*speed; p.vx += clamp(desired-p.vx,-acceleration*dt,acceleration*dt); if (move) p.dir=move;
+      if(p.rollTime>0){p.vx=p.rollDir*850;p.dir=p.rollDir;fire=0;}
       p.x=clamp(p.x+p.vx*dt,26,W-26);
       p.coyote = p.grounded ? .1 : Math.max(0,p.coyote-dt);
       if (p.jumpBuffer > 0 && p.coyote > 0) { p.vy=-610; p.grounded=false; p.jumpBuffer=0; p.coyote=0; this.burst(p.x,GROUND,'#9aad94',6); }
@@ -541,6 +607,8 @@
       if(this.screen==='playing')MM.GolemCombat?.update(this,dt);
       if(this.screen==='playing')MM.WolfCombat?.update(this,dt);
       if(this.screen==='playing')MM.KongCombat?.update(this,dt);
+      if(this.screen==='playing')MM.DragonCombat?.update(this,dt);
+      if(this.screen==='playing')MM.MythicCombat?.update(this,dt);
       if(this.player.weaponMode!=='normal')this.updateAmmoUI();
       if(this.screen!=='playing')return;
       for(const shot of this.enemyShots){
@@ -570,8 +638,12 @@
           if(wolfHit===false){this.burst(e.x,e.y-e.h*.55,'#d6c7ed',5);continue;}
           const kongHit=MM.KongCombat?.hit(this,e,damage);
           if(kongHit===false){this.burst(e.x,e.y-e.h*.55,'#f5bf78',5);continue;}
-          if(wolfHit!==true&&kongHit!==true)e.health-=damage;
-          e.hit=.12;if(!e.vinePhase)e.x=clamp(e.x+bullet.dir*(e.boss?2:7),18,W-18);
+          const dragonHit=MM.DragonCombat?.hit(this,e,damage,bullet);
+          if(dragonHit===false){this.burst(e.x,e.y-e.h*.55,'#e8dfbc',5);continue;}
+          const mythicHit=MM.MythicCombat?.hit(this,e,damage,bullet);
+          if(mythicHit===false){this.burst(e.x,e.y-e.h*.55,'#dab9e5',5);continue;}
+          if(wolfHit!==true&&kongHit!==true&&dragonHit!==true&&mythicHit!==true)e.health-=damage;
+          e.hit=.12;if(!e.vinePhase&&!e.airborne&&!e.mythicAir)e.x=clamp(e.x+bullet.dir*(e.boss?2:7),18,W-18);
           this.burst(e.x,bullet.y,'#ffdaa0',5); if(e.health<=0)this.killEnemy(e);
         }
       }

@@ -199,19 +199,19 @@ test('blood claws hold the target through both strikes and reacquire it for the 
   assert.ok(enemy.comboFirstImpactAt>=game.getPressure(enemy).warningFloor);
 });
 
-test('sniper consumes five ammo, deals five HP, and recharges for one real second', () => {
+test('sniper consumes five ammo, deals five HP, and recharges every half second', () => {
   const {game, enemy} = enterBlood(fresh({boss:true}));
   game.player.ammo = 15; enemy.x = game.player.x - 150;
   const health = enemy.health;
   assert.equal(game.shoot(-1), true); assert.equal(game.player.ammo, 10);
-  assert.equal(game.player.shotTimer, 1); assert.equal(game.player.shotCooldown, 1);
+  assert.equal(game.player.shotTimer, .5); assert.equal(game.player.shotCooldown, .5);
   assert.equal(game.bullets[0].damage, 5); assert.equal(game.bullets[0].speed, 1280);
   assert.equal(game.shoot(-1), false); advance(game, .12);
   assert.equal(enemy.health, health - 5);
-  advance(game, .87); assert.equal(game.shoot(-1), false);
+  advance(game, .37); assert.equal(game.shoot(-1), false);
   advance(game, .01); assert.equal(game.shoot(-1), true); assert.equal(game.player.ammo, 5);
-  advance(game, 1); assert.equal(game.shoot(1), true); assert.equal(game.player.ammo, 0);
-  advance(game, 1); assert.equal(game.shoot(1), false);
+  advance(game, .5); assert.equal(game.shoot(1), true); assert.equal(game.player.ammo, 0);
+  advance(game, .5); assert.equal(game.shoot(1), false);
 });
 
 test('sniper cannot fire with fewer than five ammo and falling supplies can restore a shot', () => {
@@ -311,17 +311,52 @@ test('howl immunity blocks a half-health transition and sniper damage while allo
   assert.ok(pup); assert.equal(skills.hit(game, pup, 5), true); assert.equal(pup.health, 0);
 });
 
-test('wolf pups run to the player and deal one HP contact damage without pouncing', () => {
-  const {game, skills} = fresh();
+test('wolf pups move at the reduced speed and deal one HP when their one-way run crosses the player', () => {
+  const {game, skills, campaign} = fresh();
   game.enemies = [];
   const pup = game.spawn('wolfPup', -1);
-  Object.assign(pup, {phase:'active', x:game.player.x - 150, y:438, speed:100});
+  Object.assign(pup, {phase:'active', x:game.player.x - 150, y:438});
+  assert.equal(campaign.enemyTypes.wolfPup.speed, 76);
+  assert.ok(pup.speed < 100, 'chapter scaling still leaves this pup slower than the old base speed');
   advance(game, .5);
   assert.ok(pup.x > game.player.x - 120); assert.equal(pup.wolfState, 'run');
   assert.equal(pup.health, 1); assert.equal(game.wolfZones.length, 0);
   waitFor(game, () => game.player.health < 30, 3);
   assert.equal(game.player.health, 29); assert.equal(pup.y, 438); assert.equal(pup.wolfState, 'run');
   assert.equal(skills.hit(game, pup, 1), true); assert.equal(pup.health, 0);
+});
+
+test('pups retain their spawn direction even after the player crosses behind them', () => {
+  for (const side of [-1, 1]) {
+    const {game} = fresh(); game.enemies = [];
+    const pup = game.spawn('wolfPup', side);
+    Object.assign(pup, {phase:'active', x:480, y:438}); game.player.x = side === -1 ? 800 : 160;
+    const direction = -side; advance(game, .5); const x = pup.x;
+    game.player.x = side === -1 ? 100 : 860; advance(game, .5);
+    assert.equal(pup.dir, direction); assert.equal(pup.pupRunDir, direction);
+    assert.ok((pup.x - x) * direction > 30, 'running past the player never starts a pursuit');
+    assert.equal(pup.wolfState, 'run'); assert.equal(game.wolfZones.length, 0);
+  }
+});
+
+test('escaped regular pups release their wave reservation while summoned pups retire without rewards or quota changes', () => {
+  for (const minion of [false, true]) {
+    const {game} = fresh(); game.enemies = [];
+    game.regularSpawned = game.level.target; game.levelKills = game.level.target - 1; game.spawnTimer = 10000;
+    const pup = game.spawn('wolfPup', -1);
+    Object.assign(pup, {phase:'active', x:1004, minion});
+    const score = game.score, kills = game.totalKills, quota = game.levelKills;
+    advance(game, .05);
+    assert.equal(pup.dead, true); assert.ok(!game.enemies.includes(pup));
+    assert.equal(game.score, score); assert.equal(game.totalKills, kills); assert.equal(game.levelKills, quota);
+    assert.equal(game.regularSpawned, game.level.target - (minion ? 0 : 1));
+    assert.equal(game.screen, 'playing');
+    if (!minion) {
+      assert.ok(game.spawnTimer <= .8);
+      advance(game, .8); assert.equal(game.regularSpawned, game.level.target, 'the escaped quota is replaced instead of leaving the level stuck');
+      assert.ok(game.enemies.length > 0);
+    }
+  }
 });
 
 test('every howl creates a full five-pup pack while older packs retreat at the ten-summon limit', () => {

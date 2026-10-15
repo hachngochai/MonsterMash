@@ -88,6 +88,7 @@
     }
     if (player.stunTime > 0 || player.stunGrace > 0) return false;
     player.stunTime = 2;
+    player.stunStyle = 'web';
     player.vx = 0;
     game.clearInputs?.();
     burst(game, player.x, player.y - 25, '#e4e2c1', 12, 'ring');
@@ -339,11 +340,11 @@
     enemy.wardHealFlash = Math.max(0, (enemy.wardHealFlash || 0) - dt);
     if (enemy.zombieClock + EPSILON >= enemy.nextWardAt) {
       enemy.nextWardAt += 15;
-      enemy.hardenedTime = 2; enemy.wardHealFlash = .5;
-      const healed = Math.min(2, Math.max(0, enemy.maxHealth - enemy.health));
+      enemy.hardenedTime = 1; enemy.wardHealFlash = .5;
+      const healed = Math.min(1, Math.max(0, enemy.maxHealth - enemy.health));
       enemy.health += healed;
       burst(game, enemy.x, enemy.y - enemy.h * .5, '#b3f5ad', 18, 'ring');
-      game.floating?.(enemy.x, enemy.y - enemy.h - 15, `KHIÊN 2 GIÂY${healed ? ` · +${healed} MÁU` : ''}`, '#b3f5ad');
+      game.floating?.(enemy.x, enemy.y - enemy.h - 15, `KHIÊN 1 GIÂY${healed ? ` · +${healed} MÁU` : ''}`, '#b3f5ad');
     }
     const untilWave = enemy.nextTsunamiAt - enemy.zombieClock;
     if (untilWave <= EPSILON) {

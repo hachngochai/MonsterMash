@@ -43,7 +43,7 @@ function advance(skills, game, seconds) {
   }
 }
 
-test('the green zombie wards every fifteen active seconds, heals two HP once, and blocks bullets for two seconds', () => {
+test('the green zombie wards every fifteen active seconds, heals one HP once, and blocks bullets for one second', () => {
   const {game, boss, skills} = fixture(20, 2);
   boss.nextTsunamiAt = boss.nextGluttonAt = Infinity;
   boss.health = boss.maxHealth = 100;
@@ -54,22 +54,22 @@ test('the green zombie wards every fifteen active seconds, heals two HP once, an
   assert.equal(skills.hit(game, boss), true);
   assert.equal(boss.health, 65, 'no healing before fifteen real seconds, even under pressure');
   advance(skills, game, .01);
-  assert.equal(boss.health, 67);
-  assert.equal(boss.hardenedTime, 2);
+  assert.equal(boss.health, 66);
+  assert.equal(boss.hardenedTime, 1);
   for (let hit = 0; hit < 25; hit++) assert.equal(skills.hit(game, boss), false);
-  assert.equal(boss.health, 67);
-  advance(skills, game, 1.999);
+  assert.equal(boss.health, 66);
+  advance(skills, game, .999);
   assert.equal(skills.hit(game, boss), false, 'pressure does not shorten immunity');
-  assert.equal(boss.health, 67, 'the two-second defensive window does not heal every frame');
+  assert.equal(boss.health, 66, 'the one-second defensive window does not heal every frame');
   advance(skills, game, .001);
   assert.equal(skills.hit(game, boss), true);
   boss.health--;
-  advance(skills, game, 12.999);
-  assert.equal(skills.hit(game, boss), true, 'the boss remains vulnerable for thirteen seconds after its shield');
-  assert.equal(boss.health, 66);
+  advance(skills, game, 13.999);
+  assert.equal(skills.hit(game, boss), true, 'the boss remains vulnerable for fourteen seconds after its shield');
+  assert.equal(boss.health, 65);
   advance(skills, game, .001);
-  assert.equal(boss.health, 68);
-  assert.equal(boss.hardenedTime, 2);
+  assert.equal(boss.health, 66);
+  assert.equal(boss.hardenedTime, 1);
   assert.equal(skills.hit(game, boss), false, 'the next shield begins at thirty active seconds');
 });
 
@@ -87,14 +87,14 @@ test('periodic green-zombie healing respects max HP and defensive time freezes i
   assert.equal(boss.health, boss.maxHealth - 1);
   game.screen = 'playing'; advance(skills, game, .1);
   assert.equal(boss.health, boss.maxHealth, 'healing is capped at max health');
-  assert.equal(boss.hardenedTime, 2);
+  assert.equal(boss.hardenedTime, 1);
   game.screen = 'paused'; advance(skills, game, 20);
-  assert.equal(boss.hardenedTime, 2);
+  assert.equal(boss.hardenedTime, 1);
   game.screen = 'playing'; boss.phase = 'warning'; advance(skills, game, 20);
-  assert.equal(boss.hardenedTime, 2);
+  assert.equal(boss.hardenedTime, 1);
   boss.phase = 'active'; advance(skills, game, 15);
   assert.equal(boss.health, boss.maxHealth, 'later shields cannot over-heal a full-health boss');
-  assert.equal(boss.hardenedTime, 2);
+  assert.equal(boss.hardenedTime, 1);
 });
 
 test('ordinary enemies and other bosses do not acquire the green-zombie periodic ward', () => {
@@ -614,7 +614,7 @@ test('spider boss defeat cleans its unkillable brood while preserving unrelated 
   assert.equal(game.player.stunTime, 0);
 });
 
-test('real bullets damage the zombie freely before its timed ward, then are consumed until two seconds expire', () => {
+test('real bullets damage the zombie freely before its timed ward, then are consumed until one second expires', () => {
   const {game} = realGame(20);
   const boss = game.spawn('boss', 1);
   Object.assign(boss, {phase:'active', x:700, y:438, speed:0, abilityTimer:10000, health:50, maxHealth:50});
@@ -630,13 +630,13 @@ test('real bullets damage the zombie freely before its timed ward, then are cons
   advanceGame(game, 14.89);
   assert.equal(boss.health, 40);
   game.update(.01);
-  assert.equal(boss.health, 42, 'the fifteen-second activation heals two HP');
-  assert.equal(boss.hardenedTime, 2);
+  assert.equal(boss.health, 41, 'the fifteen-second activation heals one HP');
+  assert.equal(boss.hardenedTime, 1);
   bullet();
-  assert.equal(boss.health, 42);
-  advanceGame(game, 1.98);
+  assert.equal(boss.health, 41);
+  advanceGame(game, .98);
   bullet();
-  assert.equal(boss.health, 41, 'damage resumes after two active seconds');
+  assert.equal(boss.health, 40, 'damage resumes after one active second');
 });
 
 test('real web collision pauses movement, shooting, and jumping for two seconds and freezes on pause', () => {

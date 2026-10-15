@@ -10,7 +10,9 @@
     { id: 4, name: 'Cổng nhật thực', subtitle: 'Trận chiến cho bình minh', color: '#ffb46c', enemy: 'vampire' },
     { id: 5, name: 'Thung lũng nguyền rủa', subtitle: 'Ánh sáng giữa rừng gai', color: '#becd80', enemy: 'golem' },
     { id: 6, name: 'Thung lũng trăng máu', subtitle: 'Tiếng hú dưới tán gai', color: '#d6ac91', enemy: 'werewolf', scenery: 5 },
-    { id: 7, name: 'Rừng nguyên sinh', subtitle: 'Vua rừng thức giấc', color: '#e9c96e', enemy: 'miniKingKong', scenery: 5 }
+    { id: 7, name: 'Rừng nguyên sinh', subtitle: 'Vua rừng thức giấc', color: '#e9c96e', enemy: 'miniKingKong', scenery: 5 },
+    { id: 8, name: 'Thiên không ngũ hành', subtitle: 'Dưới cánh rồng ngàn tuổi', color: '#9cdbec', enemy: 'fireDragon', scenery: 8 },
+    { id: 9, name: 'Tàn tích thần thoại', subtitle: 'Ba bản thể của Chimera', color: '#e2c58e', enemy: 'lionMan', scenery: 9 }
   ];
 
   const enemyTypes = {
@@ -23,9 +25,19 @@
     golem: { w: 74, h: 108, speed: 34, health: 4, score: 240, damage: 1, ability: 'club-swing', abilities: ['club-swing','rock-throw'] },
     miniGolem: { w: 38, h: 68, speed: 44, health: 2, score: 170, damage: 1, ability: 'club-swing', abilities: ['club-swing','rock-throw'], archetype: 'golem', variant: 'mini' },
     werewolf: { w: 48, h: 72, speed: 58, health: 3, score: 210, damage: 1, ability: 'pounce' },
-    wolfPup: { w: 26, h: 36, speed: 100, health: 1, score: 35, damage: 1, ability: null, archetype: 'werewolf', variant: 'pup' },
+    wolfPup: { w: 26, h: 36, speed: 76, health: 1, score: 35, damage: 1, ability: null, archetype: 'werewolf', variant: 'pup' },
     miniKingKong: { w: 56, h: 62, speed: 48, health: 3, score: 220, damage: 1, ability: 'banana-throw', archetype: 'kong', variant: 'mini' },
-    kong: { w: 126, h: 138, speed: 38, health: 72, score: 880, damage: 1, ability: 'banana-throw' }
+    kong: { w: 126, h: 138, speed: 38, health: 72, score: 880, damage: 1, ability: 'banana-throw' },
+    fireDragon: {w:92,h:76,speed:54,health:4,score:300,damage:1,ability:'fire-breath',archetype:'dragon',variant:'fire'},
+    iceDragon: {w:92,h:76,speed:50,health:4,score:310,damage:1,ability:'ice-fall',archetype:'dragon',variant:'ice'},
+    windDragon: {w:92,h:76,speed:62,health:4,score:300,damage:0,ability:'wind-lift',archetype:'dragon',variant:'wind'},
+    earthDragon: {w:96,h:80,speed:45,health:5,score:330,damage:1,ability:'lava-tiles',archetype:'dragon',variant:'earth'},
+    lightningDragon: {w:92,h:76,speed:60,health:4,score:340,damage:1,ability:'lightning-strike',archetype:'dragon',variant:'lightning'},
+    dragon: {w:252,h:190,speed:34,health:100,score:2800,damage:1,ability:'five-elements'},
+    lionMan: {w:38,h:54,speed:55,health:3,score:260,damage:1,ability:'spear',archetype:'lion'},
+    medusa: {w:38,h:54,speed:38,health:3,score:280,damage:0,ability:'petrify'},
+    goatman: {w:57,h:81,speed:40,health:5,score:320,damage:1,ability:'axe'},
+    chimera: {w:180,h:126,speed:48,health:120,score:3200,damage:2,ability:'chimera-hunt'}
   };
 
   const chapters = [
@@ -64,7 +76,7 @@
         'Địch kéo tới từng nhóm. Đừng dùng hết khoảng trống trong một bước.',
         'Nhện đi nhanh hơn bộ xương. Quan sát loại địch trước khi đổi hướng.',
         'Một tiếng động lớn vọng từ hang tơ. Chuẩn bị khiên cho trận tiếp theo.',
-        'Thây ma xanh tuần tra trên bệ đá rồi thả xuống. Mỗi 15 giây giao chiến, boss bật khiên miễn đạn 2 giây và hồi 2 máu, không vượt máu tối đa. Tsunami mỗi 10 giây gọi 20 thây ma xanh con chạy nối đuôi cùng một hướng: bắn hạ, nhảy qua hoặc bật khiên. Phàm ăn báo trước rồi truy đuổi 1 giây, chạy trên đất hoặc nhảy từ trên cao, hồi 5 máu trong giới hạn máu tối đa và gây 2 sát thương khi đánh trúng; hồi chiêu 8 giây.'
+        'Thây ma xanh tuần tra trên bệ đá rồi thả xuống. Mỗi 15 giây giao chiến, boss bật khiên miễn đạn 1 giây và hồi 1 máu, không vượt máu tối đa. Tsunami mỗi 10 giây gọi 20 thây ma xanh con chạy nối đuôi cùng một hướng: bắn hạ, nhảy qua hoặc bật khiên. Phàm ăn báo trước rồi truy đuổi 1 giây, chạy trên đất hoặc nhảy từ trên cao, hồi 5 máu trong giới hạn máu tối đa và gây 2 sát thương khi đánh trúng; hồi chiêu 8 giây.'
       ],
       targets: [16, 18, 19, 20, 18, 21, 22, 23, 24, 25],
       intervals: [2.08, 1.82, 1.78, 1.73, 1.91, 1.67, 1.62, 1.57, 1.53, 1.6],
@@ -186,7 +198,7 @@
         'Người sói bám sát hai phía. Đọc dấu báo, né cú vồ và canh phát bắn khi đường đạn thoáng.',
         'Bộ xương, golem nhỏ và người sói tạo thành vòng vây. Ưu tiên kẻ sắp ra đòn rồi thoát khỏi mép sân.',
         'Tiếng hú của Lang Vương vọng qua tán cây. Nhặt thùng đạn và tích khiên trước khi tiến lên đỉnh trăng máu.',
-        'Lang Vương hú 4 giây, miễn đạn và gọi 5 sói con chạy vào. Hết hú nghỉ 6 giây ở dạng thường, 4 giây khi Trăng Máu. Ở nửa máu nó lớn gấp đôi và hồi đầy máu một lần; sau mỗi 1,5 giây nhảy tới cào 2 nhát, mỗi nhát 2 máu nếu không bật khiên. Súng ngắm mở trong pha này: 5 viên/phát, 5 sát thương, hồi 1 giây.'
+        'Lang Vương hú 4 giây, miễn đạn và gọi 5 sói con chạy vào. Hết hú nghỉ 6 giây ở dạng thường, 4 giây khi Trăng Máu. Ở nửa máu nó lớn gấp đôi và hồi đầy máu một lần; sau mỗi 1,5 giây nhảy tới cào 2 nhát, mỗi nhát 2 máu nếu không bật khiên. Súng ngắm mở trong pha này: 5 viên/phát, 5 sát thương, hồi 0,5 giây. Trong Trăng Máu, nhấn hai lần liên tiếp cùng phím hoặc nút di chuyển, hoặc vuốt hai lần cùng hướng để lộn xoay né cào.'
       ],
       targets: [34, 36, 37, 38, 35, 39, 40, 42, 44, 46],
       intervals: [1.22, 1.1, 1.07, 1.04, 1.2, 1.01, 0.99, 0.97, 0.93, 1.03],
@@ -221,14 +233,48 @@
         ['miniKingKong', 'golem', 'spider', 'wolfPup'], ['miniKingKong', 'golem', 'spider', 'wolfPup'],
         ['miniKingKong', 'golem', 'spider', 'wolfPup'], ['miniKingKong', 'golem', 'spider', 'wolfPup']
       ]
+    },
+    {
+      names:['Cánh đỏ trên đỉnh núi','Gió ngược tầng mây','Ngọn lửa giữa trời','Sương băng thức giấc','Khe núi yên gió','Dung nham dưới chân','Tiếng sấm đầu tiên','Năm cánh rồng','Trước vòng âm dương','Rồng ngàn tuổi'],
+      stories:[
+        'Rồng lửa và rồng gió bay cao bên trên Golem, KingKong và người sói. Súng tự ngắm lên khi chọn mục tiêu trên trời; giữ lối thoát dưới đất.',
+        'Rồng gió báo vùng hất tung trước khi thổi. Nó không gây sát thương nhưng làm choáng 2 giây; chạy khỏi vùng báo hoặc bật khiên.',
+        'Hơi thở rồng lửa gây thiêu đốt 2 giây, mỗi giây 1 máu. Khiên đang bật chặn lửa và dập hiệu ứng cháy.',
+        'Rồng băng và rồng đất xuất hiện, Golem rời cuộc săn. Né bốn khối băng rơi và ba ô dung nham đã đánh dấu.',
+        'Đợt nhẹ giữa núi cho bạn nhặt đạn và tích khiên. Rời từng vùng báo trước khi quay lại bắn lên trời.',
+        'Dung nham phun rồi các ô đất biến mất. Đừng đứng giữa những dấu báo cùng lúc; ưu tiên rồng đang chuẩn bị ra đòn.',
+        'Rồng chớp xuất hiện và người sói rời sân. Sét đánh bên dưới cánh rồng, mất 1 máu và choáng 2 giây nếu trúng.',
+        'Năm nguyên tố phủ kín bầu trời. Theo dõi đường bay và lấy lại vị trí sau mỗi loạt kỹ năng.',
+        'Vòng âm dương xoay sau bóng rồng khổng lồ. Nhặt đạn, giữ khiên và chuẩn bị chuyển từ bầu trời xuống mặt đất.',
+        'Rồng ngàn tuổi dùng ngẫu nhiên một nguyên tố mỗi 5 giây. Ở nửa máu, Âm Dương luân hồi quét 2/3 sân: trúng mất 3 máu, có khiên vẫn mất 1. Hết máu rồng hóa kị sĩ, hồi đầy máu, phóng 5 sóng mỗi 6 giây và đâm thương mỗi 3 giây. Mỗi 10 phát trúng kị sĩ nhận 1 khiên; hạ kị sĩ mới chiến thắng.'
+      ],
+      targets:[34,37,38,39,35,40,41,42,43,44],intervals:[1.32,1.2,1.18,1.16,1.32,1.14,1.12,1.1,1.08,1.2],caps:[4,4,4,5,4,5,5,5,5,5],
+      pools:Array.from({length:10},(_,i)=>i<3?['fireDragon','windDragon','golem','miniKingKong','werewolf']:i<6?['fireDragon','windDragon','iceDragon','earthDragon','miniKingKong','werewolf']:['fireDragon','windDragon','iceDragon','earthDragon','lightningDragon','miniKingKong'])
+    },
+    {
+      names:['Bậc thềm thần thoại','Giáo sư tử','Mái tóc rắn','Bóng rìu trên đá','Đài phun im lặng','Lời nguyền hóa đá','Sừng dê sau cổng','Ba bóng cổ thần','Dưới cánh Chimera','Chimera'],
+      stories:[
+        'Người sư tử, Medusa và Goatman canh tàn tích. Né giáo từ xa, giữ khoảng cách với rìu và tích khiên trước ánh mắt hóa đá.',
+        'Sư tử đổi từ ném giáo sang chọc khi bạn đến gần. Đọc hướng lấy đà rồi di chuyển qua khoảng trống.',
+        'Medusa hóa đá khi chạm hoặc sau mỗi 5 giây. Khiên đang bật chặn và hóa giải hóa đá; đừng để nhiều Medusa khép vòng.',
+        'Goatman nâng rìu rồi bổ xuống. Nhảy hoặc rời vùng báo trước khi phản công.',
+        'Một nhịp nghỉ giữa các cột đổ. Nhặt đạn, giữ khiên và chuẩn bị cho ba kiểu tấn công khác nhau.',
+        'Giáo bay qua lời nguyền. Hạ Medusa sớm hoặc giữ khiên để giải hóa đá khi cần.',
+        'Những chiếc rìu chiếm khoảng trống giữa sân. Đổi hướng sau mỗi đòn bổ và tránh bị ép vào mép tàn tích.',
+        'Ba tộc quái cùng tiến lên. Mỗi loại giữ một nhịp đánh riêng; ưu tiên vùng báo sát bạn nhất.',
+        'Cánh Chimera che lấp cổng đền. Nhặt hòm đạn và chuẩn bị cho cuộc săn trên đất lẫn trên trời.',
+        'Chimera dùng laze mỗi 5 giây và nhảy cắn 2 máu mỗi 3 giây. Ở nửa máu nó bay lên, hồi đầy máu, thét lửa mỗi 4 giây và lao săn mục tiêu mỗi 6 giây. Còn 10 máu dạng bay, nó tách thành Sư tử vương 30 máu, Medusa Queen 20 máu và Goatman huy hoàng 40 máu. Mỗi 10 máu thực sự gây ra tích 1 khiên; hạ đủ ba bản thể để kết thúc chiến dịch.'
+      ],
+      targets:[36,39,40,41,37,42,43,44,45,46],intervals:[1.28,1.16,1.14,1.12,1.28,1.1,1.08,1.06,1.04,1.16],caps:[4,4,5,5,4,5,5,6,6,5],
+      pools:Array.from({length:10},()=>['lionMan','medusa','goatman'])
     }
   ];
 
-  const bossNames = ['Kẻ gác nghĩa địa', 'Thây ma xanh', 'Nhện chúa', 'Bóng ma trắng', 'Dracula', 'Golem chúa', 'Lang Vương', 'KingKong'];
+  const bossNames = ['Kẻ gác nghĩa địa', 'Thây ma xanh', 'Nhện chúa', 'Bóng ma trắng', 'Dracula', 'Golem chúa', 'Lang Vương', 'KingKong', 'Rồng ngàn tuổi', 'Chimera'];
   // Boss identities follow their milestones independently of the world scenery.
-  const bossArchetypes = ['skeleton', 'zombie', 'spider', 'ghost', 'vampire', 'golem', 'werewolf', 'kong'];
-  const bossAbilities = [['bone-volley'], ['ledge-drop'], ['silk-drop'], ['sine-drop'], ['bat-morph', 'shadow-drop'], ['club-swing','rock-throw'], ['pounce'], ['banana-throw']];
-  const bossSkills = [['bone-pillars'], ['timed-ward', 'tsunami', 'glutton'], ['web-stun', 'egg-hatch'], ['vanish-strike'], ['bat-drain', 'blood-clone'], ['rage-ground-slam', 'triple-smash'], ['blood-moon', 'double-claw', 'pack-howl'], ['banana-burst', 'vine-transform', 'half-arena-scream', 'final-rage']];
+  const bossArchetypes = ['skeleton', 'zombie', 'spider', 'ghost', 'vampire', 'golem', 'werewolf', 'kong','dragon','chimera'];
+  const bossAbilities = [['bone-volley'], ['ledge-drop'], ['silk-drop'], ['sine-drop'], ['bat-morph', 'shadow-drop'], ['club-swing','rock-throw'], ['pounce'], ['banana-throw'],['five-elements'],['chimera-hunt']];
+  const bossSkills = [['bone-pillars'], ['timed-ward', 'tsunami', 'glutton'], ['web-stun', 'egg-hatch'], ['vanish-strike'], ['bat-drain', 'blood-clone'], ['rage-ground-slam', 'triple-smash'], ['blood-moon', 'double-claw', 'pack-howl'], ['banana-burst', 'vine-transform', 'half-arena-scream', 'final-rage'],['five-elements','yin-yang-reincarnation','dragon-knight'],['laser','giant-bite','aerial-hunt','three-forms']];
   const levels = [];
   chapters.forEach(function (chapter, world) {
     chapter.names.forEach(function (name, stage) {
@@ -247,7 +293,7 @@
         // Starting rounds stay scarce; collecting a crate restores several shots.
         initialAmmo: 3 + world,
         ammoCapacity: 18 + world * 4,
-        ammoPerCrate: 5 + world * 2,
+        ammoPerCrate: world === 9 ? 36 : world === 8 ? 30 : 5 + world * 2,
         ammoInterval: Number((Math.max(4.3, 5.8 - world * 0.2 - (recovery ? 0.3 : 0))).toFixed(1)),
         // Keep original overhead skills, introducing one before mixing the others.
         abilitySpawnEvery: chapter.pools[stage].some(type => enemyTypes[type].ability) ? (recovery || stage < 3 ? 4 : 3) : 0,
@@ -263,7 +309,7 @@
         bossWarmup: 4,
         boss: stage === 9,
         bossArchetype: stage === 9 ? bossArchetypes[world] : null,
-        bossHealth: stage === 9 ? (world === 5 ? 54 : world === 6 ? 50 : world === 7 ? 72 : 18 + world * 4) : 0,
+        bossHealth: stage === 9 ? (world === 5 ? 54 : world === 6 ? 50 : world === 7 ? 72 : world === 8 ? 100 : world === 9 ? 120 : 18 + world * 4) : 0,
         bossAbilities: stage === 9 ? bossAbilities[world].slice() : [],
         bossSkills: stage === 9 ? bossSkills[world].slice() : [],
         story: chapter.stories[stage],
@@ -274,7 +320,7 @@
       if (config.id === 2) config.tutorial = 'Hạ mỗi 10 địch nhận một khiên. Nhấn Space trên PC hoặc vuốt xuống trên điện thoại để kích hoạt.';
       if (config.id === 3) config.tutorial = 'Thây ma có thể đi trên bệ đá rồi rơi xuống. Quan sát dấu báo dưới bệ để tránh điểm đáp.';
       if (config.id === 12) config.tutorial = 'Nhện đu trên tơ, nhấp nhô rồi thả xuống. Né điểm đáp; nhặt thùng đạn trước khi bắn tiếp.';
-      if (config.id === 20) config.tutorial = 'Tsunami gọi 20 thây ma xanh con mỗi 10 giây, chạy nối đuôi từ một phía: bắn, nhảy hoặc bật khiên. Phàm ăn báo trước rồi truy đuổi 1 giây, hồi 5 máu tối đa và gây 2 sát thương khi trúng; hồi chiêu 8 giây. Mỗi 15 giây giao chiến, boss bật khiên miễn đạn 2 giây và hồi 2 máu, không vượt máu tối đa.';
+      if (config.id === 20) config.tutorial = 'Tsunami gọi 20 thây ma xanh con mỗi 10 giây, chạy nối đuôi từ một phía: bắn, nhảy hoặc bật khiên. Phàm ăn báo trước rồi truy đuổi 1 giây, hồi 5 máu tối đa và gây 2 sát thương khi trúng; hồi chiêu 8 giây. Mỗi 15 giây giao chiến, boss bật khiên miễn đạn 1 giây và hồi 1 máu, không vượt máu tối đa.';
       if (config.id === 22) config.tutorial = 'Bóng ma bay theo đường lượn sóng rồi hạ xuống. Giữ khoảng trống, chờ chúng vào tầm bắn.';
       if (config.id === 30) config.tutorial = 'Bắn 2 phát phá trứng trước khi nở sau 3 giây chạm đất. Mỗi trứng nở 5 nhện con không thể bắn hạ: chạm mất 1 máu và choáng 1,5 giây. Khiên đang bật chặn cả hai; tơ của nhện chúa vẫn gây choáng 2 giây.';
       if (config.id === 32) config.tutorial = 'Thây ma xanh có nhiều máu hơn thây ma thường. Nhặt thùng đạn và giữ khoảng cách với bệ đá.';
@@ -282,10 +328,16 @@
       if (config.id === 51) config.tutorial = 'Golem nâng gậy trước khi quật và lấy đà ném đá khi ở xa. Né đường báo vàng hoặc bật khiên; đá không đổi hướng sau khi ném.';
       if (config.id === 61) config.tutorial = 'Golem nhỏ chịu nhiều đạn hơn bộ xương, quật gậy khi gần và ném đá khi xa. Né dấu báo hoặc bật khiên trước khi áp sát.';
       if (config.id === 62) config.tutorial = 'Người sói lấy đà rồi nhảy lên vồ xuống. Rời vùng báo trước, nhảy qua cú vồ và canh bắn khi nó dừng lại.';
-      if (config.id === 70) config.tutorial = 'Lang Vương hú 4 giây, miễn đạn và gọi 5 sói con; hết hú nghỉ 6 giây thường / 4 giây Trăng Máu. Pha Trăng Máu hồi đầy máu một lần và cào kép mỗi 1,5 giây. Súng ngắm cần 5 viên/phát, gây 5 sát thương, hồi 1 giây.';
+      if (config.id === 70) config.tutorial = 'Lang Vương hú 4 giây, miễn đạn và gọi 5 sói con; hết hú nghỉ 6 giây thường / 4 giây Trăng Máu. Pha Trăng Máu hồi đầy máu một lần và cào kép mỗi 1,5 giây. Súng ngắm cần 5 viên/phát, gây 5 sát thương, hồi 0,5 giây. Trong Trăng Máu, nhấn hai lần liên tiếp cùng phím hoặc nút di chuyển, hoặc vuốt hai lần cùng hướng để lộn xoay né cào.';
       if (config.id === 71) config.tutorial = 'Tiểu KingKong lấy đà rồi ném chuối. Né đường báo và nhảy qua vỏ chuối để giữ nhịp di chuyển; khiên đang bật chặn được đòn đánh.';
-      if (config.id === 74) config.tutorial = 'Sói con nhỏ nhưng chạy nhanh và cắn khi áp sát. Hạ chúng trước khi Golem hoặc tiểu KingKong khóa đường lui.';
+      if (config.id === 74) config.tutorial = 'Sói con chạy chậm hơn và chỉ đi theo một hướng, không quay lại truy đuổi. Nhảy qua hoặc lùi khỏi đường chạy; giữ khoảng trống trước Golem và tiểu KingKong.';
       if (config.id === 80) config.tutorial = 'KingKong bám dây ở nửa máu: rời nửa sân báo đỏ, bắn hướng lên gây 2 sát thương/viên và nhận 1 khiên mỗi 5 phát. Khi máu boss về 0, bật khiên để sống qua 5 giây cuồng nộ; không có khiên mỗi đòn mất 3 máu.';
+      if (config.id === 81) config.tutorial = 'Rồng bay cao: súng tự ngắm lên, mỗi viên gây 2 sát thương. Nếu có quái mặt đất ở gần phía bắn, súng giữ tầm thấp. Né vùng lửa và gió báo trước; khiên chặn thiêu đốt và hất tung.';
+      if (config.id === 84) config.tutorial = 'Rồng băng gọi bốn khối băng rơi; rồng đất đánh dấu ba ô dung nham. Rời ô báo trước khi đòn đánh xuất hiện.';
+      if (config.id === 87) config.tutorial = 'Rồng chớp đánh sét ngay bên dưới nó: trúng đòn mất 1 máu và choáng 2 giây. Di chuyển khỏi đường sét hoặc bật khiên.';
+      if (config.id === 90) config.tutorial = 'Âm Dương luân hồi phủ 2/3 sân: trúng mất 3 máu, có khiên vẫn mất 1 máu. Rồng hết máu hóa kị sĩ và hồi đầy máu; bắn trúng kị sĩ mỗi 10 phát nhận 1 khiên. Hạ kị sĩ mới thắng.';
+      if (config.id === 91) config.tutorial = 'Sư tử ném giáo từ xa và chọc khi gần; Goatman giơ rìu trước khi bổ. Medusa hóa đá 1,5 giây khi chạm hoặc nhìn trúng: bật khiên để ngăn hoặc giải hóa đá.';
+      if (config.id === 100) config.tutorial = 'Chimera hồi đầy máu và bay khi còn nửa máu. Né Hỏa phong phủ 1/3 sân; bật khiên trước cú lao khóa mục tiêu. Dạng bay còn 10 máu sẽ phân hóa ba vương thú: hạ cả ba mới thắng. Mỗi 10 máu boss mất nhận 1 khiên, tối đa 3.';
       levels.push(config);
     });
   });
@@ -321,12 +373,12 @@
     return {
       x: side === -1 ? -50 : 1010,
       y: 438,
-      w: boss ? (archetype === 'golem' ? 156 : archetype === 'werewolf' ? 80 : archetype === 'kong' ? 126 : Math.max(96, stats.w * 1.85)) : stats.w,
-      h: boss ? (archetype === 'golem' ? 172 : archetype === 'werewolf' ? 108 : archetype === 'kong' ? 138 : Math.max(94, stats.h * 1.5)) : stats.h,
+      w: boss ? (archetype === 'golem' ? 156 : archetype === 'werewolf' ? 80 : archetype === 'kong' ? 126 : archetype === 'dragon' ? 252 : archetype === 'chimera' ? 180 : Math.max(96, stats.w * 1.85)) : stats.w,
+      h: boss ? (archetype === 'golem' ? 172 : archetype === 'werewolf' ? 108 : archetype === 'kong' ? 138 : archetype === 'dragon' ? 190 : archetype === 'chimera' ? 126 : Math.max(94, stats.h * 1.5)) : stats.h,
       dir: side === -1 ? 1 : -1,
       type: boss ? 'boss' : enemyType,
       archetype: archetype,
-      variant: stats.variant || null,
+      variant: boss && archetype === 'dragon' ? 'yinYang' : stats.variant || null,
       ability: stats.ability,
       abilities: boss ? config.bossAbilities.slice() : (stats.abilities ? stats.abilities.slice() : stats.ability ? [stats.ability] : []),
       bossSkills: boss ? config.bossSkills.slice() : [],

@@ -112,7 +112,7 @@ test('one shield protects the complete final rage at 20 and 60 FPS and only then
     game.shieldCount=1;game.activateShield();const hp=game.player.health;
     advance(game,4.95,step);assert.equal(game.screen,'playing');assert.equal(game.player.health,hp);assert.equal(game.player.shieldHits,3);
     advance(game,.05,step);assert.equal(game.screen,'won');assert.equal(enemy.dead,true);
-    assert.ok(game.save.completed.includes(80));assert.equal(game.save.resume,80);
+    assert.ok(game.save.completed.includes(80));assert.equal(game.save.resume,81);
     assert.equal(game.kongZones.length,0);assert.equal(game.bananaPeels.length,0);assert.equal(game.getWeaponProfile().kind,'normal');
   }
 });
