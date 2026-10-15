@@ -1,11 +1,12 @@
 <!doctype html><html lang="vi"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Kiểm tra hiệu ứng boss · 3.0.0</title><link rel="stylesheet" href="../assets/fonts/fonts.css?v=3.0.0">
+<title>Kiểm tra hiệu ứng boss · 3.0.1</title><link rel="stylesheet" href="../assets/fonts/fonts.css?v=3.0.1">
 <style>html{scroll-behavior:smooth;scroll-padding-top:84px}body{margin:20px;background:#101714;color:#e9eade;font:14px/1.5 'Noto Sans',sans-serif}main{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}h1{font-size:20px}h2{font-size:14px;margin:0 0 6px}canvas{display:block;box-sizing:border-box;width:100%;border:1px solid #ffffff25;border-radius:8px}nav{position:sticky;top:0;z-index:2;display:flex;flex-wrap:wrap;gap:8px;padding:12px 0;background:#101714f5}nav a{color:#e9eade;text-decoration:none;border:1px solid #ffffff35;border-radius:6px;padding:7px 12px}nav a:hover,nav a:focus-visible{background:#334438}@media(max-width:700px){main{grid-template-columns:1fr}nav a{font-size:12px;padding:5px 8px}}</style>
-<h1>Kiểm tra hiệu ứng và dấu tiếng Việt · 3.0.0</h1><nav aria-label="Chọn bối cảnh"><a href="#preview-10">Boss 10–50</a><a href="#preview-51">Thung lũng</a><a href="#preview-70">Lang Vương</a><a href="#preview-80">KingKong</a><a href="#preview-81">Ngũ hành</a><a href="#preview-90">Rồng ngàn tuổi</a><a href="#preview-91">Thần thoại</a><a href="#preview-100">Chimera</a><a href="../" target="_blank" rel="noopener">Chơi trực tiếp ↗</a></nav><main id="previews"></main>
-<script src="../js/typography.js?v=3.0.0"></script><script src="../js/campaign.js?v=3.0.0"></script><script src="../js/bosses.js?v=3.0.0"></script><script src="../js/golem.js?v=3.0.0"></script><script src="../js/wolves.js?v=3.0.0"></script><script src="../js/kong.js?v=3.0.0"></script><script src="../js/dragons.js?v=3.0.0"></script><script src="../js/mythic.js?v=3.0.0"></script><script src="../js/renderer.js?v=3.0.0"></script><script src="../js/game.js?v=3.0.0"></script>
+<h1>Kiểm tra hiệu ứng và dấu tiếng Việt · 3.0.1</h1><nav aria-label="Chọn bối cảnh"><a href="#dragon-models">Tạo hình mới</a><a href="#preview-10">Boss 10–50</a><a href="#preview-51">Thung lũng</a><a href="#preview-70">Lang Vương</a><a href="#preview-80">KingKong</a><a href="#preview-81">Ngũ hành</a><a href="#preview-90">Rồng ngàn tuổi</a><a href="#preview-91">Thần thoại</a><a href="#preview-100">Chimera</a><a href="../" target="_blank" rel="noopener">Chơi trực tiếp ↗</a></nav><main id="previews"></main>
+<script src="../js/typography.js?v=3.0.1"></script><script src="../js/campaign.js?v=3.0.1"></script><script src="../js/bosses.js?v=3.0.1"></script><script src="../js/golem.js?v=3.0.1"></script><script src="../js/wolves.js?v=3.0.1"></script><script src="../js/kong.js?v=3.0.1"></script><script src="../js/dragons.js?v=3.0.1"></script><script src="../js/mythic.js?v=3.0.1"></script><script src="../js/renderer.js?v=3.0.1"></script><script src="../js/game.js?v=3.0.1"></script>
 <script>
 (async()=>{
 await MM.Typography.ready;
+await MM.SpriteArt?.ready;
 const samples=[
  [10,'10 · Cột xương báo trước',(g,b)=>{g.bossHazards=[-132,0,132].map(offset=>({owner:b,kind:'bones',x:440+offset,y:438,w:38,h:58,phase:'warning',timer:.8,warning:1.2,totalActive:.65,life:1.45,pulse:.4}));b.skillWarning={name:'CỘT XƯƠNG',remaining:.8,total:1.2};}],
  [20,'20 · Khiên mỗi 15 giây — miễn đạn 1 giây và hồi 1 máu',(g,b)=>{b.zombieClock=15.3;b.nextWardAt=30;b.hardenedTime=.7;b.wardHealFlash=.35;b.health=b.maxHealth-3;}],
@@ -85,11 +86,25 @@ samples.push(
  [100,'100 · Sư tử Vương — nhảy cào với ngọn giáo và vương miện',(g,b)=>{b.dead=true;b.health=0;const lion=crownForm(g,'lionMan',580,30,'crowned');lion.y=338;lion.mythicState='pounce';g.mythicZones=[zone(lion,'claw',440,170,'impact',{h:85})];}],
  [100,'100 · Medusa Queen — triệu hồi Medusa thường mỗi 10 giây',(g,b)=>{b.dead=true;b.health=0;const queen=crownForm(g,'medusa',690,20,'queen');queen.mythicState='petrify';queen.tell=true;for(const x of [190,300]){const e=g.spawn('medusa');Object.assign(e,{phase:'active',x,y:438,dir:1,ownerBoss:queen,minion:true});}g.player.shieldTime=2.5;g.player.shieldHits=1;g.settings.effects=false;}]
 );
+samples.unshift(
+ [81,'Mẫu rồng mới · Lửa, Băng, Gió, Đất và Chớp — cùng tạo hình, năm bảng màu',(g,b)=>{
+   const types=['fireDragon','iceDragon','windDragon','earthDragon','lightningDragon'];
+   const names=['RỒNG LỬA','RỒNG BĂNG','RỒNG GIÓ','RỒNG ĐẤT','RỒNG CHỚP'];
+   const colors=['#ffb68a','#bdedff','#c5ecd1','#e7cc8f','#e4cbff'];
+   types.forEach((type,i)=>{const e=i===0?b:g.spawn(type);Object.assign(e,{phase:'active',x:135+i*170,y:315,dir:i<3?1:-1,wingTime:1.2+i*.25});g.floating(e.x,365,names[i],colors[i]);});
+   g.player.x=480;
+ },'fireDragon','dragon-models'],
+ [90,'Mẫu rồng mới · Rồng ngàn tuổi — vương miện vàng, thân đen trắng Âm Dương',(g,b)=>{Object.assign(b,{x:635,y:360,dir:-1,wingTime:1.2});g.player.x=270;},'boss','dragon-boss-model'],
+ [90,'Mẫu rồng mới · Đổi hướng bay — đầu vuông, hàm răng sắc và cánh dơi',(g,b)=>{Object.assign(b,{x:390,y:350,dir:1,wingTime:2,dragonState:'laser-windup'});g.player.x=760;},'boss','dragon-facing-model'],
+ [90,'Mẫu rồng mới · Tắt hiệu ứng — vẫn rõ răng, gai, cánh và vương miện',(g,b)=>{Object.assign(b,{x:635,y:360,dir:-1});g.player.x=270;g.settings.effects=false;},'boss','dragon-static-model'],
+ [91,'Tạo hình mới · Sư tử, Medusa và Goatman — phóng to bản vẽ của bạn',(g,b)=>{for(const[type,x]of[['lionMan',235],['medusa',485],['goatman',745]]){const e=type==='lionMan'?b:g.spawn(type);Object.assign(e,{phase:'active',x,y:438,dir:type==='goatman'?-1:1});e.w*=3;e.h*=3;}g.player.x=70;},'lionMan','mythic-models'],
+ [100,'Tạo hình mới · Chimera — giữ nguyên đầu, sừng, cánh và đuôi rắn',(g,b)=>{Object.assign(b,{x:635,y:438,dir:-1,w:270,h:189});g.player.x=270;},'boss','chimera-model']
+);
 const previewed=new Set();
-for(const[id,title,configure,type='boss']of samples){
+for(const[id,title,configure,type='boss',anchor]of samples){
  const g=new MM.Game({headless:true,random:()=>.5,storage:{getItem:()=>null,setItem:()=>{}}});g.start(id);g.levelKills=type==='boss'?g.level.target:0;g.bossSpawned=type==='boss';g.time=7;
  const b=g.spawn(type);b.phase='active';b.x=680;b.y=438;g.player.x=440;g.player.invulnerable=0;configure(g,b);
- const section=document.createElement('section'),heading=document.createElement('h2'),canvas=document.createElement('canvas');if(!previewed.has(id)){section.id='preview-'+id;previewed.add(id);}heading.textContent=title;canvas.width=960;canvas.height=540;section.append(heading,canvas);document.getElementById('previews').append(section);MM.Renderer.draw(canvas.getContext('2d'),g);
+ const section=document.createElement('section'),heading=document.createElement('h2'),canvas=document.createElement('canvas');if(anchor)section.id=anchor;else if(!previewed.has(id)){section.id='preview-'+id;previewed.add(id);}heading.textContent=title;canvas.width=960;canvas.height=540;section.append(heading,canvas);document.getElementById('previews').append(section);MM.Renderer.draw(canvas.getContext('2d'),g);
 }
 })();
 </script></html>

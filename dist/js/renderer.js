@@ -3,6 +3,48 @@
   'use strict';
   const font = window.MM?.Typography?.sans || '"Noto Sans", Arial, sans-serif';
   const W = 960, H = 540, GROUND = 438, TAU = Math.PI * 2;
+  // User-supplied character art is decoded once; native drawings remain available
+  // while an image loads or when a browser cannot load a particular asset.
+  const spriteFiles = {
+    fire:'dragons/fire.png',ice:'dragons/ice.png',wind:'dragons/wind.png',
+    earth:'dragons/earth.png',lightning:'dragons/lightning.png',ancient:'dragons/ancient.png',
+    lion:'mythic/lion.png',medusa:'mythic/medusa.png',goatman:'mythic/goatman.png',chimera:'mythic/chimera.png'
+  };
+  const spriteEntries = Object.fromEntries(Object.keys(spriteFiles).map(name=>[name,{image:null,ready:false}]));
+  const ImageType = window.Image;
+  const scriptURL = typeof document!=='undefined' ? document.currentScript?.src : null;
+  const spriteBase = scriptURL ? new URL('../assets/sprites/',scriptURL).href : 'assets/sprites/';
+  const spriteReady = Promise.all(Object.entries(spriteFiles).map(([name,file])=>{
+    if(typeof ImageType!=='function')return Promise.resolve();
+    return new Promise(resolve=>{
+      const image=new ImageType(),entry=spriteEntries[name];entry.image=image;image.decoding='async';
+      image.onload=()=>{entry.ready=(image.naturalWidth||image.width)>0;resolve();};
+      image.onerror=()=>{entry.ready=false;resolve();};
+      image.src=spriteBase+file+'?v=3.0.1';
+    });
+  }));
+  window.MM=window.MM||{};
+  window.MM.SpriteArt={entries:spriteEntries,ready:spriteReady,set(name,image){
+    if(spriteEntries[name]){spriteEntries[name].image=image;spriteEntries[name].ready=!!image&&(image.naturalWidth||image.width)>0;}
+  }};
+  function drawSprite(c,name,dir,t,e,effects) {
+    const entry=spriteEntries[name];if(!entry?.ready)return false;
+    const image=entry.image,iw=image.naturalWidth||image.width,ih=image.naturalHeight||image.height;
+    const dragon=['fire','ice','wind','earth','lightning','ancient'].includes(name);
+    const facing=['lion','medusa','chimera'].includes(name)?-1:1;
+    const factor=dragon?1.25:name==='chimera'?1.2:1.1;
+    const height=(e.h||54)*factor,width=height*iw/ih;
+    const pivot=dragon ? .59 : name==='lion' ? .54 : name==='goatman' ? .47 : name==='chimera' ? .49 : .5;
+    const flying=dragon||e.mythicAir;
+    const bob=effects&&flying?Math.sin(t*3.2+(e.x||0)*.003)*Math.min(2,(e.h||54)*.008):0;
+    const attacking=/^(axe|stab|spear|claw|bite|swoop)$/.test(e.mythicState||'');
+    const tilt=effects?(flying?Math.sin(t*2.3)*.018:attacking?Math.sin((e.mythicProgress||0)*Math.PI)*.065:0):0;
+    c.save();
+    // Undo the vector drawer's anisotropic scale before fitting the PNG.
+    c.scale(40/(e.w||40),54/(e.h||54));c.scale((dir||1)*facing,1);c.translate(0,bob);c.rotate(tilt);
+    c.drawImage(image,-width*pivot,-height*.967,width,height);
+    c.restore();return true;
+  }
   const palettes = [
     { sky: '#111529', horizon: '#41405c', far: '#24273c', near: '#171d2d', ground: '#151c26', soil: '#101620', edge: '#556461', glow: '#b9a2ff', mist: '#a8aec5', moon: '#ddd8cb', name: 'cemetery' },
     { sky: '#0b1926', horizon: '#244f4b', far: '#183c3c', near: '#102827', ground: '#132924', soil: '#0b1919', edge: '#668369', glow: '#9ee1a2', mist: '#85bba5', moon: '#d8e9cd', name: 'woods' },
@@ -1245,12 +1287,12 @@
     }
   }
   const dragonColors = {
-    fire:{body:'#b74741',shade:'#743843',light:'#ed9a69',wing:'#713b50',eye:'#ffe69c'},
-    ice:{body:'#629fc5',shade:'#426b92',light:'#c4f1ed',wing:'#39627d',eye:'#e8ffff'},
-    wind:{body:'#70a390',shade:'#446d71',light:'#d4e7ae',wing:'#3c6469',eye:'#eff9b2'},
-    earth:{body:'#9a7955',shade:'#605447',light:'#d7bb7a',wing:'#65513e',eye:'#f5da83'},
-    lightning:{body:'#8b73b9',shade:'#514d83',light:'#e5c975',wing:'#514773',eye:'#fff3a8'},
-    yinYang:{body:'#d7dedb',shade:'#343c4c',light:'#fff5dc',wing:'#1e293b',eye:'#f7daa3'}
+    fire:{body:'#ac4545',shade:'#682f42',light:'#e98262',belly:'#e9b888',wing:'#84314b',membrane:'#c7595c',eye:'#ffcf67',accent:'#f1a367'},
+    ice:{body:'#6daacb',shade:'#3c648c',light:'#b5e7ec',belly:'#def0e2',wing:'#39698c',membrane:'#6aa9c3',eye:'#f2ffff',accent:'#cdf4ed'},
+    wind:{body:'#5f9d87',shade:'#355e60',light:'#a2d5aa',belly:'#d2dcaa',wing:'#365e66',membrane:'#6f9d8a',eye:'#f0e6a1',accent:'#c2e3b2'},
+    earth:{body:'#a08055',shade:'#604f43',light:'#cfad71',belly:'#e1c58f',wing:'#5d4e43',membrane:'#a1875f',eye:'#ffdb76',accent:'#d9bd82'},
+    lightning:{body:'#8b70b5',shade:'#51406f',light:'#b49acc',belly:'#e6cea0',wing:'#4e3c72',membrane:'#8b659c',eye:'#fff0a0',accent:'#f4d16d'},
+    yinYang:{body:'#363746',shade:'#202432',light:'#a7a8b2',belly:'#e6dbc1',wing:'#373442',membrane:'#8c738a',eye:'#ffd583',accent:'#eee8d4'}
   };
   function yinYang(c,x,y,r,t,effects,alpha=1) {
     c.save();c.translate(x,y);c.rotate(effects?t*.65:.4);c.globalAlpha*=alpha;
@@ -1261,31 +1303,94 @@
   }
   function drawDragon(c,dir,walk,t,boss,e,effects) {
     if(e.dragonForm==='knight'){drawDragonKnight(c,dir,walk,t,boss,e,effects);return;}
-    const variant=e.variant||'fire',p=dragonColors[variant]||dragonColors.fire,outline='#142335';
-    const flap=effects?Math.sin((e.wingTime||t)*5)*3:0;
+    if(drawSprite(c,e.variant==='yinYang'||boss?'ancient':e.variant||'fire',dir,t,e,effects))return;
+    const variant=e.variant||'fire',p=dragonColors[variant]||dragonColors.fire,outline='#171b29';
+    const royal=variant==='yinYang',flap=effects?Math.sin((e.wingTime||t)*5)*2.1:0;
+    const breath=effects?Math.sin(t*2.8+(e.x||0)*.003)*.45:0,armed=!!e.tell||e.dragonState==='laser-windup';
+    const claw=effects?Math.sin(t*3.2)*.9:0,horn='#ead8b8',ivory='#fff0d2';
     c.save();c.scale(dir,1);c.lineJoin='round';c.lineCap='round';
-    // Ribbed bat wings frame a long reptilian body and a horned, distinct face.
+    // Broad, angular bat wings and a coiled tail retain the reference silhouette.
     for(const side of [-1,1]){
-      polygon(c,[[side*2,-28],[side*8,-43-flap],[side*20,-56-flap],[side*19,-35],[side*24,-26],[side*14,-30],[side*10,-20]],p.wing,outline,1.2);
-      line(c,side*2,-28,side*20,-56-flap,p.light,1);line(c,side*8,-43-flap,side*19,-35,p.body,.8);line(c,side*8,-43-flap,side*14,-30,p.body,.8);
-      polygon(c,[[side*17,-54-flap],[side*20,-61-flap],[side*20,-54-flap]],p.light,outline,.6);
+      const top=-49-flap,tip=-40-flap*.55;
+      polygon(c,[[side*4,-26],[side*11,-38],[side*16,top],[side*35,tip],[side*27,-34],[side*26,-25],[side*20,-28],[side*16,-20],[side*9,-24]],p.wing,outline,1.5);
+      polygon(c,[[side*15,top+2],[side*32,tip],[side*25,-35],[side*24,-28],[side*19,-31],[side*16,-23],[side*11,-26]],p.membrane,outline,.85);
+      polygon(c,[[side*16,top+3],[side*31,tip+.7],[side*22,-35]],p.light);
+      line(c,side*5,-27,side*16,top,p.body,1.75);
+      line(c,side*16,top,side*25,-26,p.shade,1.3);
+      line(c,side*16,top,side*16,-22,p.shade,1.15);
+      polygon(c,[[side*14,top+1],[side*18,top-4],[side*17,top+3]],horn,outline,.65);
     }
-    c.beginPath();c.moveTo(-12,-24);c.bezierCurveTo(-30,-18,-31,-38,-19,-39);c.bezierCurveTo(-24,-35,-16,-31,-9,-31);c.closePath();c.fillStyle=p.shade;c.fill();c.strokeStyle=outline;c.lineWidth=1.2;c.stroke();
-    polygon(c,[[-25,-31],[-31,-33],[-27,-25]],p.light,outline,.6);
-    ellipse(c,-1,-25,15,12,p.body);ellipse(c,5,-22,9,7,p.light);
-    for(let i=0;i<4;i++)line(c,-1+i*3,-26,-3+i*3,-20,p.shade,.6);
-    for(const [x,y] of [[-7,-16],[9,-15]]){line(c,x,y,x+3,-8,p.body,4);line(c,x+3,-8,x+7,-7,p.light,2);for(let j=0;j<3;j++)line(c,x+5+j,-8,x+7+j,-5,'#ece3be',.8);}
-    c.beginPath();c.moveTo(4,-30);c.quadraticCurveTo(5,-45,15,-44);c.lineTo(21,-38);c.lineTo(16,-28);c.closePath();c.fillStyle=p.body;c.fill();c.strokeStyle=outline;c.lineWidth=1.2;c.stroke();
-    polygon(c,[[11,-42],[8,-51],[15,-45],[20,-48],[18,-41]],p.light,outline,.8);
-    polygon(c,[[15,-39],[24,-36],[24,-31],[17,-29],[10,-31]],p.body,outline,1.1);
-    eye(c,16,-37,4,p.eye,1,true);ellipse(c,23,-34,1,1,outline);
-    line(c,17,-31,24,-32,p.shade,1);polygon(c,[[19,-31],[20,-28],[21,-31]],'#f0e4c0');
-    for(let i=0;i<5;i++)polygon(c,[[-13+i*4,-34],[-12+i*4,-39-(i%2)*2],[-9+i*4,-34]],p.light,outline,.5);
-    if(variant==='ice')for(const[x,y]of[[-8,-30],[1,-33],[8,-43]])polygon(c,[[x-2,y],[x,y-7],[x+3,y]],'#c5f3ee','#f3ffff',.5);
-    if(variant==='lightning'){polygon(c,[[-5,-33],[2,-34],[-1,-27],[5,-28],[-6,-17],[-3,-25],[-8,-24]],'#f2d58d');line(c,20,-47,24,-52,'#fff1a8',1.3);}
-    if(variant==='earth')for(const x of [-9,0,7])polygon(c,[[x-3,-31],[x,-38],[x+4,-32],[x+3,-27]],'#b79e73',p.shade,.5);
-    if(variant==='wind')for(let i=0;i<3;i++){c.beginPath();c.moveTo(-7+i*4,-28);c.quadraticCurveTo(-12+i*4,-23,-5+i*4,-22);c.strokeStyle='#c8e8cc';c.lineWidth=.7;c.stroke();}
-    if(e.tell||e.dragonState==='laser-windup'){ellipse(c,24,-32,3,2,p.eye);if(effects)halo(c,24,-32,11,p.eye,.28);}
+    polygon(c,[[-9,-17],[-15,-10],[-27,-10],[-34,-19],[-29,-17],[-26,-20],[-25,-13],[-17,-14],[-12,-23]],p.shade,outline,1.5);
+    line(c,-25,-12,-18,-13,p.light,1.3);
+    for(const [x,y] of [[-30,-18],[-25,-19],[-20,-17]])polygon(c,[[x-1.5,y],[x,y-5],[x+2,y+1]],p.accent,outline,.65);
+    // The upright torso has a plated belly, heavy feet and separate clawed arms.
+    c.save();c.translate(0,breath);
+    polygon(c,[[-12,-31],[-2,-34],[11,-29],[13,-12],[8,-5],[-10,-5],[-15,-13]],p.body,outline,1.65);
+    polygon(c,[[-12,-26],[-6,-29],[-5,-7],[-11,-7],[-14,-14]],p.shade);
+    polygon(c,[[-2,-28],[10,-25],[11,-11],[7,-7],[-2,-8]],p.belly,outline,1);
+    for(let i=0;i<4;i++)line(c,-1,-23+i*3.6,10,-21.8+i*3.5,p.shade,.7);
+    for(const [x,s] of [[-8,-1],[7,1]]){
+      polygon(c,[[x-4,-10],[x+3,-10],[x+4,-3],[x+6,-1],[x-5,-1],[x-5,-5]],s<0?p.shade:p.body,outline,1.25);
+      for(let i=0;i<3;i++)rect(c,x-3.5+i*2.6,-2.6,1.8,1.6,horn);
+    }
+    for(const side of [-1,1]){
+      const x=side<0?-13:13,y=-19+claw*(side<0?1:-1);
+      polygon(c,[[x-side*2,-27],[x+side*3,-25],[x+side*5,y],[x+side*1,y+3],[x-side*3,y-1]],side<0?p.shade:p.body,outline,1.15);
+      line(c,x+side*2,y-1,x+side*4,y+1,p.light,.8);
+      for(let i=0;i<2;i++)polygon(c,[[x+side*(1+i*2),y+1],[x+side*(2+i*2),y+4],[x+side*(3+i*2),y+1]],horn,outline,.5);
+    }
+    c.restore();
+    // Oversized square head, narrow eyes and the wide, tooth-filled jaw define this family.
+    polygon(c,[[-13,-44],[-17,-53],[-7,-47],[-5,-41]],horn,outline,1.15);
+    polygon(c,[[15,-44],[19,-53],[22,-42]],royal?'#f5edda':p.accent,outline,1.15);
+    polygon(c,[[-12,-46],[14,-46],[19,-42],[19,-37],[27,-37],[28,-31],[26,-24],[10,-23],[-12,-29]],p.body,outline,1.8);
+    polygon(c,[[-11,-45],[-5,-44],[-6,-30],[-11,-31]],p.shade);
+    polygon(c,[[-5,-44],[12,-44],[17,-41],[16,-35],[-4,-35]],royal?'#4b4959':p.light);
+    if(royal)polygon(c,[[11,-44],[16,-42],[17,-35],[12,-35],[11,-39]],'#e9e7d8');
+    polygon(c,[[-5,-40],[3,-37.5],[2,-35],[-4,-36]],p.eye,outline,.8);
+    polygon(c,[[8,-37.5],[16,-40],[16,-36],[10,-35]],royal?'#e7bb7a':p.eye,outline,.8);
+    rect(c,-1.5,-37.8,1.1,2.2,outline);rect(c,12,-37.8,1.1,2.2,outline);
+    line(c,-6,-41,3,-38,outline,1.8);line(c,7.5,-38,17,-41,outline,1.8);
+    polygon(c,[[8,-37],[27,-37],[27.5,-33],[9,-32]],royal?'#767582':p.light,outline,1);
+    line(c,20.5,-35.7,20,-34.1,outline,1);line(c,25,-35.7,24.5,-34.1,outline,1);
+    polygon(c,[[-2.5,-34],[26.7,-32.8],[25.5,-26],[10,-25],[-3,-28]],'#301f2b',outline,1.1);
+    polygon(c,[[1,-28.4],[7,-29],[12,-26.1],[3,-27]],'#a24b59');
+    for(let i=0;i<7;i++){
+      const x=-1.6+i*3.9,y=-33.7+i*.16;
+      polygon(c,[[x,y],[x+3.3,y+.1],[x+1.8,y+3.3+(i%2)*.6]],ivory);
+    }
+    for(let i=0;i<6;i++){
+      const x=2+i*4,y=-27.3+(i>1?.8:0);
+      polygon(c,[[x,y],[x+1.6,y-2.7],[x+3,y+.2]],ivory);
+    }
+    polygon(c,[[-3,-28],[10,-25],[26,-26],[25,-23],[10,-22],[-3,-25]],p.shade,outline,1);
+    line(c,11,-23.6,23,-24,p.light,.6);
+    if(variant==='ice'){
+      polygon(c,[[-10,-44],[-9,-49],[-6,-44]],'#d6fbf3',outline,.55);
+      polygon(c,[[-12,-23],[-9,-19],[-12,-16],[-15,-20]],'#b7eced',p.shade,.6);
+    }
+    if(variant==='wind'){
+      line(c,-10,-32,-7,-34,p.accent,.7);line(c,-9,-30,-6,-32,p.accent,.7);
+      polygon(c,[[-13,-24],[-17,-24],[-14,-21]],p.light,outline,.5);
+    }
+    if(variant==='earth')polygon(c,[[-13,-23],[-9,-25],[-7,-21],[-10,-18],[-14,-19]],p.light,p.shade,.7);
+    if(variant==='lightning')polygon(c,[[-10,-26],[-4,-27],[-7,-22],[-2,-23],[-10,-15],[-7,-21],[-12,-20]],p.accent,outline,.35);
+    if(royal){
+      polygon(c,[[-7,-47],[-10,-55],[-3,-52],[2,-59],[7,-52],[13,-55],[12,-47]],'#e4c776',outline,1.15);
+      polygon(c,[[-7,-54],[-4,-50],[-1,-52],[2,-57],[5,-52],[9,-50],[11,-53],[10,-48],[-5,-48]],'#fff0a7');
+      polygon(c,[[2,-54],[4,-51],[2,-48],[0,-51]],'#b44d65',outline,.45);
+      ellipse(c,-5,-50,.8,.8,'#b44d65');ellipse(c,10,-50,.8,.8,'#b44d65');
+    }
+    if(armed){
+      ellipse(c,28,-29.5,2.1,1.7,p.eye);
+      if(effects){
+        halo(c,29,-29.5,8,p.eye,.22);
+        for(let i=0;i<3;i++){
+          const progress=((t*1.6+i/3)%1+1)%1,x=29+progress*8,y=-29.5+Math.sin(t*5+i*2)*1.8;
+          polygon(c,[[x-1,y],[x,y-1.3],[x+1.5,y],[x,y+1.2]],p.eye);
+        }
+      }
+    }
     c.restore();
   }
   function drawDragonKnight(c,dir,walk,t,boss,e,effects) {
@@ -1309,6 +1414,7 @@
     line(c,-12,y+5,12,y+5,'#fff0ad',1);ellipse(c,0,y+1,2,2,'#b95767');
   }
   function drawLion(c,dir,walk,t,boss,e,effects) {
+    if(drawSprite(c,'lion',dir,t,e,effects))return;
     const outline='#222837',gold=e.mythicCrowned?'#d8ab5c':'#bb874b',fur='#d9bb7b',attack=e.mythicState==='spear'||e.mythicState==='pounce';
     c.save();c.scale(dir,1);
     for(const[x,s]of[[-9,1],[8,-1]]){line(c,x,-18,x+walk*s,-5,gold,6);rounded(c,x-5+walk*s,-5,12,5,2,'#765645',outline,1);}
@@ -1323,6 +1429,7 @@
     if(e.mythicCrowned)crown(c,-61);c.restore();
   }
   function drawMedusa(c,dir,walk,t,boss,e,effects) {
+    if(drawSprite(c,'medusa',dir,t,e,effects))return;
     const outline='#172d36',queen=e.mythicCrowned,skin=queen?'#aac99a':'#88b394';
     c.save();c.scale(dir,1);
     polygon(c,[[-11,-27],[10,-27],[17,-2],[7,0],[1,-4],[-6,0],[-18,-3]],queen?'#655778':'#465878',outline,1.4);
@@ -1337,6 +1444,7 @@
     if(queen)crown(c,-61);c.restore();
   }
   function drawGoatman(c,dir,walk,t,boss,e,effects) {
+    if(drawSprite(c,'goatman',dir,t,e,effects))return;
     const outline='#222735',fur=e.mythicCrowned?'#a9aca2':'#8b8b83',armor=e.mythicCrowned?'#b89f67':'#685957';
     c.save();c.scale(dir,1);
     for(const[x,s]of[[-9,1],[9,-1]]){line(c,x,-17,x+s*walk,-6,fur,6);polygon(c,[[x-5+s*walk,-7],[x+5+s*walk,-7],[x+7+s*walk,-1],[x+s*walk,0],[x-6+s*walk,-1]],'#35333b',outline,1);line(c,x+s*walk,-4,x+s*walk,-1,'#8f8c81',.8);}
@@ -1350,6 +1458,7 @@
     if(e.mythicCrowned)crown(c,-65);c.restore();
   }
   function drawChimera(c,dir,walk,t,boss,e,effects) {
+    if(drawSprite(c,'chimera',dir,t,e,effects))return;
     const outline='#1e2836',air=!!e.mythicAir||e.y<GROUND-50,flap=effects?Math.sin(t*6)*3:0;
     c.save();c.scale(dir,1);
     // The snake is the tail itself; the mane, single goat horn and two wings are structural.
