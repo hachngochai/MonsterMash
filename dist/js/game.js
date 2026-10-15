@@ -6,6 +6,17 @@
   const W = 960, H = 540, GROUND = 438, SAVE_KEY = 'monster-mash-v2';
   const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
   const overlaps = (a, b) => Math.abs(a.x - b.x) < (a.w + b.w) / 2 && a.y > b.y - b.h && a.y - a.h < b.y;
+  // Return the first point of a swept bullet against a rectangle, including diagonal shots.
+  function bulletEntry(x0,y0,x1,y1,e) {
+    let near=0,far=1;
+    for(const [start,delta,low,high] of [[x0,x1-x0,e.x-e.w/2-3,e.x+e.w/2+3],[y0,y1-y0,e.y-e.h-3,e.y+3]]){
+      if(Math.abs(delta)<1e-9){if(start<low||start>high)return null;continue;}
+      const a=(low-start)/delta,b=(high-start)/delta;
+      near=Math.max(near,Math.min(a,b));far=Math.min(far,Math.max(a,b));
+      if(near>far)return null;
+    }
+    return near;
+  }
   function readSave(storage) {
     let raw = {};
     try { raw = JSON.parse(storage?.getItem(SAVE_KEY) || '{}') || {}; } catch { /* Private browsing can deny storage. */ }
@@ -30,7 +41,7 @@
     }
     play(kind) {
       if (!this.game.settings.sound || !this.context || this.context.state !== 'running') return;
-      const notes = { shot:[230,65,.07,.035], sniper:[150,35,.14,.055], hit:[100,35,.13,.045], kill:[560,180,.1,.035], shield:[320,940,.32,.05], win:[440,880,.45,.06], health:[660,990,.16,.04], ammo:[420,760,.15,.04], empty:[90,65,.04,.02] };
+      const notes = { shot:[230,65,.07,.035], sniper:[150,35,.14,.055], hit:[100,35,.13,.045], kill:[560,180,.1,.035], shield:[320,940,.32,.05], win:[440,880,.45,.06], health:[660,990,.16,.04], ammo:[420,760,.15,.04], empty:[90,65,.04,.02], howl:[180,90,4,.045], roar:[90,40,.55,.065], banana:[320,75,.2,.045] };
       const [start,end,length,volume] = notes[kind] || notes.shot;
       const ctx = this.context, t = ctx.currentTime, osc = ctx.createOscillator(), gain = ctx.createGain();
       osc.type = ['shot','sniper','hit'].includes(kind) ? 'triangle' : 'sine';
@@ -52,6 +63,7 @@
       this.enemies = []; this.bullets = []; this.particles = []; this.floats = []; this.pickups = [];
       this.ammoCrates = []; this.enemyShots = []; this.ammoTimer = 2.4;
       this.bossHazards = []; this.bossEggs = []; this.golemZones = []; this.groundCracks = []; this.wolfZones = [];
+      this.kongZones=[];this.bananaPeels=[];
       this.keys = new Set(); this.pointers = new Map(); this.padInputs = new Map();
       this.score = 0; this.totalKills = 0; this.levelKills = 0; this.shieldCount = 0;
       this.regularSpawned = 0; this.spawnTimer = 1; this.bossSpawned = false; this.bossDefeated = false;
@@ -88,6 +100,7 @@
       this.enemies = []; this.bullets = []; this.particles = []; this.floats = []; this.pickups = [];
       this.ammoCrates=[];this.enemyShots=[];this.ammoTimer=2.4;
       this.bossHazards=[];this.bossEggs=[];this.golemZones=[];this.groundCracks=[];this.wolfZones=[];
+      this.kongZones=[];this.bananaPeels=[];
       this.levelKills = 0; this.regularSpawned = 0; this.spawnTimer = 2.2; this.levelTime = 0; this.restTimer = 0;
       this.bossSpawned = false; this.bossDefeated = false; this.shake = 0; this.flash = 0;
       this.screen = 'playing'; this.clearInputs(); this.sound.unlock();
@@ -107,6 +120,7 @@
       this.screen = 'home'; this.clearInputs(); this.enemies = []; this.bullets = []; this.particles = []; this.pickups = []; this.floats = [];
       this.ammoCrates=[];this.enemyShots=[];
       this.bossHazards=[];this.bossEggs=[];this.golemZones=[];this.groundCracks=[];this.wolfZones=[];
+      this.kongZones=[];this.bananaPeels=[];
       this.level=Campaign.getLevel(this.save.resume);this.tuning=Campaign.tuning(this.settings.difficulty);this.player=this.makePlayer();
       this.levelKills=0;this.totalKills=0;this.shieldCount=0;this.score=0;this.bossSpawned=false;this.bossDefeated=false;
       if (!this.headless) { this.mobileView?.leave(); this.ui['home-overlay'].hidden = false; this.ui['result-overlay'].hidden = true; this.ui['stage-banner'].hidden = true; this.ui['toast'].hidden = true; }
@@ -187,6 +201,8 @@
       this.burst(this.player.x,this.player.y-28,'#91e3d1',22,'ring'); this.sound.play('shield'); this.toast('Khiên bật · 5 giây / 3 lần chặn'); this.updateUI(); return true;
     }
     getWeaponProfile() {
+      const aerialBoss=this.enemies.find(e=>e.boss&&e.archetype==='kong'&&e.vinePhase&&!e.kongFinalTriggered&&!e.dead&&e.health>0);
+      if(aerialBoss)return {kind:'highAim',cost:1,damage:2,cooldown:.22,speed:1050,locked:aerialBoss.kongState==='vine-rise',target:aerialBoss};
       const bloodBoss=this.enemies.find(e=>e.boss&&e.archetype==='werewolf'&&e.bloodMoon&&!e.dead&&e.health>0);
       return bloodBoss?{kind:'sniper',cost:5,damage:5,cooldown:1,speed:1280,locked:bloodBoss.wolfState==='transform'}:{kind:'normal',cost:1,damage:1,cooldown:.17,speed:780,locked:false};
     }
@@ -200,7 +216,13 @@
       }
       p.ammo-=weapon.cost;p.shotTimer=weapon.cooldown;p.shotCooldown=weapon.cooldown;this.updateAmmoUI();
       const x = p.x+dir*(p.w/2+10), y = p.y-27;
-      this.bullets.push({x,y,previousX:x,dir,life:1.5,kind:weapon.kind,damage:weapon.damage,speed:weapon.speed}); this.burst(x,y,'#ffdc93',weapon.kind==='sniper'?9:4,'spark'); this.sound.play(weapon.kind==='sniper'?'sniper':'shot'); return true;
+      const bullet={x,y,previousX:x,dir,life:1.5,kind:weapon.kind,damage:weapon.damage,speed:weapon.speed};
+      if(weapon.kind==='highAim'){
+        const target=weapon.target,angle=Math.atan2(target.y-target.h*.55-y,target.x-x);
+        bullet.vx=Math.cos(angle)*weapon.speed;bullet.vy=Math.sin(angle)*weapon.speed;bullet.angle=angle;
+        p.aimAngle=angle;p.dir=Math.sign(bullet.vx)||dir;MM.KongCombat?.recordShot(this,target);
+      }else p.aimAngle=null;
+      this.bullets.push(bullet); this.burst(x,y,'#ffdc93',weapon.kind==='sniper'?9:4,'spark'); this.sound.play(weapon.kind==='sniper'?'sniper':'shot'); return true;
     }
     dropAmmo(x = 90 + this.random() * (W - 180)) {
       if(this.screen!=='playing'||this.ammoCrates.length>=3)return null;
@@ -226,15 +248,15 @@
     }
     updateAmmoUI() {
       if(this.headless||!this.ui['ammo-count'])return;
-      const p=this.player,weapon=this.getWeaponProfile(),sniper=weapon.kind==='sniper';p.weaponMode=weapon.kind;
+      const p=this.player,weapon=this.getWeaponProfile(),sniper=weapon.kind==='sniper',high=weapon.kind==='highAim';p.weaponMode=weapon.kind;
       this.ui['ammo-count'].textContent=`${String(p.ammo).padStart(2,'0')} / ${p.maxAmmo}`;
       this.ui['ammo-status'].classList.toggle('low',p.ammo>=weapon.cost&&p.ammo<=(sniper?10:3));
       this.ui['ammo-status'].classList.toggle('empty',p.ammo<weapon.cost);
       this.ui['ammo-status'].classList.toggle('sniper',sniper);
-      this.ui['ammo-status'].setAttribute('aria-label',`${sniper?'Súng ngắm: 5 đạn / 5 sát thương. ':''}Đạn ${p.ammo} / ${p.maxAmmo}. Nhặt hòm AMMO để tiếp tế.`);
-      if(this.ui['ammo-mode'])this.ui['ammo-mode'].textContent=sniper?(weapon.locked?'NGẮM · CHỜ':p.shotTimer>0?`NGẮM ${p.shotTimer.toFixed(1)}s`:'NGẮM · 5 ĐẠN'):'ĐẠN';
+      this.ui['ammo-status'].setAttribute('aria-label',`${sniper?'Súng ngắm: 5 đạn / 5 sát thương. ':high?'Bắn tầm cao: 1 đạn / 2 sát thương, mỗi 5 phát nhận 1 khiên. ':''}Đạn ${p.ammo} / ${p.maxAmmo}. Nhặt hòm AMMO để tiếp tế.`);
+      if(this.ui['ammo-mode'])this.ui['ammo-mode'].textContent=sniper?(weapon.locked?'NGẮM · CHỜ':p.shotTimer>0?`NGẮM ${p.shotTimer.toFixed(1)}s`:'NGẮM · 5 ĐẠN'):high?(weapon.locked?'TẦM CAO · CHỜ':`TẦM CAO · ${weapon.target.highAimShots%5}/5`):'ĐẠN';
       this.ui['touch-controls']?.classList.toggle('empty',p.ammo<weapon.cost);
-      document.querySelectorAll('.fire-control').forEach(button=>{button.querySelector('small').textContent=sniper?'NGẮM':'BẮN';button.setAttribute('aria-label',`${sniper?'Bắn ngắm':'Bắn'} ${button.dataset.control==='fire-left'?'trái':'phải'}`);});
+      document.querySelectorAll('.fire-control').forEach(button=>{button.querySelector('small').textContent=sniper?'NGẮM':high?'BẮN CAO':'BẮN';button.setAttribute('aria-label',`${sniper?'Bắn ngắm':high?'Bắn tầm cao':'Bắn'} ${button.dataset.control==='fire-left'?'trái':'phải'}`);});
     }
     burst(x,y,color,count=12,type='spark') {
       if (!this.settings.effects) return;
@@ -254,6 +276,7 @@
       if(enemy.boss)MM.BossCombat?.setup(this,enemy);
       if(enemy.archetype==='golem')MM.GolemCombat?.setup(this,enemy);
       if(enemy.archetype==='werewolf')MM.WolfCombat?.setup(this,enemy);
+      if(enemy.archetype==='kong')MM.KongCombat?.setup(this,enemy);
       this.enemies.push(enemy); return enemy;
     }
     configureAbility(enemy, state) {
@@ -316,6 +339,7 @@
     }
     updateEnemy(e,dt) {
       e.age+=dt;e.hit=Math.max(0,e.hit-dt);
+      if(e.tsunamiChild)return; // The wave owns its staggered entry and one-way movement.
       if(e.phase==='warning'){
         e.warning-=dt;
         if(e.warning<=0){e.phase='active';if(!e.ambush)e.x=e.dir===1?24:W-24;}
@@ -324,7 +348,8 @@
       const p=this.player,archetype=e.archetype||e.type,state=e.abilityState||'ground';
       e.combatTime=(e.combatTime||0)+dt;
       const pressure=e.pressure=this.getPressure(e);
-      if(archetype==='golem'||archetype==='werewolf')return; // Announced weapon attacks own movement and collisions.
+      if(e.gluttonState)return;
+      if(archetype==='golem'||archetype==='werewolf'||archetype==='kong')return; // Announced weapon attacks own movement and collisions.
       if(e.phantomState)return; // The ghost's announced attack owns its position and collisions.
       e.flightPhase=(e.flightPhase||0)+dt*pressure.flightRate;
       // Patrol and cooldown clocks accelerate. The announced attack window uses real seconds.
@@ -384,6 +409,7 @@
       this.totalKills++; this.score += enemy.score || 100;
       if(enemy.archetype==='golem')MM.GolemCombat?.cleanup(this,enemy);
       if(enemy.archetype==='werewolf')MM.WolfCombat?.cleanup(this,enemy);
+      if(enemy.archetype==='kong')MM.KongCombat?.cleanup(this,enemy);
       if (enemy.boss) {
         this.bossDefeated = !this.enemies.some(other=>other!==enemy&&other.boss&&!other.dead&&other.health>0);
         MM.BossCombat?.cleanup(this,enemy);
@@ -458,6 +484,7 @@
       const p = this.player; p.invulnerable = Math.max(0,p.invulnerable-dt); p.shieldTime = Math.max(0,p.shieldTime-dt); p.shotTimer = Math.max(0,p.shotTimer-dt);p.dryCooldown=Math.max(0,p.dryCooldown-dt);
       const wasStunned=p.stunTime>0;
       p.stunTime=Math.max(0,p.stunTime-dt);p.knockdownTime=Math.max(0,p.knockdownTime-dt);p.stunGrace=Math.max(0,p.stunGrace-dt);
+      if(p.stunTime<1e-8)p.stunTime=0;if(p.knockdownTime<1e-8)p.knockdownTime=0;
       if(wasStunned&&p.stunTime===0)p.stunGrace=.6;
       let move = (this.keys.has('ArrowRight')?1:0)-(this.keys.has('ArrowLeft')?1:0);
       let fire = this.keys.has('KeyA')||this.keys.has('KeyJ') ? -1 : this.keys.has('KeyD')||this.keys.has('KeyL') ? 1 : 0;
@@ -483,7 +510,7 @@
       if (fire) this.shoot(fire);
       this.updateAmmo(dt);
       this.spawnTimer -= dt;
-      const alive = this.enemies.filter(e=>!e.boss).length;
+      const alive = this.enemies.filter(e=>!e.boss&&!e.minion).length;
       if (this.spawnTimer<=0 && this.regularSpawned<this.level.target && alive<this.level.maxAlive && this.restTimer<=0) {
         const ordinal=this.regularSpawned+1;
         let type=this.level.types[Math.floor(this.random()*this.level.types.length)];
@@ -511,9 +538,11 @@
       MM.BossCombat?.update(this,dt);
       if(this.screen==='playing')MM.GolemCombat?.update(this,dt);
       if(this.screen==='playing')MM.WolfCombat?.update(this,dt);
-      if(this.player.weaponMode==='sniper')this.updateAmmoUI();
+      if(this.screen==='playing')MM.KongCombat?.update(this,dt);
+      if(this.player.weaponMode!=='normal')this.updateAmmoUI();
       if(this.screen!=='playing')return;
       for(const shot of this.enemyShots){
+        if(shot.kind==='banana'){MM.KongCombat?.updateShot(this,shot,dt);continue;}
         shot.x+=shot.vx*dt;shot.y+=shot.vy*dt;shot.life-=dt;
         if(overlaps({...p,w:p.w*.75,h:p.h*.86},shot)){
           if(shot.kind==='rock')this.burst(shot.x,shot.y,'#c1a78a',10);
@@ -526,23 +555,26 @@
       const spent=new Set();
       for(const bullet of this.bullets) {
         if(this.screen!=='playing')break;
-        const prev=bullet.x; bullet.previousX=prev; bullet.x+=bullet.dir*(bullet.speed||780)*dt; bullet.life-=dt;
-        const candidates=this.enemies.filter(e=>!e.dead&&!e.intangible&&e.phase==='active'&&bullet.y>=e.y-e.h-3&&bullet.y<=e.y+3&&Math.max(prev,bullet.x)>=e.x-e.w/2&&Math.min(prev,bullet.x)<=e.x+e.w/2).sort((a,b)=>Math.abs(a.x-prev)-Math.abs(b.x-prev));
-        if(MM.BossCombat?.hitEgg(this,bullet,prev,candidates.length?Math.abs(candidates[0].x-prev):Infinity)){spent.add(bullet);continue;}
+        const prev=bullet.x,prevY=bullet.y;bullet.previousX=prev;bullet.previousY=prevY;
+        bullet.x+=(bullet.vx??bullet.dir*(bullet.speed||780))*dt;bullet.y+=(bullet.vy||0)*dt;bullet.life-=dt;
+        const candidates=this.enemies.filter(e=>!e.dead&&!e.intangible&&e.phase==='active').map(e=>({e,t:bulletEntry(prev,prevY,bullet.x,bullet.y,e)})).filter(v=>v.t!==null).sort((a,b)=>a.t-b.t).map(v=>v.e);
+        if(!bullet.vy&&MM.BossCombat?.hitEgg(this,bullet,prev,candidates.length?Math.abs(candidates[0].x-prev):Infinity)){spent.add(bullet);continue;}
         const e=candidates[0];
         if(e) {
           spent.add(bullet);
           if(MM.BossCombat?.hit(this,e)===false){this.burst(e.x,bullet.y,'#a7edab',4);continue;}
           const damage=clamp(Number.isFinite(bullet.damage)?bullet.damage:1,1,5);
           const wolfHit=MM.WolfCombat?.hit(this,e,damage);
-          if(wolfHit===false)continue;
-          if(wolfHit!==true)e.health-=damage;
-          e.hit=.12; e.x=clamp(e.x+bullet.dir*(e.boss?2:7),18,W-18);
+          if(wolfHit===false){this.burst(e.x,e.y-e.h*.55,'#d6c7ed',5);continue;}
+          const kongHit=MM.KongCombat?.hit(this,e,damage);
+          if(kongHit===false){this.burst(e.x,e.y-e.h*.55,'#f5bf78',5);continue;}
+          if(wolfHit!==true&&kongHit!==true)e.health-=damage;
+          e.hit=.12;if(!e.vinePhase)e.x=clamp(e.x+bullet.dir*(e.boss?2:7),18,W-18);
           this.burst(e.x,bullet.y,'#ffdaa0',5); if(e.health<=0)this.killEnemy(e);
         }
       }
       if(this.screen!=='playing')return;
-      this.bullets=this.bullets.filter(b=>!spent.has(b)&&b.life>0&&b.x>-30&&b.x<W+30);
+      this.bullets=this.bullets.filter(b=>!spent.has(b)&&b.life>0&&b.x>-30&&b.x<W+30&&b.y>-30&&b.y<H+30);
       for(const pickup of this.pickups){pickup.life-=dt;if(Math.abs(p.x-pickup.x)<p.w/2+16&&Math.abs(p.y-pickup.y)<70){p.health=Math.min(p.maxHealth,p.health+1);pickup.life=0;this.floating(p.x,p.y-p.h-12,'+1 MÁU','#afe4bc');this.sound.play('health');this.updateUI();}}
       this.pickups=this.pickups.filter(pickup=>pickup.life>0);
       this.particles.forEach(effect=>{effect.life-=dt;effect.x+=effect.vx*dt;effect.y+=effect.vy*dt;if(effect.type!=='ring')effect.vy+=180*dt;});this.particles=this.particles.filter(effect=>effect.life>0);

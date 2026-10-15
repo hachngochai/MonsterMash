@@ -23,6 +23,14 @@
       enemy.bulletArmor = true;
       enemy.armorHits = 0;
       enemy.hardenedTime = 0;
+      enemy.zombieClock = 0;
+      enemy.nextTsunamiAt = 5;
+      enemy.nextGluttonAt = 8;
+      enemy.tsunamiSerial = 0;
+      enemy.tsunamiWaves = [];
+      enemy.tsunamiWarning = null;
+      enemy.gluttonState = null;
+      enemy.gluttonHealFlash = 0;
     }
   }
 
@@ -37,6 +45,15 @@
     enemy.drainFlash = 0;
     enemy.intangible = false;
     enemy.phantomState = null;
+    if (enemy.skillLevel === 20) {
+      for (const child of game.enemies) if (child.tsunamiChild && child.ownerBoss === enemy) {
+        child.dead = true; child.health = 0;
+      }
+      game.enemies = game.enemies.filter(child => !child.tsunamiChild || child.ownerBoss !== enemy);
+      enemy.tsunamiWarning = null; enemy.tsunamiWaves = [];
+      enemy.gluttonState = null; enemy.gluttonTarget = null; enemy.gluttonHealFlash = 0;
+      enemy.tell = false; enemy.charging = false;
+    }
   }
 
   function hit(game, enemy) {
@@ -190,6 +207,133 @@
     game.bossHazards = game.bossHazards.filter(hazard => alive(hazard.owner) && hazard.timer > EPSILON);
   }
 
+  function beginTsunami(game, enemy) {
+    const direction = enemy.tsunamiWarning?.direction || (game.random() < .5 ? 1 : -1);
+    const wave = {id:++enemy.tsunamiSerial, direction, shieldBlocked:false, damageTaken:false};
+    // Retire only old summons, without awarding kills, score, or healing drops.
+    const previous = game.enemies.filter(child => child.tsunamiChild && child.ownerBoss === enemy && alive(child));
+    for (const child of previous.slice(0, Math.max(0, previous.length + 20 - 40))) {
+      child.dead = true; child.health = 0;
+    }
+    game.enemies = game.enemies.filter(child => !child.dead);
+    enemy.tsunamiWaves.push(wave);
+    for (let index = 0; index < 20; index++) {
+      const child = game.spawn('greenZombie', direction === 1 ? -1 : 1);
+      Object.assign(child, {x:direction === 1 ? -18 : W + 18, y:GROUND, w:24, h:38, baseW:24, baseH:38,
+        health:1, maxHealth:1, score:35, damage:1, speed:460, minion:true, tsunamiChild:true,
+        ownerBoss:enemy, tsunamiDirection:direction, tsunamiWaveId:wave.id, tsunamiWave:wave,
+        tsunamiDelay:index * .12, phase:index ? 'warning' : 'active', warning:index * .12,
+        abilityState:'ground', abilityTimer:Infinity, ambush:true, dropping:false, tell:false, charging:false,
+        platform:null, dir:direction, attackResolved:false});
+    }
+    enemy.tsunamiWarning = null;
+    burst(game, direction === 1 ? 8 : W - 8, GROUND - 22, '#8edf78', 22, 'ring');
+    game.floating?.(enemy.x, enemy.y - enemy.h - 14, 'TSUNAMI · 20 THÂY MA CON', '#b3f5ad');
+  }
+
+  function updateTsunamiChildren(game, dt) {
+    for (const child of game.enemies) {
+      if (!child.tsunamiChild || !alive(child)) continue;
+      if (!alive(child.ownerBoss)) { child.dead = true; child.health = 0; continue; }
+      let travel = dt;
+      if (child.tsunamiDelay > EPSILON) {
+        const delay = Math.min(child.tsunamiDelay, dt);
+        child.tsunamiDelay -= delay; child.warning = child.tsunamiDelay;
+        travel -= delay;
+        if (child.tsunamiDelay > EPSILON) continue;
+      }
+      child.phase = 'active'; child.dir = child.tsunamiDirection;
+      child.x += child.tsunamiDirection * child.speed * travel;
+      child.y = GROUND;
+      if (!child.attackResolved && contact({...game.player, w:game.player.w * .75, h:game.player.h * .86}, child)) {
+        const wave = child.tsunamiWave;
+        if (wave.shieldBlocked) child.attackResolved = true;
+        else if (game.player.shieldTime > 0 && game.player.shieldHits > 0) {
+          // One shield hit absorbs this entire ordered wave, rather than its
+          // twenty bodies consuming all three hits before the train passes.
+          wave.shieldBlocked = true; child.attackResolved = true;
+          game.hurt({x:child.x, damage:1, forceHit:true, tsunamiStrike:true});
+          game.floating?.(game.player.x, game.player.y - game.player.h - 14, 'KHIÊN CHẶN TSUNAMI', '#91e3d1');
+        } else if (!(game.player.invulnerable > 0)) {
+          child.attackResolved = true;
+          const health = game.player.health;
+          game.hurt({x:child.x, damage:1, tsunamiStrike:true});
+          if (game.player.health < health) wave.damageTaken = true;
+        }
+        if (game.screen !== 'playing') break;
+      }
+      if (child.x < -40 || child.x > W + 40) { child.dead = true; child.health = 0; }
+    }
+    game.enemies = game.enemies.filter(child => !child.tsunamiChild || alive(child));
+    for (const enemy of game.enemies) if (enemy.boss && enemy.skillLevel === 20 && enemy.tsunamiWaves) {
+      enemy.tsunamiWaves = enemy.tsunamiWaves.filter(wave => game.enemies.some(child => child.tsunamiChild && child.ownerBoss === enemy && child.tsunamiWaveId === wave.id));
+    }
+  }
+
+  function beginGluttonWarning(game, enemy) {
+    enemy.gluttonState = 'warning'; enemy.gluttonTotal = warnTime(game, enemy, 1);
+    enemy.gluttonTimer = Math.max(0, enemy.nextGluttonAt - enemy.zombieClock);
+    enemy.gluttonTarget = {x:game.player.x, y:game.player.y};
+    enemy.gluttonJump = enemy.y < GROUND - 40 || game.player.y < GROUND - 40;
+    enemy.tell = true; enemy.charging = true;
+  }
+
+  function beginGluttonChase(game, enemy) {
+    enemy.gluttonState = 'chase'; enemy.gluttonTimer = enemy.gluttonTotal = 1;
+    enemy.gluttonStart = {x:enemy.x, y:enemy.y};
+    enemy.gluttonJump = enemy.y < GROUND - 40 || game.player.y < GROUND - 40;
+    enemy.gluttonHit = false; enemy.gluttonElapsed = 0;
+    enemy.platform = null; enemy.dropping = false; enemy.tell = false; enemy.charging = true;
+    const healed = Math.min(5, Math.max(0, enemy.maxHealth - enemy.health));
+    enemy.health += healed; enemy.gluttonHealFlash = .5;
+    if (healed > 0) game.floating?.(enemy.x, enemy.y - enemy.h - 14, `PHÀM ĂN · +${healed} MÁU`, '#b3f5ad');
+    burst(game, enemy.x, enemy.y - enemy.h * .5, '#b3f5ad', 14, 'ring');
+  }
+
+  function updateGlutton(game, enemy, dt) {
+    if (!enemy.gluttonState) return;
+    if (enemy.gluttonState === 'warning') {
+      enemy.gluttonTimer = Math.max(0, enemy.nextGluttonAt - enemy.zombieClock);
+      if (enemy.gluttonTimer > EPSILON) return;
+      beginGluttonChase(game, enemy);
+      // The one-second pursuit starts now; the warning frame is not consumed.
+      return;
+    }
+    const travel = Math.min(dt, enemy.gluttonTimer);
+    enemy.gluttonElapsed = Math.min(1, enemy.gluttonElapsed + travel);
+    enemy.gluttonTimer = Math.max(0, 1 - enemy.gluttonElapsed);
+    const player = game.player;
+    enemy.gluttonTarget = {x:player.x, y:player.y};
+    const distance = player.x - enemy.x;
+    if (Math.abs(distance) > 2) enemy.dir = Math.sign(distance);
+    enemy.x = clamp(enemy.x + Math.sign(distance) * Math.min(Math.abs(distance), 400 * travel), enemy.w / 2, W - enemy.w / 2);
+    enemy.y = enemy.gluttonJump ? enemy.gluttonStart.y + (GROUND - enemy.gluttonStart.y) * enemy.gluttonElapsed - Math.sin(Math.PI * enemy.gluttonElapsed) * 100 : GROUND;
+    if (!enemy.gluttonHit && contact({...player, w:player.w * .75, h:player.h * .86}, {...enemy, w:enemy.w * .8, h:enemy.h * .86})) {
+      enemy.gluttonHit = true;
+      game.hurt({x:enemy.x, damage:2, gluttonStrike:true});
+    }
+    if (enemy.gluttonTimer <= EPSILON) {
+      enemy.gluttonState = null; enemy.gluttonTarget = null;
+      enemy.y = GROUND; enemy.abilityState = 'ground'; enemy.abilityTimer = 4.5;
+      enemy.platform = null; enemy.tell = false; enemy.charging = false; enemy.dropping = false;
+      enemy.nextGluttonAt += 8;
+    }
+  }
+
+  function updateGreenZombie(game, enemy, dt) {
+    enemy.zombieClock += dt;
+    enemy.gluttonHealFlash = Math.max(0, (enemy.gluttonHealFlash || 0) - dt);
+    const untilWave = enemy.nextTsunamiAt - enemy.zombieClock;
+    if (untilWave <= EPSILON) {
+      beginTsunami(game, enemy); enemy.nextTsunamiAt += 5;
+    } else if (untilWave <= warnTime(game, enemy, .9)) {
+      if (!enemy.tsunamiWarning) enemy.tsunamiDirection = game.random() < .5 ? 1 : -1;
+      enemy.tsunamiWarning = {name:'TSUNAMI · 20 THÂY MA CON', remaining:untilWave, total:warnTime(game, enemy, .9), direction:enemy.tsunamiDirection};
+    }
+    if (!enemy.gluttonState && enemy.nextGluttonAt - enemy.zombieClock <= warnTime(game, enemy, 1)) beginGluttonWarning(game, enemy);
+    updateGlutton(game, enemy, dt);
+  }
+
   function beginPhantom(game, enemy) {
     enemy.phantomState = 'invisible'; enemy.intangible = true;
     enemy.tell = false; enemy.charging = false;
@@ -240,7 +384,11 @@
   }
 
   function setWarning(game, enemy) {
-    if (enemy.drainWarning) {
+    if (enemy.gluttonState) {
+      enemy.skillWarning = {name:enemy.gluttonState === 'warning' ? 'PHÀM ĂN · +5 MÁU / 2 SÁT THƯƠNG' : 'PHÀM ĂN · TRUY ĐUỔI', remaining:Math.max(0, enemy.gluttonTimer), total:enemy.gluttonTotal};
+    } else if (enemy.tsunamiWarning) {
+      enemy.skillWarning = enemy.tsunamiWarning;
+    } else if (enemy.drainWarning) {
       enemy.skillWarning = {name:'HÚT MÁU · DÙNG KHIÊN', remaining:Math.max(0, enemy.drainWarning.remaining), total:enemy.drainWarning.total};
     } else if (enemy.phantomState === 'invisible') {
       enemy.skillWarning = {name:'ẨN MÌNH', remaining:Math.max(0, enemy.phantomTimer), total:enemy.phantomTotal};
@@ -293,6 +441,8 @@
     updateHazards(game, dt);
     if (game.screen !== 'playing') return;
     updateEggs(game, dt);
+    updateTsunamiChildren(game, dt);
+    if (game.screen !== 'playing') return;
     for (const enemy of game.enemies.slice()) {
       if (!enemy.boss || !alive(enemy)) continue;
       if (!enemy.skillTimers) setup(game, enemy);
@@ -309,6 +459,9 @@
         case 10:
           clocks.bones -= dt * rate;
           if (clocks.bones <= EPSILON) { floorAttack(game, enemy, 'bones'); clocks.bones = 7; }
+          break;
+        case 20:
+          updateGreenZombie(game, enemy, dt);
           break;
         case 30:
           clocks.web -= dt * rate; clocks.egg -= dt;

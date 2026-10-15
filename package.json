@@ -1,8 +1,8 @@
 {
   "name": "monster-mash",
-  "version": "2.3.2",
+  "version": "2.4.0",
   "private": true,
-  "description": "A 70-stage native Canvas 2D monster hunting game",
+  "description": "An 80-stage native Canvas 2D monster hunting game",
   "scripts": {
     "dev": "node scripts/serve.mjs",
     "build": "node scripts/build.mjs",

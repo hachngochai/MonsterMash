@@ -10,7 +10,8 @@
     { sky: '#261524', horizon: '#6b364b', far: '#422433', near: '#291b2a', ground: '#291c29', soil: '#18141f', edge: '#82605f', glow: '#ff9a9d', mist: '#b97f8f', moon: '#f2a690', name: 'castle' },
     { sky: '#171624', horizon: '#514039', far: '#3d3035', near: '#28232d', ground: '#292729', soil: '#181820', edge: '#927950', glow: '#ffc878', mist: '#c09968', moon: '#e5b770', name: 'eclipse' },
     { sky: '#141b20', horizon: '#343d32', far: '#22302c', near: '#1c2623', ground: '#242a25', soil: '#171b20', edge: '#727650', glow: '#d4cd89', mist: '#8c9b7f', moon: '#b4bca0', name: 'cursed-valley' },
-    { sky: '#141b20', horizon: '#343d32', far: '#22302c', near: '#1c2623', ground: '#242a25', soil: '#171b20', edge: '#727650', glow: '#d4cd89', mist: '#8c9b7f', moon: '#b4bca0', name: 'blood-valley' }
+    { sky: '#141b20', horizon: '#343d32', far: '#22302c', near: '#1c2623', ground: '#242a25', soil: '#171b20', edge: '#727650', glow: '#d4cd89', mist: '#8c9b7f', moon: '#b4bca0', name: 'blood-valley' },
+    { sky: '#141b20', horizon: '#343d32', far: '#22302c', near: '#1c2623', ground: '#242a25', soil: '#171b20', edge: '#727650', glow: '#d4cd89', mist: '#8c9b7f', moon: '#b4bca0', name: 'primal-forest' }
   ];
   const scenes = new Map();
   function seedRandom(seed) {
@@ -279,7 +280,7 @@
     c.save(); c.translate(x, y - bob); c.scale((player.w || 38) / 38, (player.h || 54) / 54); c.lineJoin = 'round'; c.lineCap = 'round';
     if (knocked) c.rotate(-1.16 * dir);
     if (player.invulnerable > 0 && effects) c.globalAlpha = .72 + Math.sin(t * 37) * .18;
-    const sniper = player.weaponMode === 'sniper';
+    const sniper = player.weaponMode === 'sniper', highAim = player.weaponMode === 'highAim';
     const outline = '#101923', skin = '#d8b47d', empty = (sniper ? player.ammo < 5 : player.ammo === 0) && !(player.shotTimer > .001);
     // Combat boots and articulated legs under the original square camo body.
     rounded(c, -13 + stride, -13, 9, 13, 2, '#283e3a', outline, 2);
@@ -321,6 +322,11 @@
       c.restore();
     } else for (const side of [-1, 1]) {
       // Dual pistols retain the distinctive original left/right shooting pose.
+      c.save();
+      if (highAim && side === dir && Number.isFinite(player.aimAngle)) {
+        const angle = player.aimAngle + (side < 0 ? Math.PI : 0);
+        c.translate(side * 18, -26); c.rotate(angle); c.translate(-side * 18, 26);
+      }
       rounded(c, side < 0 ? -26 : 14, -28, 12, 9, 3, '#607c48', outline, 2);
       rounded(c, side < 0 ? -29 : 22, -28, 8, 8, 3, skin, outline, 1.7);
       c.save();
@@ -334,6 +340,7 @@
         polygon(c, [[side * 39, -28], [side * 48, -35], [side * 46, -29], [side * 54, -27], [side * 45, -25], [side * 48, -20]], '#ffd98b');
         polygon(c, [[side * 39, -28], [side * 48, -28], [side * 42, -25]], '#fff6d4');
       }
+      c.restore();
     }
     if (player.stunTime > 0 && !knocked) {
       c.save(); c.globalAlpha = 1;
@@ -378,7 +385,28 @@
     for (let i = 0; i < 5; i++) line(c, -9 + i * 4.5, -28, -9 + i * 4.5, -24, '#35404a', 1);
     line(c, -15, -49, -6, -49, '#ffffff66', 1.5);
   }
-  function drawZombie(c, dir, walk, t, boss, enemy) {
+  function drawTsunamiChild(c, dir, walk, t, enemy, effects) {
+    const skin = '#94c966', outline = '#182b27', stride = effects ? Math.sin((enemy.age || t) * 22 + (enemy.tsunamiIndex || 0)) * 5 : 3;
+    c.save(); c.scale(dir, 1); c.rotate(.12);
+    // A large young face and short running limbs distinguish the summoned wave.
+    line(c, -6, -16, -11 - stride, -5, '#52694b', 6); line(c, 6, -16, 8 + stride, -4, '#73865b', 6);
+    rounded(c, -17 - stride, -6, 11, 5, 2, '#28382e', outline); rounded(c, 6 + stride, -5, 12, 5, 2, '#334133', outline);
+    rounded(c, -13, -31, 27, 19, 3, '#4b7144', outline, 2);
+    polygon(c, [[-11, -29], [-3, -24], [-7, -13], [-12, -17]], '#314c3b');
+    line(c, -11, -27, -18, -19 + stride * .3, skin, 5); line(c, 10, -27, 23, -31 - stride * .25, skin, 5);
+    for (let finger = 0; finger < 3; finger++) line(c, 22, -32 + finger * 2, 27 + finger, -29 + finger * 2, skin, 1.5);
+    rounded(c, -17, -52, 33, 27, 5, skin, outline, 2.2);
+    polygon(c, [[-16, -52], [15, -52], [14, -46], [7, -48], [2, -44], [-7, -48], [-16, -45]], '#34432c');
+    eye(c, -6, -40, 8, '#fff1b8', 1, true); eye(c, 8, -40, 8, '#f4e994', 1, true);
+    rounded(c, -1, -32, 13, 7, 2, '#30492e'); rect(c, 1, -32, 3, 3, '#eee2b0'); rect(c, 8, -27, 3, 2, '#eee2b0');
+    line(c, -11, -34, -5, -32, '#d0d998', 1); c.restore();
+  }
+  function drawZombie(c, dir, walk, t, boss, enemy, effects) {
+    if (enemy && enemy.tsunamiChild) { drawTsunamiChild(c, dir, walk, t, enemy, effects); return; }
+    const devouring = boss && enemy && enemy.gluttonState === 'chase';
+    const preparing = boss && enemy && enemy.gluttonState === 'warning';
+    c.save();
+    if (devouring) c.rotate(dir * .16);
     const green = boss || enemy && (enemy.type === 'greenZombie' || enemy.archetype === 'greenZombie' || enemy.variant === 'green');
     const skin = green ? (boss ? '#81ad5c' : '#75a457') : '#adb194', outline = '#14232b';
     rounded(c, -12 + walk, -14, 9, 13, 2, '#3c4340', outline, 2); rounded(c, 3 - walk, -14, 10, 13, 2, '#485247', outline, 2);
@@ -386,13 +414,18 @@
     rounded(c, -19, -31, 38, 21, 3, green ? '#385439' : '#3d5362', outline, 2.3);
     polygon(c, [[-16, -31], [-3, -25], [-8, -12], [-17, -17]], '#2a3c49'); polygon(c, [[7, -18], [14, -24], [19, -15], [12, -10]], '#627258');
     line(c, 0, -29, 0, -12, '#738376', 1); ellipse(c, 3, -22, 1, 1, '#afb097');
-    line(c, dir * 13, -25, dir * 30, -26 - walk * .4, skin, 6); line(c, -dir * 15, -24, -dir * 25, -15 + walk * .2, skin, 5);
+    line(c, dir * 13, -25, dir * (devouring ? 34 : 30), (devouring ? -32 : -26) - walk * .4, skin, 6); line(c, -dir * 15, -24, -dir * 25, (devouring ? -27 : -15) + walk * .2, skin, 5);
     for (let i = 0; i < 3; i++) { line(c, dir * 29, -27 + i * 2, dir * (34 + i), -24 + i * 3, skin, 2); }
     rounded(c, -19, -51, 38, 28, 4, skin, outline, 2.5); polygon(c, [[-19, -51], [19, -51], [17, -44], [10, -47], [4, -43], [-4, -47], [-12, -43], [-19, -45]], '#28332d');
     eye(c, -7, -39, 9, '#f2df9f', dir); eye(c, 8, -40, 8, '#d6d8aa', dir);
     line(c, -16, -32, -9, -30, '#657b54', 2); line(c, 7, -32, 15, -34, '#657b54', 1.5);
-    rounded(c, -6, -30, 17, 5, 1, '#354a37'); rect(c, -3, -30, 3, 3, '#d3d0ab'); rect(c, 6, -28, 3, 3, '#d3d0ab');
+    if (devouring || preparing) {
+      rounded(c, -7, -32, 23, devouring ? 14 : 10, 3, '#1b3326', '#b9d88b', .8);
+      for (const toothX of [-4, 3, 10]) { rect(c, toothX, -32, 4, 4, '#eee5b9'); rect(c, toothX + 1, devouring ? -22 : -25, 3, 3, '#d2d4a4'); }
+      if (devouring) ellipse(c, 5, -23, 6, 2, '#8c6957');
+    } else { rounded(c, -6, -30, 17, 5, 1, '#354a37'); rect(c, -3, -30, 3, 3, '#d3d0ab'); rect(c, 6, -28, 3, 3, '#d3d0ab'); }
     line(c, -11, -45, -4, -44, '#d4dbaa66', 1);
+    c.restore();
   }
   function drawRock(c, x, y, size, rotation = 0) {
     c.save(); c.translate(x, y); c.rotate(rotation); c.scale(size / 20, size / 20);
@@ -501,6 +534,7 @@
   }
   function drawWerewolf(c, dir, walk, t, boss, e, effects) {
     e = e || {};
+    if (e.variant === 'pup' || e.wolfPup || e.type === 'wolfPup') { drawWolfPup(c, dir, walk, t, e, effects); return; }
     const state = e.wolfState || 'approach', progress = Math.max(0, Math.min(1, e.wolfProgress || 0));
     const blood = !!e.bloodMoon, preparing = state === 'windup' || state === 'blood-windup' || state === 'claw-windup';
     const leaping = state === 'leap' || state === 'blood-leap', attacking = state === 'pounce' || state === 'claw';
@@ -541,6 +575,8 @@
         polygon(c, [[handX + 2, fingerY], [handX + (blood ? 12 : 10), fingerY + 3], [handX + 4, fingerY + 2]], claw, outline, .6);
       }
     }
+    c.save();
+    if (e.howling) { c.translate(2, -34); c.rotate(-.38); c.translate(-2, 34); }
     polygon(c, [[-15, -51], [-15, -61], [-5, -54], [3, -57], [13, -53], [18, -45], [17, -34], [7, -29], [-5, -32], [-12, -39]], fur, outline, 2);
     polygon(c, [[-14, -58], [-8, -54], [-13, -48]], '#ac9c8e', outline, .8);
     polygon(c, [[5, -53], [13, -61], [17, -47]], mane, outline, 1.2);
@@ -551,6 +587,13 @@
     line(c, 11, -35, 25, -35, '#403631', 1.5);
     polygon(c, [[12, -35], [16, -35], [15, -28]], '#f3e3c9', outline, .6);
     polygon(c, [[21, -35], [24, -35], [22, -30]], '#f3e3c9', outline, .6);
+    if (e.howling) {
+      polygon(c, [[11, -35], [25, -35], [23, -25], [13, -27], [7, -31]], '#24212a', outline, 1.2);
+      polygon(c, [[12, -28], [23, -26], [25, -24], [12, -23], [6, -28]], mane, outline, 1.2);
+      polygon(c, [[15, -35], [18, -35], [17, -29]], '#f3e3c9');
+      polygon(c, [[22, -35], [25, -35], [23, -29]], '#f3e3c9');
+      ellipse(c, 16, -26, 4, 1.3, '#c77c78');
+    }
     rounded(c, 3, -47, 12, 5, 2, '#23332f'); ellipse(c, 10, -45, 3.5, 2, eyeColor);
     ellipse(c, 11, -45, .7, 1.7, '#222626'); line(c, 2, -49, 15, -46, shade, 2.1);
     line(c, -8, -52, -3, -54, '#e1dfc477', 1); line(c, -9, -40, -5, -36, '#e1dfc477', 1);
@@ -563,6 +606,7 @@
       polygon(c, [[-2, -30], [3, -31], [7, -26], [2, -22], [-3, -26]], '#ac9464', outline, .9);
       ellipse(c, 2, -26, 1.8, 1.8, blood ? '#ff7067' : '#e5b177');
     }
+    c.restore();
     if (blood) {
       line(c, -11, -30, -6, -24, '#c28b828c', 1.1); line(c, 4, -24, 8, -20, '#c28b828c', 1.1);
       if (effects) halo(c, 10, -45, 8, '#ff6157', .3);
@@ -577,6 +621,85 @@
       }
     }
     c.restore();
+  }
+  function drawWolfPup(c, dir, walk, t, e, effects) {
+    const outline = '#1b2828', fur = '#8a8a78', shade = '#4c5c53', mane = '#c0b99a';
+    const stride = effects ? Math.sin((e.age || t) * 17) * 4 : 0;
+    c.save(); c.scale(dir, 1);
+    polygon(c, [[-15, -28], [-23, -34], [-25, -42], [-20, -38], [-16, -37], [-10, -30]], shade, outline, 1.5);
+    for (const [hip, phase] of [[-12, -1], [9, 1]]) {
+      line(c, hip, -24, hip + stride * phase, -12, shade, 6);
+      line(c, hip + stride * phase, -12, hip + 5 + stride * phase, -3, shade, 4);
+      rounded(c, hip + stride * phase, -4, 9, 4, 1.4, '#43534d', outline, 1);
+    }
+    polygon(c, [[-16, -36], [-8, -40], [10, -37], [16, -28], [11, -19], [-8, -21], [-17, -26]], fur, outline, 1.6);
+    polygon(c, [[-8, -35], [10, -33], [11, -22], [-7, -25]], mane);
+    for (const [hip, phase] of [[-11, 1], [10, -1]]) {
+      line(c, hip, -23, hip + stride * phase, -12, fur, 5.5);
+      line(c, hip + stride * phase, -12, hip + 3 + stride * phase, -3, fur, 3.5);
+      rounded(c, hip - 1 + stride * phase, -4, 9, 4, 1.4, shade, outline, 1);
+      line(c, hip + 5 + stride * phase, -2, hip + 8 + stride * phase, -1, '#e8dfbe', 1);
+    }
+    polygon(c, [[3, -38], [-1, -46], [2, -54], [8, -47], [13, -49], [16, -54], [20, -42], [19, -33], [11, -31]], fur, outline, 1.6);
+    polygon(c, [[2, -51], [6, -46], [2, -44]], '#b09283');
+    polygon(c, [[16, -50], [18, -43], [14, -45]], '#b09283');
+    polygon(c, [[11, -40], [22, -38], [25, -33], [19, -30], [10, -32]], mane, outline, 1.2);
+    ellipse(c, 23, -34, 2.5, 2, '#26332d'); ellipse(c, 12, -41, 2.2, 2, '#e4d999');
+    ellipse(c, 13, -41, .65, 1.3, '#27342c'); line(c, 14, -33, 21, -32, '#536050', 1);
+    polygon(c, [[17, -32], [20, -32], [18, -28]], '#f1e3c1', outline, .5);
+    polygon(c, [[-15, -32], [-21, -30], [-17, -26]], mane);
+    c.restore();
+  }
+  function drawBanana(c, x, y, size = 18, angle = 0) {
+    c.save(); c.translate(x, y); c.rotate(angle); c.scale(size / 20, size / 20);
+    c.beginPath(); c.moveTo(-9, -5); c.quadraticCurveTo(-1, 2, 9, -5); c.quadraticCurveTo(7, 7, -2, 7); c.quadraticCurveTo(-10, 6, -9, -5);
+    c.fillStyle = '#f3d55c'; c.fill(); c.strokeStyle = '#695d2f'; c.lineWidth = 1.5; c.stroke();
+    c.beginPath(); c.moveTo(-7, -1); c.quadraticCurveTo(0, 4, 7, -1); c.strokeStyle = '#fff1a7'; c.lineWidth = 1.6; c.stroke();
+    line(c, -9, -5, -10, -8, '#6c5735', 2); line(c, 9, -5, 11, -7, '#6c5735', 2); c.restore();
+  }
+  function drawMiniKingKong(c, dir, walk, t, boss, e, effects) {
+    e = e || {};
+    const raging = e.kongState === 'final-rage', vine = !!e.vinePhase;
+    const outline = '#201d20', fur = boss ? '#81573e' : '#6b4939', shade = '#432f2b', face = boss ? '#c4a17b' : '#b7926b';
+    const windup = e.kongState === 'banana-windup', throwing = e.kongState === 'banana-throw';
+    const progress = Math.max(0, Math.min(1, e.kongProgress || 0));
+    const reach = vine ? 16 : raging ? 23 : throwing ? 9 + progress * 25 : windup ? -13 : 20;
+    const handY = vine ? -49 : raging ? -6 - Math.abs(Math.sin(t * 12)) * 38 : throwing ? -51 + progress * 22 : windup ? -58 : -26;
+    c.save(); c.scale(dir, 1);
+    for (const side of [-1, 1]) {
+      const step = side * walk;
+      line(c, side * 10, -16, side * 10 + step, -5, shade, 9);
+      rounded(c, side * 10 - 5 + step, -6, 13, 6, 2, shade, outline, 1.5);
+      line(c, side * 10 - 2 + step, -2, side * 10 + 5 + step, -2, '#a57b54', 1);
+    }
+    ellipse(c, -1, -29, 19, 20, shade);
+    polygon(c, [[-16, -42], [-6, -49], [13, -43], [20, -28], [12, -14], [-12, -14], [-21, -28]], fur, outline, 2);
+    ellipse(c, 1, -28, 12, 13, '#8d6448');
+    line(c, -13, -37, -23, -23 + walk, shade, 13); line(c, -23, -23 + walk, -22, -6, fur, 11);
+    rounded(c, -27, -10, 13, 9, 3, '#866448', outline, 1.6);
+    for (let finger = 0; finger < 3; finger++) line(c, -24 + finger * 3, -8, -24 + finger * 3, -3, face, .8);
+    line(c, 12, -38, windup ? 20 : 22, windup ? -46 : -28, shade, 12);
+    line(c, windup ? 20 : 22, windup ? -46 : -28, reach, handY, fur, 10);
+    rounded(c, reach - 6, handY - 5, 12, 10, 3, face, outline, 1.5);
+    if (!vine && !raging && (!throwing || progress < .15)) drawBanana(c, reach + 2, handY - 6, boss ? 20 : 15, windup ? -.8 : .5);
+    ellipse(c, -11, -43, 4, 6, shade); ellipse(c, 14, -43, 4, 6, shade);
+    rounded(c, -13, -54, 29, 26, 9, fur, outline, 2);
+    polygon(c, [[-11, -50], [-6, -57], [-1, -54], [4, -58], [9, -52], [13, -52]], shade);
+    rounded(c, -9, -47, 24, 16, 6, face, outline, 1.2);
+    rounded(c, -7, -47, 8, 6, 2, shade); rounded(c, 5, -47, 8, 6, 2, shade);
+    ellipse(c, -2, -44, 1.6, 1.4, raging ? '#ff6246' : '#f7da8b'); ellipse(c, 9, -44, 1.6, 1.4, raging ? '#ff6246' : '#f7da8b');
+    line(c, -8, -48, 0, -46, '#382823', 2); line(c, 4, -46, 13, -48, '#382823', 2);
+    ellipse(c, 3, -39, 5, 3.5, '#725340'); ellipse(c, 1, -39, 1, 1, outline); ellipse(c, 5, -39, 1, 1, outline);
+    if (e.kongState === 'scream' || e.kongState === 'scream-windup' || raging) {
+      rounded(c, -3, -36, 15, 12, 4, '#2b2123', '#76513d', 1);
+      rounded(c, -1, -35, 11, 3, 1, '#efe1b5'); ellipse(c, 4, -27, 4, 1.5, '#b86f67');
+    } else { line(c, -2, -33, 9, -33, '#563c32', 1.5); polygon(c, [[6, -33], [9, -33], [8, -29]], '#efe1b5'); }
+    if (boss) {
+      polygon(c, [[-14, -41], [-22, -43], [-18, -37], [-22, -34], [-17, -29], [-12, -31]], '#b28b60', outline, 1);
+      line(c, -9, -43, -6, -33, '#d8b691', 1.1); line(c, -10, -36, -5, -40, '#70503e', .8);
+      line(c, -7, -24, 1, -22, '#c59b6d', 1.4); line(c, 4, -22, 10, -25, '#c59b6d', 1.4);
+    }
+    line(c, -8, -22, 7, -21, '#b28659', 1.1); c.restore();
   }
   function drawSpider(c, dir, walk, t, boss) {
     const outline = '#111b25', shell = boss ? '#aa683f' : '#71514a';
@@ -894,6 +1017,99 @@
     }
     c.restore();
   }
+  function drawKongRage(c, game) {
+    const boss = (game.enemies || []).find(e => e.boss && e.health > 0 && e.kongState === 'final-rage');
+    if (!boss) return;
+    c.save();
+    const wash = c.createLinearGradient(0, 0, 0, H); wash.addColorStop(0, '#973a2226'); wash.addColorStop(.65, '#ba58221c'); wash.addColorStop(1, '#de8a383b');
+    rect(c, 0, 0, W, H, wash); c.restore();
+  }
+  function drawWolfHowl(c, e, t, effects, viewTop) {
+    if (!e.howling || !(e.howlTime > 0)) return;
+    const color = e.bloodMoon ? '#ffac97' : '#ecdda8', x = e.x, y = e.y - e.h * .55;
+    c.save(); c.lineWidth = 1.7;
+    // The solid outline always identifies immunity, even with cosmetic effects disabled.
+    c.strokeStyle = color; c.beginPath(); c.ellipse(x, y, e.w * .65, e.h * .6, 0, 0, TAU); c.stroke();
+    for (let index = 0; index < 3; index++) {
+      const progress = effects ? (t * .62 + index / 3) % 1 : .22 + index * .24;
+      const radius = e.w * (.75 + progress * 1.15);
+      c.globalAlpha = .55 * (1 - progress); c.strokeStyle = color; c.lineWidth = 1 + (1 - progress) * 1.5;
+      c.beginPath(); c.ellipse(x, y, radius, e.h * (.36 + progress * .45), 0, 0, TAU); c.stroke();
+    }
+    c.globalAlpha = 1;
+    const labelY = Math.max(viewTop + 139, e.y - e.h - 20), labelX = Math.max(98, Math.min(W - 98, x));
+    rounded(c, labelX - 94, labelY - 16, 188, 24, 5, '#152127ee', color + 'a0', 1);
+    c.font = `700 10px ${font}`; c.textAlign = 'center'; c.fillStyle = color;
+    c.fillText(`HÚ GỌI BẦY · MIỄN ĐẠN ${e.howlTime.toFixed(1)}s`, labelX, labelY); c.restore();
+  }
+  function drawBananaTell(c, e, t, effects, viewTop) {
+    if (e.kongState !== 'banana-windup') return;
+    const targetX = Number.isFinite(e.kongTargetX) ? e.kongTargetX : Number.isFinite(e.bananaTargetX) ? e.bananaTargetX : e.targetX;
+    if (!Number.isFinite(targetX)) return;
+    const x = e.x + (e.dir || 1) * e.w * .25, y = e.y - e.h * .78, targetY = GROUND - 24;
+    c.save(); c.lineCap = 'round'; c.strokeStyle = '#f0d269'; c.lineWidth = 1.6;
+    c.setLineDash([6, 7]); c.beginPath(); c.moveTo(x, y); c.quadraticCurveTo((x + targetX) / 2, Math.min(y, targetY) - 94, targetX, targetY); c.stroke(); c.setLineDash([]);
+    c.beginPath(); c.ellipse(targetX, GROUND - 3, e.boss ? 52 : 25, 7, 0, 0, TAU); c.stroke();
+    line(c, targetX - 18, GROUND - 28, targetX + 18, GROUND - 28, '#ffeba0', 2);
+    line(c, targetX, GROUND - 40, targetX, GROUND - 15, '#ffeba0', 2);
+    const labelX = Math.max(65, Math.min(W - 65, e.x)), labelY = Math.max(viewTop + 137, e.y - e.h - 18);
+    rounded(c, labelX - 59, labelY - 16, 118, 23, 4, '#25241cee', '#d6b75d', 1);
+    c.font = `700 10px ${font}`; c.textAlign = 'center'; c.fillStyle = '#ffea92'; c.fillText(e.boss ? 'CHUỐI NỔ · NÉ!' : 'NÉM CHUỐI · NÉ!', labelX, labelY); c.restore();
+  }
+  function drawBananaPeels(c, peels, t, effects) {
+    for (const peel of peels || []) {
+      const x = peel.x, y = Number.isFinite(peel.y) ? peel.y : GROUND, width = peel.w || 38;
+      c.save(); c.globalAlpha = Math.min(1, Math.max(.25, (peel.life || 0) / .5));
+      c.strokeStyle = '#f3d975'; c.lineWidth = 1.2; c.setLineDash([4, 4]);
+      c.beginPath(); c.ellipse(x, y - 2, width / 2, 5, 0, 0, TAU); c.stroke(); c.setLineDash([]);
+      polygon(c, [[x - 1, y - 13], [x - 6, y - 7], [x - 16, y - 3], [x - 13, y], [x - 2, y - 4], [x + 2, y - 3], [x + 14, y + 1], [x + 18, y - 2], [x + 8, y - 7], [x + 3, y - 14]], '#e7c659', '#67522d', 1.3);
+      polygon(c, [[x - 1, y - 13], [x - 2, y - 5], [x + 2, y - 2], [x + 4, y - 5], [x + 2, y - 14]], '#ffeba1', '#9d7e35', .7);
+      line(c, x, y - 14, x + 1, y - 17, '#665132', 2);
+      if (effects) { c.globalAlpha *= .55; ellipse(c, x + 13, y - 14, 1.5, 1.5, '#ffefb2'); }
+      c.restore();
+    }
+  }
+  function drawKongVine(c, e, t, effects) {
+    if (!e.vinePhase || e.kongState === 'final-rage') return;
+    const anchorX = Number.isFinite(e.vineAnchorX) ? e.vineAnchorX : W / 2;
+    const anchorY = Number.isFinite(e.vineAnchorY) ? e.vineAnchorY : 0;
+    const handX = e.x + (e.dir || 1) * e.w * .4, handY = e.y - e.h * 49 / 54;
+    c.save(); c.lineCap = 'round';
+    line(c, anchorX, anchorY, handX, handY, '#16281c', 8);
+    line(c, anchorX - 1, anchorY, handX - 1, handY, '#83934e', 4);
+    line(c, anchorX + 1, anchorY, handX + 1, handY, '#b1b07c', 1);
+    for (const progress of [.16, .32, .47, .63, .79]) {
+      const x = anchorX + (handX - anchorX) * progress, y = anchorY + (handY - anchorY) * progress;
+      const direction = progress < .5 ? -1 : 1;
+      polygon(c, [[x, y], [x + direction * 12, y - 9], [x + direction * 16, y - 5], [x + direction * 8, y + 3]], '#647447', '#203826', .8);
+    }
+    c.restore();
+  }
+  function drawKongZones(c, zones, game, t, effects) {
+    for (const zone of zones || []) {
+      if (zone.phase !== 'warning' && zone.phase !== 'impact') continue;
+      const x = Number.isFinite(zone.x) ? zone.x : W / 2, width = zone.w || W / 2, height = zone.h || GROUND;
+      const left = Math.max(0, x - width / 2), y = Number.isFinite(zone.y) ? zone.y : GROUND;
+      const warning = zone.phase === 'warning', scream = zone.kind === 'scream';
+      const color = scream ? '#f4d88c' : '#ffa579';
+      c.save(); c.globalAlpha = warning ? .08 : .17; rect(c, left, Math.max(0, y - height), Math.min(W - left, width), height, color); c.globalAlpha = 1;
+      c.strokeStyle = color; c.lineWidth = 2; c.setLineDash(warning ? [8, 7] : []); c.strokeRect(left + 1, Math.max(0, y - height) + 1, Math.min(W - left - 2, width - 2), height - 2); c.setLineDash([]);
+      if (scream) for (let index = 0; index < 4; index++) {
+        const radius = 40 + index * 46 + (effects ? t * 36 % 46 : 0);
+        const originX = zone.owner?.x || x, originY = (zone.owner?.y || 250) - 70;
+        const angle = Math.atan2(y - height / 2 - originY, x - originX);
+        c.globalAlpha = .6 - index * .11; c.beginPath(); c.arc(originX, originY, radius, angle - Math.PI / 3, angle + Math.PI / 3); c.stroke();
+      }
+      c.globalAlpha = 1;
+      const label = scream ? 'TIẾNG THÉT · CHẠY SANG NỬA AN TOÀN' : 'CUỒNG NỘ · BẬT KHIÊN';
+      const labelX = Math.max(157, Math.min(W - 157, x));
+      const labelY = scream ? GROUND - 32 : Math.max((game.viewTop || 0) + 164, GROUND - 165);
+      rounded(c, labelX - 151, labelY - 18, 302, 25, 5, '#25201ded', color + 'a0', 1);
+      c.font = `700 11px ${font}`; c.textAlign = 'center'; c.fillStyle = color;
+      const remaining = Math.max(0, zone.timer || 0);
+      c.fillText(`${label}${warning ? ` · ${remaining.toFixed(1)}s` : ''}`, labelX, labelY - 2); c.restore();
+    }
+  }
   function drawGolemRockTell(c, e, t, effects) {
     if (e.golemState !== 'rock-windup' || !Number.isFinite(e.rockAimX) || !Number.isFinite(e.rockAimY)) return;
     const dir = e.dir || 1;
@@ -917,22 +1133,88 @@
     rounded(c, labelX - 46, labelY - 14, 92, 23, 4, '#14232bee', '#dbb777', 1);
     c.font = `700 10px ${font}`; c.textAlign = 'center'; c.fillStyle = '#ffe5af'; c.fillText('NÉM ĐÁ', labelX, labelY + 1); c.restore();
   }
-  const monsterDrawers = { skeleton: drawSkeleton, zombie: drawZombie, greenZombie: drawZombie, spider: drawSpider, ghost: drawGhost, vampire: drawVampire, golem: drawGolem, miniGolem: drawGolem, werewolf: drawWerewolf };
+  function drawZombieSkillTell(c, e, t, effects, viewTop) {
+    if (!e.boss) return;
+    const wave = e.tsunamiWarning;
+    if (wave) {
+      const dir = wave.direction === -1 ? -1 : 1, remaining = Math.max(0, wave.remaining || 0), labelX = dir > 0 ? 140 : W - 140;
+      c.save(); c.lineCap = 'round';
+      // The direction and runner lane remain visible with cosmetic effects disabled.
+      rect(c, 0, GROUND - 43, W, 43, '#a1db7812');
+      for (let index = 0; index < 9; index++) {
+        const x = 56 + index * 106;
+        line(c, x - dir * 17, GROUND - 19, x + dir * 14, GROUND - 19, '#bfe68a9e', 2);
+        line(c, x + dir * 14, GROUND - 19, x + dir * 6, GROUND - 26, '#bfe68a9e', 2);
+        line(c, x + dir * 14, GROUND - 19, x + dir * 6, GROUND - 12, '#bfe68a9e', 2);
+      }
+      line(c, dir > 0 ? 4 : W - 4, GROUND - 65, dir > 0 ? 4 : W - 4, GROUND + 2, '#c8ef92', 4);
+      rounded(c, labelX - 123, GROUND - 94, 246, 39, 5, '#14261eed', '#aad378', 1.3);
+      c.font = `700 11px ${font}`; c.textAlign = 'center'; c.fillStyle = '#daf0ae';
+      c.fillText(`TSUNAMI · 20 THÂY MA CON · ${remaining.toFixed(1)}s`, labelX, GROUND - 79);
+      c.font = `600 10px ${font}`; c.fillStyle = '#b6d896';
+      c.fillText(dir > 0 ? 'TRÁI → PHẢI · NHẢY / BẮN / KHIÊN' : 'PHẢI → TRÁI · NHẢY / BẮN / KHIÊN', labelX, GROUND - 64); c.restore();
+    }
+    const pursuing = e.gluttonState === 'chase', preparing = e.gluttonState === 'warning';
+    if (pursuing || preparing) {
+      const target = e.gluttonTarget || {}, targetX = Number.isFinite(target.x) ? target.x : e.x + (e.dir || 1) * 150;
+      const targetY = Number.isFinite(target.y) ? target.y : GROUND, centreY = targetY - 27;
+      const startY = e.y - e.h * .6, color = pursuing ? '#d8f599' : '#b6dd86';
+      const labelX = Math.max(115, Math.min(W - 115, targetX));
+      const nearTarget = Math.abs(e.x - targetX) < 120 + e.w / 2 && Math.abs(e.y - targetY) < 70;
+      const labelY = Math.max((viewTop || 0) + 178, nearTarget ? Math.min(targetY - 81, e.y - e.h * 1.3 - 24) : targetY - 81);
+      c.save(); c.lineCap = 'round'; c.strokeStyle = color; c.lineWidth = pursuing ? 2 : 1.5; c.setLineDash(preparing ? [6, 5] : []);
+      c.beginPath(); c.moveTo(e.x, startY);
+      if (e.gluttonJump) c.quadraticCurveTo((e.x + targetX) / 2, Math.min(startY, centreY) - 55, targetX, centreY);
+      else c.lineTo(targetX, centreY);
+      c.stroke(); c.setLineDash([]);
+      c.beginPath(); c.ellipse(targetX, centreY, 24, 32, 0, 0, TAU); c.stroke();
+      for (const dir of [-1, 1]) line(c, targetX + dir * 30, centreY, targetX + dir * 21, centreY, color, 2.5);
+      rounded(c, labelX - 111, labelY - 17, 222, 24, 5, '#192c22ef', color + 'bd', 1);
+      c.font = `700 10px ${font}`; c.textAlign = 'center'; c.fillStyle = color;
+      c.fillText(`PHÀM ĂN · ${pursuing ? 'TRUY ĐUỔI' : 'NÉ VỒ'} · ${Math.max(0, e.gluttonTimer || 0).toFixed(1)}s`, labelX, labelY - 1);
+      if (effects && pursuing) {
+        for (let index = 0; index < 3; index++) {
+          const back = (e.dir || 1) * (15 + index * 13);
+          line(c, e.x - back, e.y - e.h * (.27 + index * .15), e.x - back - (e.dir || 1) * 24, e.y - e.h * (.27 + index * .15) + 4, '#b8dc7980', 2);
+        }
+      }
+      c.restore();
+    }
+    if (e.gluttonHealFlash > 0) {
+      c.save();
+      const centreY = e.y - e.h * .5, progress = Math.max(0, Math.min(1, 1 - e.gluttonHealFlash / .5));
+      if (effects) halo(c, e.x, centreY, e.w * (.8 + progress * .45), '#b5ea79', .35 * (1 - progress));
+      c.strokeStyle = '#c3ee95'; c.lineWidth = 1.8; c.globalAlpha = Math.max(.2, 1 - progress);
+      c.beginPath(); c.ellipse(e.x, centreY, e.w * .62 + progress * 15, e.h * .59 + progress * 8, 0, 0, TAU); c.stroke();
+      const x = e.x - e.w * .65, y = e.y - e.h - 14;
+      line(c, x - 5, y, x + 5, y, '#daf8a8', 3); line(c, x, y - 5, x, y + 5, '#daf8a8', 3); c.restore();
+    }
+  }
+  const monsterDrawers = { skeleton: drawSkeleton, zombie: drawZombie, greenZombie: drawZombie, spider: drawSpider, ghost: drawGhost, vampire: drawVampire, golem: drawGolem, miniGolem: drawGolem, werewolf: drawWerewolf, wolfPup: drawWerewolf, kong: drawMiniKingKong, miniKingKong: drawMiniKingKong };
   function drawMonster(c, e, t, effects, world, viewTop = 0) {
     const boss = e.boss || e.type === 'boss';
     const fallbackWorld = Math.max(0, Math.min(palettes.length - 1, e.world == null ? world : e.world));
     const fallbackType = window.MM?.Campaign?.worlds?.[fallbackWorld]?.enemy || ['skeleton', 'spider', 'ghost', 'vampire', 'vampire', 'golem', 'werewolf'][fallbackWorld] || 'skeleton';
     const type = monsterDrawers[e.archetype] ? e.archetype : monsterDrawers[e.type] ? e.type : monsterDrawers[fallbackType] ? fallbackType : 'skeleton';
     const transforming = type === 'werewolf' && e.wolfState === 'transform';
+    const grabbingVine = type === 'kong' && e.kongState === 'vine-rise';
     const growth = transforming ? .5 + .5 * Math.max(0, Math.min(1, 1 - (e.transformTime || 0) / 1.2)) : 1;
     const w = (e.w || (boss ? 68 : 40)) * growth, h = (e.h || (boss ? 88 : 52)) * growth, dir = e.dir || 1;
     drawPhantomTell(c, e, t, effects, viewTop);
-    if (e.intangible && !transforming) {
+    if (e.intangible && !transforming && !grabbingVine) {
       if (effects) { c.save(); c.globalAlpha = .045; ellipse(c, e.x, e.y - h * .42, 17, 5, '#c5eeeb'); c.restore(); }
       return;
     }
     const aerial = e.abilityState && e.abilityState !== 'ground' || e.y < GROUND - 8;
     shadow(c, e.x, aerial ? GROUND : e.y, w, !!aerial);
+    if (type === 'zombie' || type === 'greenZombie') drawZombieSkillTell(c, e, t, effects, viewTop);
+    if (e.tsunamiChild && effects) {
+      c.save(); c.globalAlpha = .45;
+      for (let index = 0; index < 2; index++) line(c, e.x - dir * (w * .4 + 3), e.y - 7 - index * 8, e.x - dir * (w * .4 + 18 + index * 7), e.y - 5 - index * 8, '#b5d789', 1.4);
+      c.restore();
+    }
+    if (type === 'werewolf') drawWolfHowl(c, e, t, effects, viewTop);
+    if (type === 'kong' || type === 'miniKingKong') { drawKongVine(c, e, t, effects); drawBananaTell(c, e, t, effects, viewTop); }
     if (type === 'golem' || type === 'miniGolem') drawGolemRockTell(c, e, t, effects);
     if (type === 'spider' && e.abilityState === 'hanging') {
       line(c, e.x, 0, e.x, e.y - h + 3, '#d3e3ce85', boss ? 1.6 : 1);
@@ -955,11 +1237,11 @@
     const walk = effects ? Math.sin((e.age || t) * (type === 'spider' ? 13 : 8) + e.x * .007) * 2.7 : 0;
     if (boss) {
       c.save(); c.globalAlpha = .25;
-      c.strokeStyle = e.bloodMoon ? '#ffa68d' : palettes[world].glow; c.lineWidth = 1.2; c.beginPath(); c.ellipse(0, -32, 31, 37, 0, 0, TAU); c.stroke(); c.restore();
+      c.strokeStyle = e.kongState === 'final-rage' ? '#ffae77' : e.bloodMoon ? '#ffa68d' : palettes[world].glow; c.lineWidth = 1.2; c.beginPath(); c.ellipse(0, -32, 31, 37, 0, 0, TAU); c.stroke(); c.restore();
     }
     monsterDrawers[type](c, dir, walk, t, boss, e, effects);
     drawBulletArmor(c, e, t, effects);
-    if (boss && type !== 'golem' && type !== 'werewolf') {
+    if (boss && type !== 'golem' && type !== 'werewolf' && type !== 'kong') {
       polygon(c, [[-17, -52], [-23, -65], [-9, -59], [0, -69], [9, -59], [23, -65], [17, -52]], '#bea05d', '#251e25', 1.6);
       line(c, -15, -54, 15, -54, '#f4d493', 1.2); ellipse(c, 0, -60, 2.8, 2.8, '#f5927c');
       polygon(c, [[-21, -29], [-25, -36], [-16, -37], [-11, -29]], '#b9a574', '#211e2b'); polygon(c, [[21, -29], [25, -36], [16, -37], [11, -29]], '#b9a574', '#211e2b');
@@ -989,6 +1271,12 @@
   function drawBullet(c, b, effects) {
     const direction = b.dir || (b.vx < 0 ? -1 : 1);
     c.save(); c.lineCap = 'round';
+    if (b.kind === 'highAim') {
+      const length = Math.max(1, Math.hypot(b.vx || 0, b.vy || 0)), dx = (b.vx || 0) / length, dy = (b.vy || 0) / length;
+      if (effects) line(c, b.x - dx * 42, b.y - dy * 42, b.x, b.y, '#e8eca74a', 5);
+      line(c, b.x - dx * 25, b.y - dy * 25, b.x, b.y, '#ffe9ad', 2.5); ellipse(c, b.x, b.y, 3.2, 3.2, '#fff8d5');
+      c.restore(); return;
+    }
     if (b.kind === 'sniper') {
       if (effects) line(c, b.x - direction * 76, b.y, b.x, b.y, '#fff1bb38', 6);
       line(c, b.x - direction * 56, b.y, b.x, b.y, '#d9be77', 2.8);
@@ -999,6 +1287,14 @@
     ellipse(c, b.x, b.y, 4.2, 2, '#fff1bb'); c.restore();
   }
   function drawEnemyShot(c, shot, t, effects) {
+    if (shot.kind === 'banana' || shot.kind === 'bananaFragment') {
+      const size = Math.max(8, shot.w || 18);
+      c.save();
+      if (effects) line(c, shot.x, shot.y, shot.x - (shot.vx || 0) * .06, shot.y - (shot.vy || 0) * .06, '#f6d87860', shot.giant ? 7 : 3);
+      drawBanana(c, shot.x, shot.y, size, Number.isFinite(shot.rotation) ? shot.rotation : (shot.rotationSeed || 0) + t * 8);
+      if (shot.giant) { c.strokeStyle = '#ffe994'; c.lineWidth = 1.6; c.beginPath(); c.arc(shot.x, shot.y, size * .72, 0, TAU); c.stroke(); }
+      c.restore(); return;
+    }
     if (shot.kind === 'rock' || shot.type === 'rock') {
       const size = Math.max(8, shot.w || 20), vx = shot.vx || 0, vy = shot.vy || 0;
       c.save(); c.lineCap = 'round';
@@ -1142,22 +1438,23 @@
       const name = split ? 'DRACULA ' + owner : (game.level.bossName || 'KẺ GIỮ CỔNG').toUpperCase();
       c.save(); c.textAlign = 'center'; c.font = `600 11px ${font}`; c.fillStyle = '#eadbc2';
       c.fillText(name, centre, top + 31);
-      if (!boss.intangible || boss.wolfState === 'transform') {
+      if (!boss.intangible || boss.wolfState === 'transform' || boss.kongState === 'vine-rise') {
+        const visibleHealth = boss.kongFinalTriggered ? 0 : boss.health;
         rounded(c, x, top + 42, width, 5, 2, '#071018bb');
-        rounded(c, x, top + 42, width * Math.max(.01, boss.health / boss.maxHealth), 5, 2, boss.bloodMoon ? '#f28d78' : attackRate > 1.3 ? '#d28b72' : '#d9a174');
-        c.font = `400 9px ${font}`; c.fillStyle = '#b7c4ba'; c.fillText(`${boss.health} / ${boss.maxHealth}`, centre, top + 63);
+        if (visibleHealth > 0) rounded(c, x, top + 42, width * Math.max(.01, visibleHealth / boss.maxHealth), 5, 2, boss.bloodMoon ? '#f28d78' : attackRate > 1.3 ? '#d28b72' : '#d9a174');
+        c.font = `400 9px ${font}`; c.fillStyle = '#b7c4ba'; c.fillText(`${visibleHealth} / ${boss.maxHealth}`, centre, top + 63);
       } else { c.font = `600 10px ${font}`; c.fillStyle = '#b7d5d1'; c.fillText('ĐÃ BIẾN MẤT', centre, top + 56); }
       c.font = `600 10px ${font}`; c.fillStyle = attackRate > 1.3 ? '#dfa180' : '#9ea99b';
       c.fillText(`NHỊP TẤN CÔNG ×${attackRate.toFixed(2)}`, centre, top + 79);
       let armorY = top + 98;
       // Drain's shield instruction has priority when it coincides with another cast.
-      const warning = boss.drainWarning || boss.skillWarning;
+      const warning = boss.drainWarning || boss.howlWarning || boss.tsunamiWarning || boss.skillWarning;
       if (warning) {
         const remaining = Math.max(0, Number(warning.remaining) || 0), total = Math.max(.01, Number(warning.total) || remaining || 1);
         const cardWidth = Math.min(330, slotWidth - 18), warningColor = boss.drainWarning ? '#f5abb7' : '#f1cf97';
         rounded(c, centre - cardWidth / 2, top + 86, cardWidth, 25, 5, '#101c2aeb', boss.drainWarning ? '#d894a077' : '#e5b17666', 1);
         c.font = `600 11px ${font}`; c.fillStyle = warningColor;
-        const warningName = boss.drainWarning ? 'HÚT MÁU · BẬT KHIÊN' : String(warning.name || 'KỸ NĂNG BOSS');
+        const warningName = boss.drainWarning ? 'HÚT MÁU · BẬT KHIÊN' : boss.howling ? 'HÚ GỌI BẦY · MIỄN ĐẠN' : String(warning.name || 'KỸ NĂNG BOSS');
         c.fillText(`${split ? owner + ' · ' : ''}${warningName} · ${remaining.toFixed(1)}s`, centre, top + 101);
         rounded(c, centre - cardWidth / 2 + 10, top + 108, cardWidth - 20, 2, 1, '#493e34');
         rounded(c, centre - cardWidth / 2 + 10, top + 108, (cardWidth - 20) * Math.max(.002, Math.min(1, 1 - remaining / total)), 2, 1, warningColor);
@@ -1172,9 +1469,24 @@
         c.font = `600 11px ${font}`; c.fillStyle = '#f5bd89'; c.lineWidth = 3; c.strokeStyle = '#13222aed';
         const text = `CUỒNG NỘ · ${boss.rageTime.toFixed(1)}s`; c.strokeText(text, centre, armorY); c.fillText(text, centre, armorY);
       }
+      if (boss.howling && boss.howlTime > 0) {
+        c.font = `700 10px ${font}`; c.fillStyle = '#ffe6ab'; c.lineWidth = 3; c.strokeStyle = '#34232bed';
+        const text = `MIỄN ĐẠN · 5 SÓI CON · ${boss.howlTime.toFixed(1)}s`; c.strokeText(text, centre, armorY); c.fillText(text, centre, armorY);
+        armorY += 17;
+      }
       if (boss.bloodMoon) {
         c.font = `600 10px ${font}`; c.fillStyle = '#ffd3b4'; c.lineWidth = 3; c.strokeStyle = '#34232bed';
         const text = boss.wolfState === 'transform' ? 'THỨC TỈNH · MIỄN ĐẠN' : 'TRĂNG MÁU · SÚNG NGẮM 5 ĐẠN / PHÁT'; c.strokeText(text, centre, armorY); c.fillText(text, centre, armorY);
+      }
+      if (boss.archetype === 'kong') {
+        const raging = boss.kongState === 'final-rage';
+        c.font = `700 10px ${font}`; c.fillStyle = raging ? '#ffbb85' : '#e5d8a1'; c.lineWidth = 3; c.strokeStyle = '#34232bed';
+        const text = raging ? `CUỒNG NỘ · KHIÊN ${Math.max(0, boss.kongRageTime || 0).toFixed(1)}s` : boss.vinePhase ? 'NGẮM LÊN CAO · 2 SÁT THƯƠNG / ĐẠN' : 'CHUỐI NỔ · COI CHỪNG VỎ CHUỐI';
+        c.strokeText(text, centre, armorY); c.fillText(text, centre, armorY);
+        if (boss.vinePhase && !raging) {
+          c.font = `600 10px ${font}`; c.fillStyle = '#b7dfa4';
+          c.fillText(`BẮN 5 PHÁT · +1 KHIÊN · ${Math.max(0, boss.highAimShots || 0) % 5}/5`, centre, armorY + 17);
+        }
       }
       c.restore();
     }
@@ -1190,8 +1502,8 @@
     const pool = types.length ? [...new Set(types)] : ['skeleton'], positions = [92, 215, 335, 624, 747, 870];
     for (let i = 0; i < positions.length; i++) {
       const type = pool[i % pool.length], stats = window.MM?.Campaign?.enemyTypes?.[type];
-      const w = type === 'miniGolem' ? 38 : type === 'werewolf' ? 48 : type === 'golem' ? 58 : type === 'spider' ? 46 : 43;
-      const h = type === 'miniGolem' ? 68 : type === 'werewolf' ? 72 : type === 'golem' ? 88 : type === 'spider' ? 32 : 61;
+      const w = type === 'wolfPup' ? 26 : type === 'miniKingKong' ? 56 : type === 'miniGolem' ? 38 : type === 'werewolf' ? 48 : type === 'golem' ? 58 : type === 'spider' ? 46 : 43;
+      const h = type === 'wolfPup' ? 36 : type === 'miniKingKong' ? 62 : type === 'miniGolem' ? 68 : type === 'werewolf' ? 72 : type === 'golem' ? 88 : type === 'spider' ? 32 : 61;
       drawMonster(c, { x: positions[i], y: GROUND, w, h, type, variant: stats && stats.variant, archetype: stats && stats.archetype || type, dir: i < 3 ? 1 : -1 }, t, effects, world);
     }
     drawHunter(c, { x: 477, y: GROUND, w: 45, h: 64, dir: 1, vx: 0 }, t, effects);
@@ -1206,12 +1518,15 @@
     if (effects && game.shake > 0) c.translate(Math.sin(t * 83) * game.shake, Math.cos(t * 97) * game.shake * .6);
     c.drawImage(scenes.get(sceneWorld), 0, 0); drawAtmosphere(c, sceneWorld, t, effects);
     drawBloodMoon(c, game, t, effects);
+    drawKongRage(c, game);
     if (game.screen === 'home' && (!game.enemies || !game.enemies.length)) drawHomeCast(c, t, effects, world, game.level);
     else {
       drawBossHazards(c, game.bossHazards, t, effects, world);
       drawGroundCracks(c, game.groundCracks);
       drawGolemZones(c, game.golemZones, t, effects);
       drawWolfZones(c, game.wolfZones, t, effects);
+      drawKongZones(c, game.kongZones, game, t, effects);
+      drawBananaPeels(c, game.bananaPeels, t, effects);
       drawPlatforms(c, game.enemies || [], t, effects);
       for (const p of game.pickups || []) drawPickup(c, p, t, effects);
       for (const crate of game.ammoCrates || []) drawAmmoCrate(c, crate, t, effects);

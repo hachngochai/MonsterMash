@@ -1,6 +1,6 @@
 # Monster Mash — The Midnight Hunt
 
-Rebuild 05 của game Monster Mash của KIO. Native Canvas 2D, không cần Processing.js, CDN, thư viện hoặc cài package. Có thể mở `index.html` trực tiếp; nên dùng preview local để tiến trình lưu cùng một địa chỉ trình duyệt.
+Rebuild 06 (v2.4.0) của game Monster Mash của KIO. Native Canvas 2D, không cần Processing.js, CDN, thư viện hoặc cài package. Có thể mở `index.html` trực tiếp; nên dùng preview local để tiến trình lưu cùng một địa chỉ trình duyệt.
 
 Chơi bản public: [Monster Mash trên GitHub Pages](https://hachngochai.github.io/MonsterMash/).
 
@@ -25,21 +25,26 @@ GitHub Pages của repo xuất bản từ nhánh `master`, thư mục gốc `/`,
 
 ## Gameplay
 
-- 70 màn có tên, mục tiêu và cấu hình riêng, chia thành 7 chương: nghĩa địa, rừng tơ, thành phố ma, lâu đài trăng máu, cổng nhật thực, **Thung lũng nguyền rủa** và **Thung lũng trăng máu** (tiếp tục dùng nền rừng gai).
-- Boss ở màn 10, 20, 30, 40, 50, 60, 70; xuất hiện sau khi hạ đủ địch thường. Hạ boss mới qua màn.
-- Màn 10: bộ xương gọi cột xương có dấu báo trước. Màn 20: thây ma xanh nhận đủ 10 phát trúng sẽ miễn đạn 2 giây; đạn bị chặn không tăng bộ đếm. Màn 30: nhện nhả tơ gây choáng 2 giây và phóng trứng mỗi 5 giây; phá bằng 2 phát, nếu để 5 giây sau khi chạm đất sẽ nở đúng 5 nhện con. Tối đa 2 trứng, dành sẵn chỗ cho đàn nhện con để không vượt 15 con.
+- 80 màn có tên, mục tiêu và cấu hình riêng, chia thành 8 chương: nghĩa địa, rừng tơ, thành phố ma, lâu đài trăng máu, cổng nhật thực, **Thung lũng nguyền rủa**, **Thung lũng trăng máu** và **Rừng nguyên sinh**. Ba chương cuối dùng cùng nền rừng gai với ánh sáng le lói.
+- Boss ở màn 10, 20, 30, 40, 50, 60, 70, 80; xuất hiện sau khi hạ đủ địch thường. Hạ boss mới qua màn; riêng KingKong cần sống qua cơn cuồng nộ cuối.
+- Màn 10: bộ xương gọi cột xương có dấu báo trước. Màn 20: thây ma xanh nhận đủ 10 phát trúng sẽ miễn đạn 2 giây; đạn bị chặn không tăng bộ đếm. **Tsunami** mỗi 5 giây gọi đúng 20 thây ma xanh con chạy nhanh nối đuôi, cả đàn từ trái sang phải hoặc phải sang trái. Bắn hạ, nhảy qua hoặc bật khiên để tránh; con chạy hết sân rời trận. **Phàm ăn** có dấu báo trước rồi truy đuổi người chơi trong 1 giây, chạy trên đất hoặc nhảy từ trên cao, hồi 5 máu trong giới hạn máu tối đa và gây 2 sát thương khi đánh trúng; hồi chiêu 8 giây. Hai kỹ năng này chỉ thuộc boss màn 20, giữ nguyên tuần tra bệ đá và miễn đạn cũ.
+- Màn 30: nhện nhả tơ gây choáng 2 giây và phóng trứng mỗi 5 giây; phá bằng 2 phát, nếu để 5 giây sau khi chạm đất sẽ nở đúng 5 nhện con. Tối đa 2 trứng, dành sẵn chỗ cho đàn nhện con để không vượt 15 con.
 - Màn 40: ma trắng tàng hình mỗi 5 giây, không nhận đạn; sau 1,5 giây sẽ báo hướng và tập kích ngẫu nhiên từ trên, trái hoặc phải. Trúng đòn bị đánh ngã, mất 1 máu và 1 khiên tích (không xuống dưới 0). Màn 50: Dracula báo trước mỗi lần hút máu khi hóa dơi; đòn này không thể né bằng khoảng cách hoặc bất tử sau va chạm, chỉ khiên đang bật mới chặn. Đòn trúng hồi 1 máu cho boss. Ở nửa máu, boss phân thân một lần; phải hạ cả hai mới thắng. Bản sao có 17 máu ở Cân bằng, các đợt tấn công được lệch nhịp.
 - Quái thường màn 30–40 chỉ gồm xương, thây ma, zombie xanh và nhện; giữ boss nhện màn 30 và ma trắng màn 40. Màn 51–60 chỉ có xương, Golem và nhện, trong rừng gai leo nguyên sinh với những tia sáng le lói.
 - Golem cầm gậy gỗ gai, báo trước vùng quật rồi đánh 1 máu. Golem thường và mini còn lấy đà ném một viên đá khi ở xa; Golem chúa ném ba viên theo hình quạt. Đá bay thẳng tới vị trí đã báo, không đuổi theo người chơi; mỗi viên gây 1 máu và chặn được bằng khiên đang bật. Nhịp ném tăng theo áp lực thời gian, dấu báo vẫn giữ thời gian phản ứng. Golem chúa màn 60 hóa điên đúng 5 giây mỗi 10 giây giao chiến: giáng xuống gây nứt đất, mất 1 máu và choáng 1 giây khi không có khiên, rồi lao tới và đập 3 nhát. Mỗi nhát đập mất 3 máu và có thể né bằng nhảy, rời vùng báo hoặc khiên đang bật. Ba nhát riêng biệt vẫn tính khi người chơi đang bất tử sau đòn trước. Tạm dừng đóng băng đồng hồ; các kỹ năng vẫn có dấu báo khi tắt hiệu ứng.
 - Màn 61–70 chỉ có xương, Golem mini bằng kích thước bộ xương và người sói. Người sói báo trước điểm đáp rồi nhảy lên vồ xuống; đòn vồ thường gây 1 máu. Nền thung lũng được tái sử dụng.
-- Lang Vương màn 70 có 50 máu ở Cân bằng. Lần đầu chạm nửa máu sẽ chuyển Trăng Máu, hồi đầy máu và tăng cả chiều rộng/cao gấp đôi. Miễn sát thương trong 1,2 giây biến đổi, rồi có thể bị hạ; không hồi lại ở lần chạm nửa máu tiếp theo. Màn hình nhuộm đỏ và trăng đỏ mọc ở góc phải. Sau mỗi 3 giây giao chiến ở pha Trăng Máu, boss khóa vị trí người chơi, nhảy tới rồi cào 2 nhát, mỗi nhát 2 máu; từng nhát chặn được bằng khiên đang bật.
+- Lang Vương màn 70 có 50 máu ở Cân bằng. Lần đầu chạm nửa máu sẽ chuyển Trăng Máu, hồi đầy máu và tăng cả chiều rộng/cao gấp đôi. Miễn sát thương trong 1,2 giây biến đổi, rồi có thể bị hạ; không hồi lại ở lần chạm nửa máu tiếp theo. Màn hình nhuộm đỏ và trăng đỏ mọc ở góc phải. Sau mỗi 1,5 giây giao chiến ở pha Trăng Máu, boss khóa vị trí người chơi, nhảy tới rồi cào 2 nhát, mỗi nhát 2 máu; từng nhát chặn được bằng khiên đang bật.
+- Lang Vương hú bầy đàn 4 giây, miễn sát thương đạn trong lúc hú và gọi đúng 5 sói con chạy vào tấn công. Hết tiếng hú, boss nghỉ 6 giây ở dạng thường hoặc 4 giây trong Trăng Máu rồi mới hú lại, để người chơi có khoảng bắn hạ boss. Tiếng hú và đòn nhảy cào hoạt động đồng thời. Sói con nhỏ 26×36, 1 máu ở mọi độ khó; bắn hạ vẫn tích khiên nhưng không tính vào số quái cần hạ của màn.
 - Trong Trăng Máu, súng tự đổi thành súng ngắm: mỗi phát tốn 5 đạn, gây 5 sát thương, hồi chiêu 1 giây. Bắn được khi còn ít nhất 5 viên và đã hết hồi chiêu; dưới 5 viên cần nhặt thùng tiếp tế. Không tiêu hao đạn trong thời gian boss đang biến đổi. Đạn và khiên vẫn hữu hạn.
+- Màn 71–80 tiếp tục thuộc rừng nguyên sinh, chỉ có tiểu KingKong, Golem cỡ lớn thường, nhện và sói con. Tiểu KingKong có ngoại hình riêng, lấy đà ném chuối từ xa; đường báo giúp né trước khi chuối tới. Hai màn 71 và 75 giảm nhịp để làm quen và hồi phục.
+- KingKong màn 80 có 72 máu ở Cân bằng. Dạng mặt đất ném chuối nổ thành 5 vỏ trơn: chạm gây ngã và choáng 0,5 giây; chỉ khiên đang bật mới bảo vệ. Khi chạm nửa máu, boss chuyển pha một lần, hồi đầy máu rồi bám dây leo. Tiếng gầm đánh vào nửa sân đã báo; chạy sang nửa còn lại để né. Súng tự ngẩng lên bắn boss trên cao, dùng 1 viên gây 2 sát thương. Cứ bắn thành công 5 phát sẽ nhận 1 khiên tích, tối đa 3; không cần cả 5 viên đều trúng boss.
+- Khi KingKong ở pha dây leo hết máu, boss vẫn sống và nổi điên đúng 5 giây: lao xuống gây chấn động rồi tấn công liên tục, mỗi đòn không có khiên mất 3 máu dù còn bất tử sau đòn trước. Khiên đang bật bảo vệ trong toàn thời gian hiệu lực của nó, không trừ số lần chặn riêng trong cơn cuồng nộ. Người chơi sống qua 5 giây mới hạ được KingKong và hoàn thành chiến dịch.
 - Sinh lực 7 / 5 / 4 ở chế độ Thư giãn / Cân bằng / Thử thách. Đạn có giới hạn, mỗi phát tiêu hao 1 viên; nhịp bắn 0,17 giây. Nhặt thùng **AMMO** rơi từ trên xuống để tiếp tế, kể cả lúc đánh boss. Khi hết đạn, súng hạ xuống và bộ đếm đạn chuyển màu cảnh báo.
 - Mỗi 10 địch hạ được nhận 1 khiên, tích tối đa 3. Tiến độ cộng dồn qua màn. Khiên kéo dài 5 giây và chặn tối đa 3 lần va chạm; không chồng nhiều khiên cùng lúc.
 - Sau khi trúng đòn có 1,35 giây bất tử. Qua màn hồi 1 máu, màn hồi phục hồi 2. Mỗi 7 địch rơi vật phẩm máu nếu đang thiếu máu.
 - Địch có cổng báo trước, giới hạn số lượng đồng thời và khoảng nghỉ sau mỗi nhóm. Giữ lại kỹ năng riêng từ source gốc: zombie di chuyển trên bệ lơ lửng rồi nhảy xuống; nhện đu trên sợi tơ, nhấp nhô rồi thả xuống; ma bay theo sóng sin rồi bổ nhào; ma cà rồng hóa dơi, bay lên, tuần tra, lao xuống và trở lại hình người. Boss giữ kỹ năng theo loài. Dấu báo vàng chỉ vị trí đáp trước khi địch tấn công.
 - Nhịp tấn công tăng dần theo thời gian thực trong từng màn, bằng đường cong mượt có giới hạn. Quái bắt đầu tăng sau 12 giây (16 giây ở màn hồi phục); boss có đồng hồ riêng, tăng sau 4 giây giao chiến. Ở chế độ Cân bằng, nhịp quái đạt tối đa ×1,50–1,725 và boss ×1,70–1,925 tùy vùng. Di chuyển, bay, bổ nhào và đạn xương tăng nhẹ hơn nhịp hồi kỹ năng. Dấu báo vẫn có ít nhất 0,9 giây thực để phản ứng (Thư giãn 1,1; Thử thách 0,75). Tạm dừng cũng dừng quá trình tăng tốc; màn mới bắt đầu lại nhịp đầu.
-- Tiến trình, kỷ lục và thiết lập tự lưu trong localStorage. Save cũ đã hoàn thành chiến dịch 50 hoặc 60 màn tiếp tục ở màn 51 hoặc 61 tương ứng; giữ nguyên kỷ lục, các màn đã qua và thiết lập. Không gửi dữ liệu ra ngoài. Khi browser chặn lưu trữ, game vẫn chơi được trong phiên hiện tại.
+- Tiến trình, kỷ lục và thiết lập tự lưu trong localStorage. Save cũ đã hoàn thành chiến dịch 50, 60 hoặc 70 màn tiếp tục ở màn 51, 61 hoặc 71 tương ứng; giữ nguyên kỷ lục, các màn đã qua và thiết lập. Không gửi dữ liệu ra ngoài. Khi browser chặn lưu trữ, game vẫn chơi được trong phiên hiện tại.
 
 Tiếp tế đạn ở chế độ Cân bằng:
 
@@ -52,8 +57,9 @@ Tiếp tế đạn ở chế độ Cân bằng:
 | Cổng nhật thực | 7 | 34 | 13 | 5,0 giây |
 | Thung lũng nguyền rủa | 8 | 38 | 15 | 4,8 giây |
 | Thung lũng trăng máu | 9 | 42 | 17 | 4,6 giây |
+| Rừng nguyên sinh | 10 | 46 | 19 | 4,4 giây |
 
-Thư giãn nhân lượng đạn khởi đầu và tiếp tế với 1,35; Thử thách nhân với 0,85, làm tròn thành số viên nguyên. Sức chứa giữ nguyên. Màn hồi phục giảm khoảng tiếp tế 0,3 giây; khi boss xuất hiện có thêm một thùng. Đạn còn lại được mang sang màn kế tiếp, cộng thêm lượng đầu màn và giới hạn theo sức chứa. Thùng tiếp tế rơi theo nhịp; không tự nạp đạn khi bắn hết.
+Thư giãn nhân lượng đạn khởi đầu và tiếp tế với 1,35; Thử thách nhân với 0,85, làm tròn thành số viên nguyên. Sức chứa giữ nguyên. Màn hồi phục giảm khoảng tiếp tế 0,3 giây, tối thiểu 4,3 giây; khi boss xuất hiện có thêm một thùng. Đạn còn lại được mang sang màn kế tiếp, cộng thêm lượng đầu màn và giới hạn theo sức chứa. Thùng tiếp tế rơi theo nhịp; không tự nạp đạn khi bắn hết.
 
 Thùng rơi với tốc độ 180 pixel/giây rồi nằm trên đất 8 giây ở chế độ Cân bằng (Thư giãn 10; Thử thách 6), tối đa 3 thùng đồng thời. Có thể nhảy nhặt khi thùng còn đang rơi. Tăng nhịp tấn công không làm giảm lượng tiếp tế hoặc tăng máu địch.
 
@@ -76,15 +82,16 @@ Khung game nằm trong kích thước cửa sổ hiện tại, tránh thanh cu�
 
 ## Cấu trúc và cập nhật sau này
 
-- `js/campaign.js`: dữ liệu màn, 7 chương, loại địch và hệ số độ khó. Thêm chương hoặc màn tại đây; `levels.length` điều khiển tiến trình và điều kiện màn cuối.
+- `js/campaign.js`: dữ liệu màn, 8 chương, loại địch và hệ số độ khó. Thêm chương hoặc màn tại đây; `levels.length` điều khiển tiến trình và điều kiện màn cuối.
 - `js/game.js`: mô phỏng theo giây, input, va chạm, kỹ năng riêng của từng loài, đạn và tiếp tế, khiên, save và giao diện.
 - `js/typography.js` và `assets/fonts/`: font Noto Sans / Noto Serif có bộ ký tự tiếng Việt, tải từ file trong game trước khi vẽ Canvas. Font được phân phối theo SIL Open Font License; giấy phép nằm cùng thư mục.
 - `js/mobile.js`: điều khiển toàn màn hình, hướng ngang và xử lý trình duyệt không hỗ trợ.
-- `js/bosses.js`: kỹ năng boss, miễn đạn, tơ, trứng, tàng hình, hút máu và phân thân; đồng hồ đứng yên khi tạm dừng.
+- `js/bosses.js`: kỹ năng boss, miễn đạn, Tsunami gọi đàn và Phàm ăn truy đuổi, tơ, trứng, tàng hình, hút máu và phân thân; đồng hồ đứng yên khi tạm dừng.
 - `js/golem.js`: gậy gai, ném đá có dấu báo, hóa điên theo chu kỳ, nứt đất gây choáng và chuỗi ba nhát đập của Golem chúa.
-- `js/wolves.js`: người sói nhảy vồ, Trăng Máu chuyển pha một lần và hai nhát cào của Lang Vương.
-- `js/renderer.js`: nhân vật khối vuông lấy cảm hứng source gốc, 6 bối cảnh được cache cho 7 chương, bệ lơ lửng, tơ nhện, dơi biến hình, thùng đạn, sương, ánh sáng và hiệu ứng. Đồ họa vẽ bằng code, không cần tải ảnh.
-- `style.css` và `index.html`: giao diện responsive, bản đồ 70 màn, hướng dẫn và cài đặt.
+- `js/wolves.js`: người sói nhảy vồ, sói con chạy cắn, Trăng Máu chuyển pha một lần, tiếng hú gọi bầy và hai nhát cào của Lang Vương.
+- `js/kong.js`: tiểu KingKong ném chuối và ba pha boss KingKong: chuối nổ, bám dây gầm nửa sân, cuồng nộ cuối 5 giây.
+- `js/renderer.js`: nhân vật khối vuông lấy cảm hứng source gốc, 6 bối cảnh được cache cho 8 chương, bệ lơ lửng, tơ nhện, dơi biến hình, thùng đạn, sương, ánh sáng và hiệu ứng. Đồ họa vẽ bằng code, không cần tải ảnh.
+- `style.css` và `index.html`: giao diện responsive, bản đồ 80 màn, hướng dẫn và cài đặt.
 - `tests/`: kiểm tra chiến dịch, input, đa chạm, khiên, boss, save, pause và kết thúc trận.
 - `tests/boss-preview.html`: bảng xem các trạng thái hiệu ứng và dấu tiếng Việt; mở qua server local để kiểm tra hình ảnh khi cập nhật.
 

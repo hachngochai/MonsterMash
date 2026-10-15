@@ -9,7 +9,8 @@
     { id: 3, name: 'Lâu đài trăng máu', subtitle: 'Nhanh tay trước cú lao tới', color: '#d5a0ff', enemy: 'vampire' },
     { id: 4, name: 'Cổng nhật thực', subtitle: 'Trận chiến cho bình minh', color: '#ffb46c', enemy: 'vampire' },
     { id: 5, name: 'Thung lũng nguyền rủa', subtitle: 'Ánh sáng giữa rừng gai', color: '#becd80', enemy: 'golem' },
-    { id: 6, name: 'Thung lũng trăng máu', subtitle: 'Tiếng hú dưới tán gai', color: '#d6ac91', enemy: 'werewolf', scenery: 5 }
+    { id: 6, name: 'Thung lũng trăng máu', subtitle: 'Tiếng hú dưới tán gai', color: '#d6ac91', enemy: 'werewolf', scenery: 5 },
+    { id: 7, name: 'Rừng nguyên sinh', subtitle: 'Vua rừng thức giấc', color: '#e9c96e', enemy: 'miniKingKong', scenery: 5 }
   ];
 
   const enemyTypes = {
@@ -21,7 +22,10 @@
     vampire: { w: 46, h: 78, speed: 55, health: 3, score: 190, damage: 1, ability: 'bat-morph' },
     golem: { w: 74, h: 108, speed: 34, health: 4, score: 240, damage: 1, ability: 'club-swing', abilities: ['club-swing','rock-throw'] },
     miniGolem: { w: 38, h: 68, speed: 44, health: 2, score: 170, damage: 1, ability: 'club-swing', abilities: ['club-swing','rock-throw'], archetype: 'golem', variant: 'mini' },
-    werewolf: { w: 48, h: 72, speed: 58, health: 3, score: 210, damage: 1, ability: 'pounce' }
+    werewolf: { w: 48, h: 72, speed: 58, health: 3, score: 210, damage: 1, ability: 'pounce' },
+    wolfPup: { w: 26, h: 36, speed: 100, health: 1, score: 35, damage: 1, ability: null, archetype: 'werewolf', variant: 'pup' },
+    miniKingKong: { w: 56, h: 62, speed: 48, health: 3, score: 220, damage: 1, ability: 'banana-throw', archetype: 'kong', variant: 'mini' },
+    kong: { w: 126, h: 138, speed: 38, health: 72, score: 880, damage: 1, ability: 'banana-throw' }
   };
 
   const chapters = [
@@ -60,7 +64,7 @@
         'Địch kéo tới từng nhóm. Đừng dùng hết khoảng trống trong một bước.',
         'Nhện đi nhanh hơn bộ xương. Quan sát loại địch trước khi đổi hướng.',
         'Một tiếng động lớn vọng từ hang tơ. Chuẩn bị khiên cho trận tiếp theo.',
-        'Thây ma xanh tuần tra trên bệ đá rồi thả xuống. Sau mỗi 10 phát bắn trúng, nó miễn nhiễm 2 giây: né đòn và chờ lớp bảo hộ tắt.'
+        'Thây ma xanh tuần tra trên bệ đá rồi thả xuống, miễn đạn 2 giây sau mỗi 10 phát trúng. Tsunami mỗi 5 giây gọi 20 thây ma xanh con chạy nối đuôi cùng một hướng: bắn hạ, nhảy qua hoặc bật khiên. Phàm ăn báo trước rồi truy đuổi 1 giây, chạy trên đất hoặc nhảy từ trên cao, hồi 5 máu trong giới hạn máu tối đa và gây 2 sát thương khi đánh trúng; hồi chiêu 8 giây.'
       ],
       targets: [16, 18, 19, 20, 18, 21, 22, 23, 24, 25],
       intervals: [2.08, 1.82, 1.78, 1.73, 1.91, 1.67, 1.62, 1.57, 1.53, 1.6],
@@ -182,7 +186,7 @@
         'Người sói bám sát hai phía. Đọc dấu báo, né cú vồ và canh phát bắn khi đường đạn thoáng.',
         'Bộ xương, golem nhỏ và người sói tạo thành vòng vây. Ưu tiên kẻ sắp ra đòn rồi thoát khỏi mép sân.',
         'Tiếng hú của Lang Vương vọng qua tán cây. Nhặt thùng đạn và tích khiên trước khi tiến lên đỉnh trăng máu.',
-        'Khi còn nửa máu, Lang Vương hóa trăng máu một lần: lớn gấp đôi, hồi đầy máu và nhuộm đỏ khu rừng dưới mặt trăng góc phải. Mỗi 3 giây nó nhảy tới cào 2 nhát, mỗi nhát mất 2 máu nếu không bật khiên. Súng ngắm mở trong pha này: mỗi phát dùng 5 viên, gây 5 sát thương và hồi 1 giây.'
+        'Lang Vương hú 4 giây, miễn đạn và gọi 5 sói con chạy vào. Hết hú nghỉ 6 giây ở dạng thường, 4 giây khi Trăng Máu. Ở nửa máu nó lớn gấp đôi và hồi đầy máu một lần; sau mỗi 1,5 giây nhảy tới cào 2 nhát, mỗi nhát 2 máu nếu không bật khiên. Súng ngắm mở trong pha này: 5 viên/phát, 5 sát thương, hồi 1 giây.'
       ],
       targets: [34, 36, 37, 38, 35, 39, 40, 42, 44, 46],
       intervals: [1.22, 1.1, 1.07, 1.04, 1.2, 1.01, 0.99, 0.97, 0.93, 1.03],
@@ -193,14 +197,38 @@
         ['skeleton', 'werewolf'], ['skeleton', 'miniGolem', 'werewolf'], ['miniGolem', 'werewolf'],
         ['skeleton', 'miniGolem', 'werewolf']
       ]
+    },
+    {
+      names: ['Dưới vòm rừng cổ', 'Chuối bay qua tán lá', 'Bước chân dưới dây leo', 'Vòng vây bên rễ cây', 'Nắng lọt qua tán rừng', 'Gậy gai và chuối chín', 'Bầy sói dưới vòm xanh', 'Tiếng gầm sau thác', 'Trước ngai vua rừng', 'KingKong'],
+      stories: [
+        'Rừng nguyên sinh vẫn phủ kín thung lũng. Tiểu KingKong xuất hiện cùng nhện: quan sát đường chuối ném và giữ một khoảng trống để né.',
+        'Tiểu KingKong ném chuối từ xa. Rời vị trí đã báo, nhảy qua vỏ chuối và đừng đứng yên dưới tán cây.',
+        'Golem cầm gậy gai tiến giữa những dây leo cổ. Né đá bay trước khi quay lại hạ tiểu KingKong.',
+        'Sói con chạy nhanh dưới rễ cây. Bắn sớm để tránh bị ép vào vùng quật gậy hoặc đường chuối.',
+        'Một vệt nắng xuyên qua tán rừng. Đợt nhẹ cho bạn nhặt đạn và giữ khiên trước khi đi sâu hơn.',
+        'Chuối bay qua đầu những chiếc gậy gai. Chọn mục tiêu gần nhất rồi đổi vị trí sau mỗi lần ném.',
+        'Nhện và sói con bám sát mặt đất, Golem cùng tiểu KingKong tấn công từ xa. Dùng nhảy và khiên để mở đường thoát.',
+        'Tiếng gầm của vua rừng vang qua thác. Giữ khoảng trống giữa những đợt chuối và đừng để bầy sói vây hai phía.',
+        'Dây leo rung lên trước ngai vua rừng. Nhặt thùng đạn và tích khiên: trận cuối có cả mặt đất lẫn tán cây.',
+        'KingKong ném chuối nổ thành 5 vỏ trơn, gây ngã và choáng 0,5 giây nếu không bật khiên. Ở nửa máu, nó bám dây leo, hồi đầy máu một lần và gầm vào nửa sân: rời vùng báo để né. Súng ngẩng lên, mỗi viên gây 2 sát thương; bắn 5 phát nhận 1 khiên. Hết máu boss nổi điên 5 giây, lao xuống giáng đất và đánh liên tục 3 máu mỗi đòn. Bật khiên để sống qua cơn cuồng nộ rồi giành chiến thắng.'
+      ],
+      targets: [36, 39, 40, 41, 37, 42, 43, 44, 45, 46],
+      intervals: [1.18, 1.06, 1.03, 1.0, 1.16, 0.98, 0.96, 0.94, 0.92, 1.02],
+      caps: [5, 5, 6, 6, 5, 6, 6, 7, 7, 6],
+      pools: [
+        ['miniKingKong', 'spider'], ['miniKingKong', 'spider'], ['miniKingKong', 'golem', 'spider'],
+        ['miniKingKong', 'golem', 'wolfPup'], ['miniKingKong', 'spider'], ['miniKingKong', 'golem', 'spider'],
+        ['miniKingKong', 'golem', 'spider', 'wolfPup'], ['miniKingKong', 'golem', 'spider', 'wolfPup'],
+        ['miniKingKong', 'golem', 'spider', 'wolfPup'], ['miniKingKong', 'golem', 'spider', 'wolfPup']
+      ]
     }
   ];
 
-  const bossNames = ['Kẻ gác nghĩa địa', 'Thây ma xanh', 'Nhện chúa', 'Bóng ma trắng', 'Dracula', 'Golem chúa', 'Lang Vương'];
+  const bossNames = ['Kẻ gác nghĩa địa', 'Thây ma xanh', 'Nhện chúa', 'Bóng ma trắng', 'Dracula', 'Golem chúa', 'Lang Vương', 'KingKong'];
   // Boss identities follow their milestones independently of the world scenery.
-  const bossArchetypes = ['skeleton', 'zombie', 'spider', 'ghost', 'vampire', 'golem', 'werewolf'];
-  const bossAbilities = [['bone-volley'], ['ledge-drop'], ['silk-drop'], ['sine-drop'], ['bat-morph', 'shadow-drop'], ['club-swing','rock-throw'], ['pounce']];
-  const bossSkills = [['bone-pillars'], ['hit-immunity'], ['web-stun', 'egg-hatch'], ['vanish-strike'], ['bat-drain', 'blood-clone'], ['rage-ground-slam', 'triple-smash'], ['blood-moon', 'double-claw']];
+  const bossArchetypes = ['skeleton', 'zombie', 'spider', 'ghost', 'vampire', 'golem', 'werewolf', 'kong'];
+  const bossAbilities = [['bone-volley'], ['ledge-drop'], ['silk-drop'], ['sine-drop'], ['bat-morph', 'shadow-drop'], ['club-swing','rock-throw'], ['pounce'], ['banana-throw']];
+  const bossSkills = [['bone-pillars'], ['hit-immunity', 'tsunami', 'glutton'], ['web-stun', 'egg-hatch'], ['vanish-strike'], ['bat-drain', 'blood-clone'], ['rage-ground-slam', 'triple-smash'], ['blood-moon', 'double-claw', 'pack-howl'], ['banana-burst', 'vine-transform', 'half-arena-scream', 'final-rage']];
   const levels = [];
   chapters.forEach(function (chapter, world) {
     chapter.names.forEach(function (name, stage) {
@@ -220,22 +248,22 @@
         initialAmmo: 3 + world,
         ammoCapacity: 18 + world * 4,
         ammoPerCrate: 5 + world * 2,
-        ammoInterval: Number((5.8 - world * 0.2 - (recovery ? 0.3 : 0)).toFixed(1)),
+        ammoInterval: Number((Math.max(4.3, 5.8 - world * 0.2 - (recovery ? 0.3 : 0))).toFixed(1)),
         // Keep original overhead skills, introducing one before mixing the others.
         abilitySpawnEvery: chapter.pools[stage].some(type => enemyTypes[type].ability) ? (recovery || stage < 3 ? 4 : 3) : 0,
         abilityInterval: Number((Math.max(world > 5 ? 6.6 : 6.5, 9 - world * 0.5) + (recovery ? 1 : 0)).toFixed(1)),
         abilityWarning: recovery ? 1.7 : 1.5,
         // Ramp duration starts after warmup. Difficulty scales only the added
         // pressure, preserving the starting attack cadence and movement speed.
-        enemyPressureCap: Number((1.5 + world * 0.0375).toFixed(4)),
-        bossPressureCap: Number((1.7 + world * 0.0375).toFixed(4)),
-        pressureRampSeconds: 100 - world * 3.75,
-        bossRampSeconds: 75 - world * 2.5,
+        enemyPressureCap: Number((1.5 + Math.min(world, 6) * 0.0375).toFixed(4)),
+        bossPressureCap: Number((1.7 + Math.min(world, 6) * 0.0375).toFixed(4)),
+        pressureRampSeconds: 100 - Math.min(world, 6) * 3.75,
+        bossRampSeconds: 75 - Math.min(world, 6) * 2.5,
         pressureWarmup: recovery ? 16 : 12,
         bossWarmup: 4,
         boss: stage === 9,
         bossArchetype: stage === 9 ? bossArchetypes[world] : null,
-        bossHealth: stage === 9 ? (world === 5 ? 54 : world === 6 ? 50 : 18 + world * 4) : 0,
+        bossHealth: stage === 9 ? (world === 5 ? 54 : world === 6 ? 50 : world === 7 ? 72 : 18 + world * 4) : 0,
         bossAbilities: stage === 9 ? bossAbilities[world].slice() : [],
         bossSkills: stage === 9 ? bossSkills[world].slice() : [],
         story: chapter.stories[stage],
@@ -246,13 +274,17 @@
       if (config.id === 2) config.tutorial = 'Hạ mỗi 10 địch nhận một khiên. Nhấn Space trên PC hoặc vuốt xuống trên điện thoại để kích hoạt.';
       if (config.id === 3) config.tutorial = 'Thây ma có thể đi trên bệ đá rồi rơi xuống. Quan sát dấu báo dưới bệ để tránh điểm đáp.';
       if (config.id === 12) config.tutorial = 'Nhện đu trên tơ, nhấp nhô rồi thả xuống. Né điểm đáp; nhặt thùng đạn trước khi bắn tiếp.';
+      if (config.id === 20) config.tutorial = 'Tsunami gọi 20 thây ma xanh con mỗi 5 giây, chạy nối đuôi từ một phía: bắn, nhảy hoặc bật khiên. Phàm ăn báo trước rồi truy đuổi 1 giây, hồi 5 máu tối đa và gây 2 sát thương khi trúng; hồi chiêu 8 giây. Lớp miễn đạn 2 giây sau mỗi 10 phát trúng vẫn còn.';
       if (config.id === 22) config.tutorial = 'Bóng ma bay theo đường lượn sóng rồi hạ xuống. Giữ khoảng trống, chờ chúng vào tầm bắn.';
       if (config.id === 32) config.tutorial = 'Thây ma xanh có nhiều máu hơn thây ma thường. Nhặt thùng đạn và giữ khoảng cách với bệ đá.';
       if (config.id === 42) config.tutorial = 'Ma cà rồng có thể hóa dơi, bay lên rồi đáp lại. Canh lúc chúng hạ thấp để tiết kiệm đạn.';
       if (config.id === 51) config.tutorial = 'Golem nâng gậy trước khi quật và lấy đà ném đá khi ở xa. Né đường báo vàng hoặc bật khiên; đá không đổi hướng sau khi ném.';
       if (config.id === 61) config.tutorial = 'Golem nhỏ chịu nhiều đạn hơn bộ xương, quật gậy khi gần và ném đá khi xa. Né dấu báo hoặc bật khiên trước khi áp sát.';
       if (config.id === 62) config.tutorial = 'Người sói lấy đà rồi nhảy lên vồ xuống. Rời vùng báo trước, nhảy qua cú vồ và canh bắn khi nó dừng lại.';
-      if (config.id === 70) config.tutorial = 'Trăng máu mở súng ngắm tự động: cần ít nhất 5 viên, mỗi phát dùng 5 viên và gây 5 sát thương; hồi chiêu 1 giây. Lang Vương hồi đầy máu và lớn gấp đôi một lần khi còn nửa máu. Bật khiên hoặc né dấu báo của đòn cào kép mỗi 3 giây.';
+      if (config.id === 70) config.tutorial = 'Lang Vương hú 4 giây, miễn đạn và gọi 5 sói con; hết hú nghỉ 6 giây thường / 4 giây Trăng Máu. Pha Trăng Máu hồi đầy máu một lần và cào kép mỗi 1,5 giây. Súng ngắm cần 5 viên/phát, gây 5 sát thương, hồi 1 giây.';
+      if (config.id === 71) config.tutorial = 'Tiểu KingKong lấy đà rồi ném chuối. Né đường báo và nhảy qua vỏ chuối để giữ nhịp di chuyển; khiên đang bật chặn được đòn đánh.';
+      if (config.id === 74) config.tutorial = 'Sói con nhỏ nhưng chạy nhanh và cắn khi áp sát. Hạ chúng trước khi Golem hoặc tiểu KingKong khóa đường lui.';
+      if (config.id === 80) config.tutorial = 'KingKong bám dây ở nửa máu: rời nửa sân báo đỏ, bắn hướng lên gây 2 sát thương/viên và nhận 1 khiên mỗi 5 phát. Khi máu boss về 0, bật khiên để sống qua 5 giây cuồng nộ; không có khiên mỗi đòn mất 3 máu.';
       levels.push(config);
     });
   });
@@ -284,12 +316,12 @@
     const archetype = stats.archetype || enemyType;
     const rawRandom = typeof rng === 'function' ? Number(rng()) : Math.random();
     const random = Number.isFinite(rawRandom) ? Math.max(0, Math.min(1, rawRandom)) : 0.5;
-    const health = Math.max(1, Math.round((boss ? config.bossHealth || 18 + config.world * 4 : stats.health * config.healthMultiplier) * settings.enemyHealthMultiplier));
+    const health = enemyType === 'wolfPup' ? 1 : Math.max(1, Math.round((boss ? config.bossHealth || 18 + config.world * 4 : stats.health * config.healthMultiplier) * settings.enemyHealthMultiplier));
     return {
       x: side === -1 ? -50 : 1010,
       y: 438,
-      w: boss ? (archetype === 'golem' ? 156 : archetype === 'werewolf' ? 80 : Math.max(96, stats.w * 1.85)) : stats.w,
-      h: boss ? (archetype === 'golem' ? 172 : archetype === 'werewolf' ? 108 : Math.max(94, stats.h * 1.5)) : stats.h,
+      w: boss ? (archetype === 'golem' ? 156 : archetype === 'werewolf' ? 80 : archetype === 'kong' ? 126 : Math.max(96, stats.w * 1.85)) : stats.w,
+      h: boss ? (archetype === 'golem' ? 172 : archetype === 'werewolf' ? 108 : archetype === 'kong' ? 138 : Math.max(94, stats.h * 1.5)) : stats.h,
       dir: side === -1 ? 1 : -1,
       type: boss ? 'boss' : enemyType,
       archetype: archetype,
