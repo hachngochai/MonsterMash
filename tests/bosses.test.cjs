@@ -129,7 +129,7 @@ test('spider webs receive a real warning, lock their target, and obey the shared
   assert.equal(game.enemyShots.length, 12);
 });
 
-test('eggs are thrown every five real seconds and only hatch five seconds after landing', () => {
+test('eggs are thrown every five real seconds and hatch three seconds after landing', () => {
   const {game, boss, skills} = fixture(30, 2);
   boss.skillTimers.web = 1000;
   advance(skills, game, 4.99);
@@ -138,22 +138,25 @@ test('eggs are thrown every five real seconds and only hatch five seconds after 
   assert.equal(game.bossEggs.length, 1);
   const egg = game.bossEggs[0];
   assert.equal(egg.landed, false);
-  assert.equal(egg.hatchTime, 5);
+  assert.equal(egg.hatchTime, 3);
   const travel = (438 - egg.y) / egg.vy;
   advance(skills, game, travel);
   assert.equal(egg.landed, true);
   assert.equal(egg.y, 438);
   assert.equal(egg.x, 360);
-  assert.ok(Math.abs(egg.hatchTime - 5) < 1e-8);
-  advance(skills, game, 4.99);
+  assert.ok(Math.abs(egg.hatchTime - 3) < 1e-8);
+  advance(skills, game, 2.99);
   assert.equal(game.enemies.filter(enemy => enemy.minion).length, 0);
-  assert.equal(game.bossEggs.length, 2, 'a second egg arrives five seconds after the first');
+  assert.equal(game.bossEggs.length, 1, 'hatching does not accelerate the five-second laying cadence');
   advance(skills, game, .01);
   const brood = game.enemies.filter(enemy => enemy.minion);
   assert.equal(brood.length, 5);
   assert.equal(game.bossEggs.includes(egg), false);
   assert.ok(brood.every(enemy => enemy.phase === 'active' && enemy.health === 1 && enemy.w === 23 && enemy.h === 18));
   assert.ok(brood.every(enemy => enemy.abilityTimer === Infinity));
+  assert.ok(brood.every(enemy => enemy.spiderling && enemy.bulletUntargetable && enemy.ownerBoss === boss));
+  advance(skills, game, 10 - 5 - travel - 3);
+  assert.equal(game.bossEggs.length, 1, 'a second egg is still laid at ten active seconds');
   assert.equal(game.regularSpawned, 17);
   assert.equal(game.totalKills, 0);
   assert.equal(game.ammoCrates.length, 0);
@@ -190,6 +193,24 @@ test('spiderling reservations keep the total at fifteen while every intact egg h
   advance(skills, game, 6);
   assert.equal(game.enemies.filter(enemy => enemy.minion && !enemy.dead).length, 15);
   assert.equal(game.bossEggs.length, 0);
+});
+
+test('the shared spiderling cap counts other broods but ignores unrelated summon types', () => {
+  const {game, boss, skills} = fixture(30);
+  boss.skillTimers.web = 1000; boss.skillTimers.egg = 0;
+  for (let index = 0; index < 15; index++) {
+    const child = game.spawn('spider', -1);
+    Object.assign(child, {minion:true, spiderling:true, ownerBoss:{health:10}, phase:'active'});
+  }
+  for (let index = 0; index < 5; index++) {
+    const child = game.spawn('zombie', -1);
+    Object.assign(child, {minion:true, ownerBoss:boss, phase:'active'});
+  }
+  skills.update(game, .01);
+  assert.equal(game.bossEggs.length, 0, 'other broods also reserve slots in the fifteen-spiderling limit');
+  for (const child of game.enemies.filter(enemy => enemy.spiderling).slice(0, 5)) child.dead = true;
+  advance(skills, game, .3);
+  assert.equal(game.bossEggs.length, 1, 'the five unrelated zombie minions do not reserve spiderling slots');
 });
 
 test('skeleton floor pillars keep their announced positions and can be cleared with a jump', () => {
@@ -352,6 +373,208 @@ function realGame(level) {
 function advanceGame(game, seconds) {
   while (seconds > 1e-9) { const dt = Math.min(1 / 60, seconds); game.update(dt); seconds -= dt; }
 }
+
+function realBrood(game, skills, x = 720) {
+  const boss = game.spawn('boss', 1);
+  Object.assign(boss, {phase:'active', x:850, y:438, speed:0, abilityTimer:10000});
+  boss.skillTimers.web = 10000; boss.skillTimers.egg = 0;
+  skills.update(game, .01);
+  boss.skillTimers.egg = 10000;
+  const egg = game.bossEggs.find(item => item.owner === boss);
+  Object.assign(egg, {x, targetX:x, y:438, landed:true, hatchTime:.01});
+  skills.update(game, .01);
+  const brood = game.enemies.filter(enemy => enemy.spiderling && enemy.ownerBoss === boss);
+  assert.equal(brood.length, 5);
+  for (const child of brood) child.speed = 0;
+  return {boss, brood};
+}
+
+test('real bullets pass through tiny invincible spiderlings and still hit bosses, eggs, and ordinary spiders', () => {
+  for (const target of ['boss', 'egg', 'spider']) {
+    const {game, skills} = realGame(30);
+    const {boss, brood} = realBrood(game, skills);
+    brood.forEach(child => { child.x = 900; });
+    brood[0].x = 580;
+    let victim;
+    if (target === 'boss') {
+      boss.x = 620; victim = boss;
+    } else if (target === 'egg') {
+      victim = {owner:boss, x:600, targetX:600, y:438, w:28, h:32, health:2, maxHealth:2,
+        landed:true, hatchTime:3, age:0, hit:0};
+      game.bossEggs.push(victim);
+    } else {
+      victim = game.spawn('spider', 1);
+      Object.assign(victim, {phase:'active', x:600, y:438, speed:0, abilityTimer:10000, health:3, maxHealth:3});
+    }
+    const before = victim.health;
+    // A low shot actually crosses the 18px body; a normal chest-height shot
+    // would miss a spiderling even without the explicit target exclusion.
+    game.bullets.push({x:560, y:430, dir:1, life:1});
+    game.update(.05);
+    assert.equal(victim.health, before - 1, `${target} behind a spiderling receives the shot`);
+    assert.equal(game.bullets.length, 0);
+    assert.ok(brood.every(child => child.health === 1 && !child.dead));
+    assert.equal(game.totalKills, 0);
+  }
+  const {game, skills} = realGame(30);
+  const {brood} = realBrood(game, skills);
+  brood.forEach(child => { child.x = 900; }); brood[0].x = 580;
+  game.bullets.push({x:560, y:430, dir:1, life:1});
+  game.update(.05);
+  assert.equal(game.bullets.length, 1, 'a spiderling alone does not consume ammunition already in flight');
+  assert.equal(brood[0].health, 1);
+});
+
+test('spiderlings cannot be killed through direct damage hooks or award score, quota, or shield charge', () => {
+  const {game, skills} = realGame(30);
+  const {brood} = realBrood(game, skills);
+  game.totalKills = 9; game.score = 100; game.levelKills = 7;
+  for (const child of brood) {
+    assert.equal(skills.hit(game, child), false);
+    game.killEnemy(child);
+    assert.equal(child.dead, undefined);
+    assert.equal(child.health, 1);
+    assert.ok(game.enemies.includes(child));
+  }
+  assert.equal(game.totalKills, 9);
+  assert.equal(game.score, 100);
+  assert.equal(game.levelKills, 7);
+  assert.equal(game.shieldCount, 0);
+  assert.equal(game.pickups.length, 0);
+});
+
+test('real spiderling contact costs one HP and stuns controls for exactly 1.5 active seconds', () => {
+  const {game, skills} = realGame(30);
+  const {brood} = realBrood(game, skills);
+  const child = brood[0]; child.x = game.player.x;
+  game.player.invulnerable = 0;
+  const health = game.player.health;
+  game.updateEnemy(child, .01);
+  assert.equal(game.player.health, health - 1);
+  assert.equal(game.player.stunTime, 1.5);
+  assert.equal(child.health, 1);
+  const x = game.player.x, ammo = game.player.ammo;
+  child.x = 900;
+  game.keys.add('ArrowRight'); game.keys.add('KeyD'); game.jump();
+  assert.equal(game.player.jumpBuffer, 0);
+  assert.equal(game.shoot(1), false);
+  advanceGame(game, .7);
+  assert.equal(game.player.x, x);
+  assert.equal(game.player.ammo, ammo);
+  game.togglePause();
+  const remaining = game.player.stunTime;
+  advanceGame(game, 5);
+  assert.equal(game.player.stunTime, remaining);
+  game.togglePause();
+  game.keys.add('ArrowRight'); game.keys.add('KeyD');
+  advanceGame(game, .79);
+  assert.equal(game.player.x, x);
+  assert.equal(game.player.ammo, ammo);
+  advanceGame(game, .02);
+  assert.ok(game.player.x > x);
+  assert.equal(game.player.ammo, ammo - 1);
+  assert.ok(game.player.stunGrace > 0);
+});
+
+test('overlapping spiderlings cannot extend a stun or bypass its recovery window', () => {
+  const {game, skills} = realGame(30);
+  const {brood} = realBrood(game, skills);
+  const child = brood[0];
+  game.player.invulnerable = 0; child.x = game.player.x;
+  game.updateEnemy(child, .01);
+  const health = game.player.health;
+  game.player.invulnerable = 0;
+  child.x = game.player.x;
+  game.updateEnemy(child, .01);
+  assert.equal(game.player.health, health);
+  assert.equal(game.player.stunTime, 1.5);
+  child.x = 900;
+  advanceGame(game, 1.5);
+  assert.equal(game.player.stunTime, 0);
+  assert.ok(game.player.stunGrace > 0);
+  child.x = game.player.x; game.player.y = 438; game.player.invulnerable = 0;
+  game.updateEnemy(child, .01);
+  assert.equal(game.player.health, health);
+  assert.equal(game.player.stunTime, 0);
+  child.x = 900; advanceGame(game, .61);
+  child.x = game.player.x; game.player.y = 438; game.player.invulnerable = 0;
+  game.updateEnemy(child, .01);
+  assert.equal(game.player.health, health - 1, 'a later attack remains dangerous after recovery');
+  assert.equal(game.player.stunTime, 1.5);
+});
+
+test('only an activated shield blocks spiderling damage and stun, with the normal three-hit budget', () => {
+  const {game, skills} = realGame(30);
+  const {brood} = realBrood(game, skills);
+  const child = brood[0];
+  game.shieldCount = 2; game.player.invulnerable = 0; child.x = game.player.x;
+  const health = game.player.health;
+  game.updateEnemy(child, .01);
+  assert.equal(game.player.health, health - 1, 'stored shields do not automatically activate');
+  assert.equal(game.shieldCount, 2);
+  assert.equal(game.player.stunTime, 1.5);
+  game.player.stunTime = game.player.stunGrace = game.player.invulnerable = 0;
+  game.player.y = 438;
+  assert.equal(game.activateShield(), true);
+  for (let hit = 0; hit < 3; hit++) {
+    child.x = game.player.x; game.player.invulnerable = 0;
+    game.updateEnemy(child, .01);
+    assert.equal(game.player.shieldHits, 2 - hit);
+    assert.equal(game.player.health, health - 1);
+    assert.equal(game.player.stunTime, 0);
+    assert.equal(child.health, 1, 'shield contact does not kill the mini spider');
+    child.x = game.player.x;
+    game.updateEnemy(child, .01);
+    assert.equal(game.player.shieldHits, 2 - hit, 'same-frame overlap respects the contact invulnerability window');
+  }
+  assert.equal(game.player.shieldTime, 0);
+  assert.equal(game.shieldCount, 1);
+});
+
+test('pause freezes a landed egg before its third second and spiderling contacts cannot act while paused', () => {
+  const {game, skills} = realGame(30);
+  const {boss, brood} = realBrood(game, skills);
+  const egg = {owner:boss, x:700, targetX:700, y:438, w:28, h:32, health:2, maxHealth:2,
+    landed:true, hatchTime:.02, age:0, hit:0};
+  game.bossEggs.push(egg);
+  game.player.invulnerable = 0;
+  const health = game.player.health, child = brood[0]; child.x = game.player.x;
+  game.togglePause(); advanceGame(game, 3);
+  skills.spiderlingHit(game, child);
+  assert.equal(game.player.health, health);
+  assert.equal(game.player.stunTime, 0);
+  assert.equal(egg.hatchTime, .02);
+  assert.equal(game.enemies.filter(enemy => enemy.spiderling).length, 5);
+  child.x = 900;
+  game.togglePause(); advanceGame(game, .03);
+  assert.equal(game.bossEggs.length, 0);
+  assert.equal(game.enemies.filter(enemy => enemy.spiderling).length, 10);
+});
+
+test('spider boss defeat cleans its unkillable brood while preserving unrelated enemies; home and retry reset all', () => {
+  const {game, skills} = realGame(30);
+  const {boss, brood} = realBrood(game, skills);
+  const otherBoss = game.spawn('boss', -1);
+  Object.assign(otherBoss, {phase:'active', speed:0, abilityTimer:10000});
+  const otherChild = game.spawn('spider', -1);
+  Object.assign(otherChild, {spiderling:true, bulletUntargetable:true, ownerBoss:otherBoss, minion:true});
+  const unrelated = game.spawn('zombie', -1); unrelated.minion = true;
+  game.killEnemy(boss);
+  assert.ok(brood.every(child => !game.enemies.includes(child)));
+  assert.ok(game.enemies.includes(otherChild));
+  assert.ok(game.enemies.includes(unrelated));
+  const health = game.player.health;
+  game.player.invulnerable = 0;
+  skills.spiderlingHit(game, brood[0]);
+  assert.equal(game.player.health, health, 'orphaned spiderlings cannot continue attacking');
+  assert.equal(game.totalKills, 1, 'retiring a brood gives no additional kill rewards');
+  game.start(30, {retry:true});
+  assert.equal(game.enemies.length, 0); assert.equal(game.bossEggs.length, 0);
+  realBrood(game, skills);
+  game.goHome();
+  assert.equal(game.enemies.length, 0); assert.equal(game.bossEggs.length, 0);
+  assert.equal(game.player.stunTime, 0);
+});
 
 test('real bullet collision spends bullets against zombie armor without damaging or advancing its counter', () => {
   const {game} = realGame(20);

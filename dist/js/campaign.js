@@ -64,7 +64,7 @@
         'Địch kéo tới từng nhóm. Đừng dùng hết khoảng trống trong một bước.',
         'Nhện đi nhanh hơn bộ xương. Quan sát loại địch trước khi đổi hướng.',
         'Một tiếng động lớn vọng từ hang tơ. Chuẩn bị khiên cho trận tiếp theo.',
-        'Thây ma xanh tuần tra trên bệ đá rồi thả xuống, miễn đạn 2 giây sau mỗi 10 phát trúng. Tsunami mỗi 5 giây gọi 20 thây ma xanh con chạy nối đuôi cùng một hướng: bắn hạ, nhảy qua hoặc bật khiên. Phàm ăn báo trước rồi truy đuổi 1 giây, chạy trên đất hoặc nhảy từ trên cao, hồi 5 máu trong giới hạn máu tối đa và gây 2 sát thương khi đánh trúng; hồi chiêu 8 giây.'
+        'Thây ma xanh tuần tra trên bệ đá rồi thả xuống, miễn đạn 2 giây sau mỗi 10 phát trúng. Tsunami mỗi 10 giây gọi 20 thây ma xanh con chạy nối đuôi cùng một hướng: bắn hạ, nhảy qua hoặc bật khiên. Phàm ăn báo trước rồi truy đuổi 1 giây, chạy trên đất hoặc nhảy từ trên cao, hồi 5 máu trong giới hạn máu tối đa và gây 2 sát thương khi đánh trúng; hồi chiêu 8 giây.'
       ],
       targets: [16, 18, 19, 20, 18, 21, 22, 23, 24, 25],
       intervals: [2.08, 1.82, 1.78, 1.73, 1.91, 1.67, 1.62, 1.57, 1.53, 1.6],
@@ -88,7 +88,7 @@
         'Theo tiếng chuông, từng nhóm nhỏ tiến vào từ hai phía.',
         'Hãy giữ lối thoát giữa những nhóm địch. Khiên sẽ cứu bạn lúc bị kẹp.',
         'Tháp chuông đã ở trước mắt. Bạn gần đến nguồn gốc màn sương.',
-        'Nhện chúa đu trên tơ và phun lưới làm choáng 2 giây. Mỗi 5 giây nó đẻ một trứng; trứng nở thành 5 nhện con. Giữ khoảng trống và canh điểm rơi.'
+        'Nhện chúa phun tơ làm choáng 2 giây và đẻ trứng mỗi 5 giây. Bắn 2 phát phá trứng trong 3 giây sau khi chạm đất; nếu nở, 5 nhện con không thể bị bắn hạ. Chạm chúng mất 1 máu và choáng 1,5 giây; bật khiên để bảo vệ.'
       ],
       targets: [21, 23, 24, 25, 22, 26, 27, 28, 29, 30],
       intervals: [1.79, 1.52, 1.48, 1.44, 1.63, 1.4, 1.36, 1.33, 1.3, 1.38],
@@ -274,8 +274,9 @@
       if (config.id === 2) config.tutorial = 'Hạ mỗi 10 địch nhận một khiên. Nhấn Space trên PC hoặc vuốt xuống trên điện thoại để kích hoạt.';
       if (config.id === 3) config.tutorial = 'Thây ma có thể đi trên bệ đá rồi rơi xuống. Quan sát dấu báo dưới bệ để tránh điểm đáp.';
       if (config.id === 12) config.tutorial = 'Nhện đu trên tơ, nhấp nhô rồi thả xuống. Né điểm đáp; nhặt thùng đạn trước khi bắn tiếp.';
-      if (config.id === 20) config.tutorial = 'Tsunami gọi 20 thây ma xanh con mỗi 5 giây, chạy nối đuôi từ một phía: bắn, nhảy hoặc bật khiên. Phàm ăn báo trước rồi truy đuổi 1 giây, hồi 5 máu tối đa và gây 2 sát thương khi trúng; hồi chiêu 8 giây. Lớp miễn đạn 2 giây sau mỗi 10 phát trúng vẫn còn.';
+      if (config.id === 20) config.tutorial = 'Tsunami gọi 20 thây ma xanh con mỗi 10 giây, chạy nối đuôi từ một phía: bắn, nhảy hoặc bật khiên. Phàm ăn báo trước rồi truy đuổi 1 giây, hồi 5 máu tối đa và gây 2 sát thương khi trúng; hồi chiêu 8 giây. Lớp miễn đạn 2 giây sau mỗi 10 phát trúng vẫn còn.';
       if (config.id === 22) config.tutorial = 'Bóng ma bay theo đường lượn sóng rồi hạ xuống. Giữ khoảng trống, chờ chúng vào tầm bắn.';
+      if (config.id === 30) config.tutorial = 'Bắn 2 phát phá trứng trước khi nở sau 3 giây chạm đất. Mỗi trứng nở 5 nhện con không thể bắn hạ: chạm mất 1 máu và choáng 1,5 giây. Khiên đang bật chặn cả hai; tơ của nhện chúa vẫn gây choáng 2 giây.';
       if (config.id === 32) config.tutorial = 'Thây ma xanh có nhiều máu hơn thây ma thường. Nhặt thùng đạn và giữ khoảng cách với bệ đá.';
       if (config.id === 42) config.tutorial = 'Ma cà rồng có thể hóa dơi, bay lên rồi đáp lại. Canh lúc chúng hạ thấp để tiết kiệm đạn.';
       if (config.id === 51) config.tutorial = 'Golem nâng gậy trước khi quật và lấy đà ném đá khi ở xa. Né đường báo vàng hoặc bật khiên; đá không đổi hướng sau khi ném.';

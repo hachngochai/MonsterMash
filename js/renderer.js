@@ -1207,6 +1207,15 @@
     }
     const aerial = e.abilityState && e.abilityState !== 'ground' || e.y < GROUND - 8;
     shadow(c, e.x, aerial ? GROUND : e.y, w, !!aerial);
+    if (e.spiderling) {
+      // The tiny, unshootable brood remains readable with decorative effects disabled.
+      c.save(); c.lineWidth = 1.3; c.strokeStyle = '#f1a683'; c.fillStyle = '#c9614b38';
+      c.beginPath(); c.ellipse(e.x, e.y - h * .38, w * .61, h * .60, 0, 0, TAU); c.fill(); c.stroke();
+      const badgeY = e.y - h - 6;
+      polygon(c, [[e.x, badgeY - 6], [e.x + 5, badgeY + 3], [e.x - 5, badgeY + 3]], '#e8ab7c', '#35252a', 1);
+      line(c, e.x, badgeY - 3, e.x, badgeY, '#35252a', 1.2); ellipse(c, e.x, badgeY + 1.6, .65, .65, '#35252a');
+      c.restore();
+    }
     if (type === 'zombie' || type === 'greenZombie') drawZombieSkillTell(c, e, t, effects, viewTop);
     if (e.tsunamiChild && effects) {
       c.save(); c.globalAlpha = .45;
@@ -1248,7 +1257,7 @@
     }
     if (e.hit > 0) { c.globalAlpha = Math.min(.8, e.hit * 5); line(c, -25, -40, -32, -45, '#fff0c0', 2); line(c, 25, -37, 32, -43, '#fff0c0', 2); }
     c.restore();
-    if (!boss && e.health < e.maxHealth && e.health > 0) {
+    if (!boss && !e.spiderling && e.health < e.maxHealth && e.health > 0) {
       rounded(c, e.x - 17, e.y - h - 12, 34, 4, 2, '#101a27a6');
       rounded(c, e.x - 17, e.y - h - 12, 34 * Math.max(.02, e.health / e.maxHealth), 4, 2, '#e2b986');
     }
@@ -1400,8 +1409,13 @@
       }
       c.restore();
       const remaining = Math.max(0, Number(egg.hatchTime) || 0);
+      const progress = Math.max(0, Math.min(1, remaining / 3));
       c.save(); c.font = `700 11px ${font}`; c.textAlign = 'center'; c.lineWidth = 3; c.strokeStyle = '#172b2e'; c.fillStyle = remaining < 2 ? '#f4c58e' : '#d8edbb';
       const label = remaining.toFixed(1) + 's'; c.strokeText(label, egg.x, y - height - 9); c.fillText(label, egg.x, y - height - 9);
+      if (egg.landed) {
+        rounded(c, egg.x - 15, y - height - 6, 30, 3, 1, '#19352e');
+        if (progress > 0) rounded(c, egg.x - 15, y - height - 6, 30 * progress, 3, 1, remaining < 1 ? '#efac83' : '#c8e89f');
+      }
       const ticks = Math.max(1, Math.min(5, egg.maxHealth || 2));
       for (let i = 0; i < ticks; i++) rounded(c, egg.x - ticks * 4 + i * 8, y + 5, 6, 3, 1, i < egg.health ? '#c8e89f' : '#38564a');
       c.restore();

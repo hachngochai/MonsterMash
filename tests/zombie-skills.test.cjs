@@ -30,12 +30,12 @@ function advance(game, seconds, skills = null, step = 1 / 60) {
 
 const children = game => game.enemies.filter(enemy => enemy.tsunamiChild);
 
-test('Tsunami announces its locked direction and summons exactly twenty one-HP children every five real seconds', () => {
+test('Tsunami announces its locked direction and summons exactly twenty one-HP children every ten real seconds', () => {
   for (const [random, direction] of [[.1, 1], [.9, -1]]) {
     const {game, boss, skills} = fixture(random);
     boss.nextGluttonAt = Infinity; game.player.y = 340;
     const quota = game.regularSpawned;
-    advance(game, 4.2, skills);
+    advance(game, 9.2, skills);
     assert.equal(children(game).length, 0);
     assert.equal(boss.tsunamiWarning.direction, direction);
     game.random = () => direction === 1 ? .9 : .1;
@@ -53,6 +53,8 @@ test('Tsunami announces its locked direction and summons exactly twenty one-HP c
     advance(game, 3.5, skills);
     assert.equal(children(game).length, 0, 'all twenty leave the arena before the next wave');
     advance(game, .5, skills);
+    assert.equal(children(game).length, 0, 'a five-second respite follows the old five-second cycle');
+    advance(game, 5, skills);
     assert.equal(children(game).length, 20);
     assert.equal(boss.tsunamiSerial, 2);
     assert.equal(game.regularSpawned, quota); assert.equal(game.levelKills, 0); assert.equal(game.totalKills, 0);
@@ -69,7 +71,7 @@ test('pressure never shortens Tsunami cadence, and portal phases and pause freez
   advance(game, 20, skills);
   assert.equal(boss.zombieClock, 0);
   game.screen = 'playing'; boss.nextGluttonAt = Infinity; game.player.y = 340;
-  advance(game, 4.99, skills);
+  advance(game, 9.99, skills);
   assert.equal(children(game).length, 0);
   advance(game, .01, skills);
   assert.equal(children(game).length, 20);
@@ -82,7 +84,7 @@ test('surviving above the fast ground wave has no delayed penalty or incidental 
   for (const step of [1 / 60, .05]) {
     const {game, boss, skills} = fixture();
     boss.nextGluttonAt = Infinity; game.player.y = 340;
-    advance(game, 9.6, skills, step);
+    advance(game, 14.6, skills, step);
     assert.equal(children(game).length, 0);
     assert.equal(game.player.health, 30); assert.equal(game.score, 0); assert.equal(game.levelKills, 0); assert.equal(game.totalKills, 0);
     assert.equal(game.pickups.length, 0);

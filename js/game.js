@@ -395,7 +395,9 @@
           else if(e.boss&&archetype==='ghost')this.configureAbility(e,'airborne');
         }
       }
-      if(overlaps({...p,w:p.w*.75,h:p.h*.86},{...e,w:e.w*.72,h:e.h*.88}))this.hurt(e);
+      if(overlaps({...p,w:p.w*.75,h:p.h*.86},{...e,w:e.w*.72,h:e.h*.88})){
+        if(e.spiderling)MM.BossCombat?.spiderlingHit(this,e);else this.hurt(e);
+      }
     }
     ambush(enemy, side, drop = false) {
       const distance = this.activeDifficulty === 'story' ? 230 : 190;
@@ -405,7 +407,7 @@
       return enemy;
     }
     killEnemy(enemy) {
-      if (this.screen !== 'playing' || enemy.dead) return; enemy.dead = true; enemy.health = 0;
+      if (this.screen !== 'playing' || enemy.dead || enemy.spiderling) return; enemy.dead = true; enemy.health = 0;
       this.totalKills++; this.score += enemy.score || 100;
       if(enemy.archetype==='golem')MM.GolemCombat?.cleanup(this,enemy);
       if(enemy.archetype==='werewolf')MM.WolfCombat?.cleanup(this,enemy);
@@ -557,7 +559,7 @@
         if(this.screen!=='playing')break;
         const prev=bullet.x,prevY=bullet.y;bullet.previousX=prev;bullet.previousY=prevY;
         bullet.x+=(bullet.vx??bullet.dir*(bullet.speed||780))*dt;bullet.y+=(bullet.vy||0)*dt;bullet.life-=dt;
-        const candidates=this.enemies.filter(e=>!e.dead&&!e.intangible&&e.phase==='active').map(e=>({e,t:bulletEntry(prev,prevY,bullet.x,bullet.y,e)})).filter(v=>v.t!==null).sort((a,b)=>a.t-b.t).map(v=>v.e);
+        const candidates=this.enemies.filter(e=>!e.dead&&!e.intangible&&!e.bulletUntargetable&&e.phase==='active').map(e=>({e,t:bulletEntry(prev,prevY,bullet.x,bullet.y,e)})).filter(v=>v.t!==null).sort((a,b)=>a.t-b.t).map(v=>v.e);
         if(!bullet.vy&&MM.BossCombat?.hitEgg(this,bullet,prev,candidates.length?Math.abs(candidates[0].x-prev):Infinity)){spent.add(bullet);continue;}
         const e=candidates[0];
         if(e) {

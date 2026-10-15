@@ -1,15 +1,15 @@
 <!doctype html><html lang="vi"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Kiểm tra hiệu ứng boss · 2.4.0</title><link rel="stylesheet" href="../assets/fonts/fonts.css?v=2.4.0">
+<title>Kiểm tra hiệu ứng boss · 2.4.1</title><link rel="stylesheet" href="../assets/fonts/fonts.css?v=2.4.1">
 <style>body{margin:20px;background:#101714;color:#e9eade;font:14px/1.5 'Noto Sans',sans-serif}main{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}h1{font-size:20px}h2{font-size:14px;margin:0 0 6px}canvas{display:block;width:100%;border:1px solid #ffffff25;border-radius:8px}@media(max-width:700px){main{grid-template-columns:1fr}}</style>
-<h1>Kiểm tra hiệu ứng và dấu tiếng Việt · 2.4.0</h1><main id="previews"></main>
-<script src="../js/typography.js?v=2.4.0"></script><script src="../js/campaign.js?v=2.4.0"></script><script src="../js/bosses.js?v=2.4.0"></script><script src="../js/golem.js?v=2.4.0"></script><script src="../js/wolves.js?v=2.4.0"></script><script src="../js/kong.js?v=2.4.0"></script><script src="../js/renderer.js?v=2.4.0"></script><script src="../js/game.js?v=2.4.0"></script>
+<h1>Kiểm tra hiệu ứng và dấu tiếng Việt · 2.4.1</h1><main id="previews"></main>
+<script src="../js/typography.js?v=2.4.1"></script><script src="../js/campaign.js?v=2.4.1"></script><script src="../js/bosses.js?v=2.4.1"></script><script src="../js/golem.js?v=2.4.1"></script><script src="../js/wolves.js?v=2.4.1"></script><script src="../js/kong.js?v=2.4.1"></script><script src="../js/renderer.js?v=2.4.1"></script><script src="../js/game.js?v=2.4.1"></script>
 <script>
 (async()=>{
 await MM.Typography.ready;
 const samples=[
  [10,'10 · Cột xương báo trước',(g,b)=>{g.bossHazards=[-132,0,132].map(offset=>({owner:b,kind:'bones',x:440+offset,y:438,w:38,h:58,phase:'warning',timer:.8,warning:1.2,totalActive:.65,life:1.45,pulse:.4}));b.skillWarning={name:'CỘT XƯƠNG',remaining:.8,total:1.2};}],
  [20,'20 · Thây ma xanh cường hóa',(g,b)=>{b.hardenedTime=1.7;b.armorHits=0;}],
- [30,'30 · Tơ gây choáng và trứng nhện',(g,b)=>{g.configureAbility(b,'hanging');b.x=670;g.player.stunTime=1.6;g.bossEggs=[{owner:b,x:370,y:438,w:28,h:32,health:1,maxHealth:2,hatchTime:3.4,landed:true}];g.enemyShots=[{kind:'web',x:510,y:350,w:30,h:24,life:3}];}],
+ [30,'30 · Tơ gây choáng và trứng nhện đếm ngược 3 giây',(g,b)=>{g.configureAbility(b,'hanging');b.x=670;g.player.stunTime=1.6;g.bossEggs=[{owner:b,x:370,y:438,w:28,h:32,health:1,maxHealth:2,hatchTime:2.4,landed:true}];g.enemyShots=[{kind:'web',x:510,y:350,w:30,h:24,life:3}];}],
  [32,'32 · So sánh zombie thường, zombie xanh, bộ xương và nhện',(g,b)=>{b.x=260;b.y=438;b.abilityState='ground';b.platform=null;g.player.x=520;for(const[type,x]of[['skeleton',125],['greenZombie',380],['spider',740]]){const e=g.spawn(type);e.phase='active';e.x=x;e.y=438;e.abilityState='ground';e.platform=null;}},'zombie'],
  [40,'40 · Ma trắng tàng hình',(g,b)=>{b.intangible=true;b.phantomState='invisible';b.skillWarning={name:'ẨN MÌNH',remaining:1.1,total:1.5};}],
  [40,'40 · Tập kích từ trên',(g,b)=>{b.phantomState='windup';b.attackSide='top';b.landX=440;b.x=440;b.y=235;b.skillWarning={name:'TẬP KÍCH TỪ TRÊN',remaining:.9,total:1.2};}],
@@ -53,6 +53,12 @@ samples.push(
  [20,'20 · Tsunami — 20 thây ma xanh con nối đuôi từ phải sang trái',(g,b)=>{b.x=805;b.y=280;b.abilityState='ledge';b.platform={x:805,y:280,w:115};for(let index=0;index<20;index++){const child=g.spawn('greenZombie');Object.assign(child,{phase:'active',x:70+index*43,y:438,w:24,h:38,health:1,maxHealth:1,tsunamiChild:true,tsunamiIndex:index,tsunamiDirection:-1,dir:-1,ownerBoss:b,minion:true,age:7+index*.07,abilityState:'ground',platform:null});}}],
  [20,'20 · Phàm ăn — tăng 5 máu và truy đuổi trên mặt đất',(g,b)=>{b.x=575;b.y=438;b.dir=-1;b.abilityState='ground';b.platform=null;b.gluttonState='chase';b.gluttonTimer=.65;b.gluttonTotal=1;b.gluttonTarget={x:440,y:438};b.gluttonStart={x:680,y:438};b.gluttonJump=false;b.gluttonHealFlash=.35;b.skillWarning={name:'PHÀM ĂN · +5 MÁU / 2 SÁT THƯƠNG',remaining:.65,total:1};}],
  [20,'20 · Phàm ăn — nhảy vồ từ trên cao, sát thương 2 máu',(g,b)=>{b.x=555;b.y=306;b.dir=-1;b.abilityState='ground';b.platform=null;b.gluttonState='chase';b.gluttonTimer=.45;b.gluttonTotal=1;b.gluttonTarget={x:440,y:438};b.gluttonStart={x:680,y:264};b.gluttonJump=true;b.gluttonHealFlash=.15;g.settings.effects=false;b.skillWarning={name:'PHÀM ĂN · +5 MÁU / 2 SÁT THƯƠNG',remaining:.45,total:1};}]
+);
+const makeSpiderlings=(g,b,positions)=>{g.configureAbility(b,'hanging');b.x=690;b.y=255;for(const x of positions){const child=g.spawn('spider');Object.assign(child,{phase:'active',x,y:438,w:23,h:18,baseW:23,baseH:18,health:1,maxHealth:1,damage:1,minion:true,spiderling:true,bulletUntargetable:true,ownerBoss:b,abilityState:'ground',platform:null,dir:x<440?1:-1,age:3});}};
+samples.push(
+ [30,'30 · Trứng nở 5 nhện con — quá nhỏ để bắn hạ',(g,b)=>{makeSpiderlings(g,b,[180,300,520,640,800]);g.bullets=[{x:322,y:431,dir:1,vx:780,life:.6}];g.settings.effects=false;}],
+ [30,'30 · Nhện con chạm — mất 1 máu và choáng 1,5 giây',(g,b)=>{makeSpiderlings(g,b,[350,390,440,500,540]);g.player.health=g.player.maxHealth-1;g.player.stunTime=1.5;}],
+ [30,'30 · Khiên chặn nhện con — không mất máu, không choáng',(g,b)=>{makeSpiderlings(g,b,[350,390,440,500,540]);g.player.shieldTime=4.5;g.player.shieldHits=2;g.player.stunTime=0;g.settings.effects=false;}]
 );
 for(const[id,title,configure,type='boss']of samples){
  const g=new MM.Game({headless:true,random:()=>.5,storage:{getItem:()=>null,setItem:()=>{}}});g.start(id);g.levelKills=type==='boss'?g.level.target:0;g.bossSpawned=type==='boss';g.time=7;

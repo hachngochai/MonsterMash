@@ -24,7 +24,7 @@
       enemy.armorHits = 0;
       enemy.hardenedTime = 0;
       enemy.zombieClock = 0;
-      enemy.nextTsunamiAt = 5;
+      enemy.nextTsunamiAt = 10;
       enemy.nextGluttonAt = 8;
       enemy.tsunamiSerial = 0;
       enemy.tsunamiWaves = [];
@@ -45,6 +45,12 @@
     enemy.drainFlash = 0;
     enemy.intangible = false;
     enemy.phantomState = null;
+    if (enemy.skillLevel === 30) {
+      for (const child of game.enemies) if (child.spiderling && child.ownerBoss === enemy) {
+        child.dead = true; child.health = 0;
+      }
+      game.enemies = game.enemies.filter(child => !child.spiderling || child.ownerBoss !== enemy);
+    }
     if (enemy.skillLevel === 20) {
       for (const child of game.enemies) if (child.tsunamiChild && child.ownerBoss === enemy) {
         child.dead = true; child.health = 0;
@@ -57,7 +63,7 @@
   }
 
   function hit(game, enemy) {
-    if (enemy.intangible) return false;
+    if (enemy.intangible || enemy.spiderling) return false;
     if (!enemy.bulletArmor) return true;
     if (enemy.hardenedTime > EPSILON) {
       burst(game, enemy.x, enemy.y - enemy.h * .55, '#b3f5ad', 3);
@@ -144,14 +150,14 @@
 
   function layEgg(game, enemy) {
     const eggs = game.bossEggs.filter(egg => egg.health > 0);
-    const spiderlings = game.enemies.filter(item => item.minion && alive(item)).length;
+    const spiderlings = game.enemies.filter(item => item.spiderling && alive(item)).length;
     // Reserve a complete brood for each egg, so every unbroken egg hatches five.
     if (eggs.length >= 2 || spiderlings + eggs.length * 5 + 5 > 15) return false;
     const targetX = clamp(game.player.x + (game.player.x < W / 2 ? 120 : -120), 55, W - 55);
     const y = Math.min(GROUND - 10, enemy.y - enemy.h * .45);
     const flightTime = Math.max(.15, (GROUND - y) / 180);
     game.bossEggs.push({owner:enemy, x:enemy.x, y, w:28, h:32, vx:(targetX - enemy.x) / flightTime,
-      vy:180, targetX, landed:false, health:2, maxHealth:2, hatchTime:5, age:0, hit:0});
+      vy:180, targetX, landed:false, health:2, maxHealth:2, hatchTime:3, age:0, hit:0});
     burst(game, enemy.x, y, '#d9dda8', 6);
     return true;
   }
@@ -160,12 +166,25 @@
     for (const offset of [-44, -22, 0, 22, 44]) {
       const minion = game.spawn('spider', offset < 0 ? -1 : 1);
       Object.assign(minion, {x:clamp(egg.x + offset, 26, W - 26), y:GROUND, w:23, h:18, baseW:23, baseH:18,
-        health:1, maxHealth:1, score:50, minion:true, phase:'active', warning:0, abilityState:'ground',
+        health:1, maxHealth:1, score:0, minion:true, spiderling:true, bulletUntargetable:true, ownerBoss:egg.owner,
+        damage:1, stun:1.5, phase:'active', warning:0, abilityState:'ground',
         abilityTimer:Infinity, ambush:false, dropping:false, tell:false, charging:false, isBat:false});
       minion.speed *= .8;
     }
     burst(game, egg.x, GROUND - 10, '#d9dda8', 16);
     egg.health = 0;
+  }
+
+  function spiderlingHit(game, enemy) {
+    const p = game.player;
+    if (!enemy.spiderling || enemy.phase !== 'active' || !alive(enemy) || !alive(enemy.ownerBoss) || game.screen !== 'playing') return false;
+    // Preserve one full stun and a short recovery, instead of extending it every
+    // frame when several invulnerable spiderlings overlap the player.
+    if (p.invulnerable > 0 || p.stunTime > 0 || p.stunGrace > 0) return false;
+    const shielded = p.shieldTime > 0 && p.shieldHits > 0, health = p.health;
+    game.hurt({x:enemy.x, owner:enemy, kind:'spiderling', damage:1, stun:1.5});
+    if (!shielded && p.health < health) game.floating?.(p.x, p.y - p.h - 12, 'NHỆN CON · CHOÁNG 1,5 GIÂY', '#ead6a3');
+    return true;
   }
 
   function updateEggs(game, dt) {
@@ -325,7 +344,7 @@
     enemy.gluttonHealFlash = Math.max(0, (enemy.gluttonHealFlash || 0) - dt);
     const untilWave = enemy.nextTsunamiAt - enemy.zombieClock;
     if (untilWave <= EPSILON) {
-      beginTsunami(game, enemy); enemy.nextTsunamiAt += 5;
+      beginTsunami(game, enemy); enemy.nextTsunamiAt += 10;
     } else if (untilWave <= warnTime(game, enemy, .9)) {
       if (!enemy.tsunamiWarning) enemy.tsunamiDirection = game.random() < .5 ? 1 : -1;
       enemy.tsunamiWarning = {name:'TSUNAMI · 20 THÂY MA CON', remaining:untilWave, total:warnTime(game, enemy, .9), direction:enemy.tsunamiDirection};
@@ -484,5 +503,5 @@
     game.bossEggs = game.bossEggs.filter(egg => alive(egg.owner) && egg.health > 0);
   }
 
-  MM.BossCombat = {setup, update, hit, hitEgg, webHit, cleanup};
+  MM.BossCombat = {setup, update, hit, hitEgg, webHit, spiderlingHit, cleanup};
 })(typeof window !== 'undefined' ? window : globalThis);
