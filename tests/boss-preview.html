@@ -1,14 +1,14 @@
 <!doctype html><html lang="vi"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Kiểm tra hiệu ứng boss · 2.4.1</title><link rel="stylesheet" href="../assets/fonts/fonts.css?v=2.4.1">
+<title>Kiểm tra hiệu ứng boss · 2.4.2</title><link rel="stylesheet" href="../assets/fonts/fonts.css?v=2.4.2">
 <style>body{margin:20px;background:#101714;color:#e9eade;font:14px/1.5 'Noto Sans',sans-serif}main{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}h1{font-size:20px}h2{font-size:14px;margin:0 0 6px}canvas{display:block;width:100%;border:1px solid #ffffff25;border-radius:8px}@media(max-width:700px){main{grid-template-columns:1fr}}</style>
-<h1>Kiểm tra hiệu ứng và dấu tiếng Việt · 2.4.1</h1><main id="previews"></main>
-<script src="../js/typography.js?v=2.4.1"></script><script src="../js/campaign.js?v=2.4.1"></script><script src="../js/bosses.js?v=2.4.1"></script><script src="../js/golem.js?v=2.4.1"></script><script src="../js/wolves.js?v=2.4.1"></script><script src="../js/kong.js?v=2.4.1"></script><script src="../js/renderer.js?v=2.4.1"></script><script src="../js/game.js?v=2.4.1"></script>
+<h1>Kiểm tra hiệu ứng và dấu tiếng Việt · 2.4.2</h1><main id="previews"></main>
+<script src="../js/typography.js?v=2.4.2"></script><script src="../js/campaign.js?v=2.4.2"></script><script src="../js/bosses.js?v=2.4.2"></script><script src="../js/golem.js?v=2.4.2"></script><script src="../js/wolves.js?v=2.4.2"></script><script src="../js/kong.js?v=2.4.2"></script><script src="../js/renderer.js?v=2.4.2"></script><script src="../js/game.js?v=2.4.2"></script>
 <script>
 (async()=>{
 await MM.Typography.ready;
 const samples=[
  [10,'10 · Cột xương báo trước',(g,b)=>{g.bossHazards=[-132,0,132].map(offset=>({owner:b,kind:'bones',x:440+offset,y:438,w:38,h:58,phase:'warning',timer:.8,warning:1.2,totalActive:.65,life:1.45,pulse:.4}));b.skillWarning={name:'CỘT XƯƠNG',remaining:.8,total:1.2};}],
- [20,'20 · Thây ma xanh cường hóa',(g,b)=>{b.hardenedTime=1.7;b.armorHits=0;}],
+ [20,'20 · Khiên mỗi 15 giây — miễn đạn 2 giây và hồi 2 máu',(g,b)=>{b.zombieClock=15.3;b.nextWardAt=30;b.hardenedTime=1.7;b.wardHealFlash=.35;b.health=b.maxHealth-3;}],
  [30,'30 · Tơ gây choáng và trứng nhện đếm ngược 3 giây',(g,b)=>{g.configureAbility(b,'hanging');b.x=670;g.player.stunTime=1.6;g.bossEggs=[{owner:b,x:370,y:438,w:28,h:32,health:1,maxHealth:2,hatchTime:2.4,landed:true}];g.enemyShots=[{kind:'web',x:510,y:350,w:30,h:24,life:3}];}],
  [32,'32 · So sánh zombie thường, zombie xanh, bộ xương và nhện',(g,b)=>{b.x=260;b.y=438;b.abilityState='ground';b.platform=null;g.player.x=520;for(const[type,x]of[['skeleton',125],['greenZombie',380],['spider',740]]){const e=g.spawn(type);e.phase='active';e.x=x;e.y=438;e.abilityState='ground';e.platform=null;}},'zombie'],
  [40,'40 · Ma trắng tàng hình',(g,b)=>{b.intangible=true;b.phantomState='invisible';b.skillWarning={name:'ẨN MÌNH',remaining:1.1,total:1.5};}],
@@ -49,6 +49,7 @@ samples.push(
  [80,'80 · KingKong cuồng nộ 5 giây — khiên bảo vệ liên tục',(g,b)=>{b.x=655;b.dir=-1;b.kongState='final-rage';b.kongRageTime=3.4;b.kongFinalTriggered=true;b.kongProgress=.6;b.health=1;g.player.shieldTime=3.5;g.player.shieldHits=1;g.kongZones=[{owner:b,kind:'rage',x:480,y:438,w:960,h:110,phase:'impact',timer:.12,total:.2}];g.groundCracks=[{owner:b,x:530,y:438,w:640,life:1.8,maxLife:2}];g.settings.effects=false;b.skillWarning={name:'CUỒNG NỘ · BẬT KHIÊN',remaining:3.4,total:5};}]
 );
 samples.push(
+ [20,'20 · Khiên sắp hồi — đếm ngược 2,6 giây, hiệu ứng tắt',(g,b)=>{b.zombieClock=12.4;b.nextWardAt=15;b.health=b.maxHealth-5;g.settings.effects=false;}],
  [20,'20 · Tsunami báo hướng chạy — hiệu ứng tắt',(g,b)=>{b.x=680;b.abilityState='ground';b.platform=null;b.tsunamiWarning={name:'TSUNAMI · 20 THÂY MA CON',remaining:.7,total:.9,direction:1};g.settings.effects=false;}],
  [20,'20 · Tsunami — 20 thây ma xanh con nối đuôi từ phải sang trái',(g,b)=>{b.x=805;b.y=280;b.abilityState='ledge';b.platform={x:805,y:280,w:115};for(let index=0;index<20;index++){const child=g.spawn('greenZombie');Object.assign(child,{phase:'active',x:70+index*43,y:438,w:24,h:38,health:1,maxHealth:1,tsunamiChild:true,tsunamiIndex:index,tsunamiDirection:-1,dir:-1,ownerBoss:b,minion:true,age:7+index*.07,abilityState:'ground',platform:null});}}],
  [20,'20 · Phàm ăn — tăng 5 máu và truy đuổi trên mặt đất',(g,b)=>{b.x=575;b.y=438;b.dir=-1;b.abilityState='ground';b.platform=null;b.gluttonState='chase';b.gluttonTimer=.65;b.gluttonTotal=1;b.gluttonTarget={x:440,y:438};b.gluttonStart={x:680,y:438};b.gluttonJump=false;b.gluttonHealFlash=.35;b.skillWarning={name:'PHÀM ĂN · +5 MÁU / 2 SÁT THƯƠNG',remaining:.65,total:1};}],

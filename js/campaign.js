@@ -64,7 +64,7 @@
         'Địch kéo tới từng nhóm. Đừng dùng hết khoảng trống trong một bước.',
         'Nhện đi nhanh hơn bộ xương. Quan sát loại địch trước khi đổi hướng.',
         'Một tiếng động lớn vọng từ hang tơ. Chuẩn bị khiên cho trận tiếp theo.',
-        'Thây ma xanh tuần tra trên bệ đá rồi thả xuống, miễn đạn 2 giây sau mỗi 10 phát trúng. Tsunami mỗi 10 giây gọi 20 thây ma xanh con chạy nối đuôi cùng một hướng: bắn hạ, nhảy qua hoặc bật khiên. Phàm ăn báo trước rồi truy đuổi 1 giây, chạy trên đất hoặc nhảy từ trên cao, hồi 5 máu trong giới hạn máu tối đa và gây 2 sát thương khi đánh trúng; hồi chiêu 8 giây.'
+        'Thây ma xanh tuần tra trên bệ đá rồi thả xuống. Mỗi 15 giây giao chiến, boss bật khiên miễn đạn 2 giây và hồi 2 máu, không vượt máu tối đa. Tsunami mỗi 10 giây gọi 20 thây ma xanh con chạy nối đuôi cùng một hướng: bắn hạ, nhảy qua hoặc bật khiên. Phàm ăn báo trước rồi truy đuổi 1 giây, chạy trên đất hoặc nhảy từ trên cao, hồi 5 máu trong giới hạn máu tối đa và gây 2 sát thương khi đánh trúng; hồi chiêu 8 giây.'
       ],
       targets: [16, 18, 19, 20, 18, 21, 22, 23, 24, 25],
       intervals: [2.08, 1.82, 1.78, 1.73, 1.91, 1.67, 1.62, 1.57, 1.53, 1.6],
@@ -228,7 +228,7 @@
   // Boss identities follow their milestones independently of the world scenery.
   const bossArchetypes = ['skeleton', 'zombie', 'spider', 'ghost', 'vampire', 'golem', 'werewolf', 'kong'];
   const bossAbilities = [['bone-volley'], ['ledge-drop'], ['silk-drop'], ['sine-drop'], ['bat-morph', 'shadow-drop'], ['club-swing','rock-throw'], ['pounce'], ['banana-throw']];
-  const bossSkills = [['bone-pillars'], ['hit-immunity', 'tsunami', 'glutton'], ['web-stun', 'egg-hatch'], ['vanish-strike'], ['bat-drain', 'blood-clone'], ['rage-ground-slam', 'triple-smash'], ['blood-moon', 'double-claw', 'pack-howl'], ['banana-burst', 'vine-transform', 'half-arena-scream', 'final-rage']];
+  const bossSkills = [['bone-pillars'], ['timed-ward', 'tsunami', 'glutton'], ['web-stun', 'egg-hatch'], ['vanish-strike'], ['bat-drain', 'blood-clone'], ['rage-ground-slam', 'triple-smash'], ['blood-moon', 'double-claw', 'pack-howl'], ['banana-burst', 'vine-transform', 'half-arena-scream', 'final-rage']];
   const levels = [];
   chapters.forEach(function (chapter, world) {
     chapter.names.forEach(function (name, stage) {
@@ -274,7 +274,7 @@
       if (config.id === 2) config.tutorial = 'Hạ mỗi 10 địch nhận một khiên. Nhấn Space trên PC hoặc vuốt xuống trên điện thoại để kích hoạt.';
       if (config.id === 3) config.tutorial = 'Thây ma có thể đi trên bệ đá rồi rơi xuống. Quan sát dấu báo dưới bệ để tránh điểm đáp.';
       if (config.id === 12) config.tutorial = 'Nhện đu trên tơ, nhấp nhô rồi thả xuống. Né điểm đáp; nhặt thùng đạn trước khi bắn tiếp.';
-      if (config.id === 20) config.tutorial = 'Tsunami gọi 20 thây ma xanh con mỗi 10 giây, chạy nối đuôi từ một phía: bắn, nhảy hoặc bật khiên. Phàm ăn báo trước rồi truy đuổi 1 giây, hồi 5 máu tối đa và gây 2 sát thương khi trúng; hồi chiêu 8 giây. Lớp miễn đạn 2 giây sau mỗi 10 phát trúng vẫn còn.';
+      if (config.id === 20) config.tutorial = 'Tsunami gọi 20 thây ma xanh con mỗi 10 giây, chạy nối đuôi từ một phía: bắn, nhảy hoặc bật khiên. Phàm ăn báo trước rồi truy đuổi 1 giây, hồi 5 máu tối đa và gây 2 sát thương khi trúng; hồi chiêu 8 giây. Mỗi 15 giây giao chiến, boss bật khiên miễn đạn 2 giây và hồi 2 máu, không vượt máu tối đa.';
       if (config.id === 22) config.tutorial = 'Bóng ma bay theo đường lượn sóng rồi hạ xuống. Giữ khoảng trống, chờ chúng vào tầm bắn.';
       if (config.id === 30) config.tutorial = 'Bắn 2 phát phá trứng trước khi nở sau 3 giây chạm đất. Mỗi trứng nở 5 nhện con không thể bắn hạ: chạm mất 1 máu và choáng 1,5 giây. Khiên đang bật chặn cả hai; tơ của nhện chúa vẫn gây choáng 2 giây.';
       if (config.id === 32) config.tutorial = 'Thây ma xanh có nhiều máu hơn thây ma thường. Nhặt thùng đạn và giữ khoảng cách với bệ đá.';

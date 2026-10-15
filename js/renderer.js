@@ -1180,9 +1180,10 @@
       }
       c.restore();
     }
-    if (e.gluttonHealFlash > 0) {
+    const healFlash = Math.max(e.gluttonHealFlash || 0, e.wardHealFlash || 0);
+    if (healFlash > 0) {
       c.save();
-      const centreY = e.y - e.h * .5, progress = Math.max(0, Math.min(1, 1 - e.gluttonHealFlash / .5));
+      const centreY = e.y - e.h * .5, progress = Math.max(0, Math.min(1, 1 - healFlash / .5));
       if (effects) halo(c, e.x, centreY, e.w * (.8 + progress * .45), '#b5ea79', .35 * (1 - progress));
       c.strokeStyle = '#c3ee95'; c.lineWidth = 1.8; c.globalAlpha = Math.max(.2, 1 - progress);
       c.beginPath(); c.ellipse(e.x, centreY, e.w * .62 + progress * 15, e.h * .59 + progress * 8, 0, 0, TAU); c.stroke();
@@ -1476,8 +1477,13 @@
       }
       if (boss.bulletArmor) {
         c.font = `600 11px ${font}`; c.fillStyle = boss.hardenedTime > 0 ? '#c4f6aa' : '#a8caa1';
-        const text = boss.hardenedTime > 0 ? `CƯỜNG HÓA · MIỄN ĐẠN ${boss.hardenedTime.toFixed(1)}s` : `GIÁP ${Math.max(0, boss.armorHits || 0)}/10`;
+        const nextWardIn = Math.max(0, (Number.isFinite(boss.nextWardAt) ? boss.nextWardAt : 15) - (boss.zombieClock || 0));
+        const text = boss.hardenedTime > 0 ? `KHIÊN MIỄN ĐẠN · ${boss.hardenedTime.toFixed(1)}s` : `KHIÊN SAU ${nextWardIn.toFixed(1)}s · HỒI 2 MÁU`;
         c.lineWidth = 3; c.strokeStyle = '#13222aed'; c.strokeText(text, centre, armorY); c.fillText(text, centre, armorY);
+        if (boss.wardHealFlash > 0) {
+          c.font = `700 10px ${font}`; c.fillStyle = '#d6f5af';
+          c.strokeText('KHIÊN HỒI PHỤC · +2 MÁU', centre, armorY + 16); c.fillText('KHIÊN HỒI PHỤC · +2 MÁU', centre, armorY + 16);
+        }
       }
       if ((boss.archetype === 'golem' || boss.type === 'golem') && boss.rageTime > 0) {
         c.font = `600 11px ${font}`; c.fillStyle = '#f5bd89'; c.lineWidth = 3; c.strokeStyle = '#13222aed';

@@ -21,9 +21,10 @@
     enemy.drainFlash = 0;
     if (enemy.skillLevel === 20) {
       enemy.bulletArmor = true;
-      enemy.armorHits = 0;
       enemy.hardenedTime = 0;
       enemy.zombieClock = 0;
+      enemy.nextWardAt = 15;
+      enemy.wardHealFlash = 0;
       enemy.nextTsunamiAt = 10;
       enemy.nextGluttonAt = 8;
       enemy.tsunamiSerial = 0;
@@ -58,6 +59,7 @@
       game.enemies = game.enemies.filter(child => !child.tsunamiChild || child.ownerBoss !== enemy);
       enemy.tsunamiWarning = null; enemy.tsunamiWaves = [];
       enemy.gluttonState = null; enemy.gluttonTarget = null; enemy.gluttonHealFlash = 0;
+      enemy.hardenedTime = 0; enemy.wardHealFlash = 0;
       enemy.tell = false; enemy.charging = false;
     }
   }
@@ -69,14 +71,6 @@
       burst(game, enemy.x, enemy.y - enemy.h * .55, '#b3f5ad', 3);
       return false;
     }
-    enemy.armorHits = (enemy.armorHits || 0) + 1;
-    if (enemy.armorHits === 10) {
-      enemy.armorHits = 0;
-      enemy.hardenedTime = 2;
-      burst(game, enemy.x, enemy.y - enemy.h * .5, '#b3f5ad', 18, 'ring');
-      game.floating?.(enemy.x, enemy.y - enemy.h - 15, 'CƯỜNG HÓA · 2 GIÂY', '#b3f5ad');
-    }
-    // The tenth successful bullet still deals damage; subsequent bullets are blocked.
     return true;
   }
 
@@ -342,6 +336,15 @@
   function updateGreenZombie(game, enemy, dt) {
     enemy.zombieClock += dt;
     enemy.gluttonHealFlash = Math.max(0, (enemy.gluttonHealFlash || 0) - dt);
+    enemy.wardHealFlash = Math.max(0, (enemy.wardHealFlash || 0) - dt);
+    if (enemy.zombieClock + EPSILON >= enemy.nextWardAt) {
+      enemy.nextWardAt += 15;
+      enemy.hardenedTime = 2; enemy.wardHealFlash = .5;
+      const healed = Math.min(2, Math.max(0, enemy.maxHealth - enemy.health));
+      enemy.health += healed;
+      burst(game, enemy.x, enemy.y - enemy.h * .5, '#b3f5ad', 18, 'ring');
+      game.floating?.(enemy.x, enemy.y - enemy.h - 15, `KHIÊN 2 GIÂY${healed ? ` · +${healed} MÁU` : ''}`, '#b3f5ad');
+    }
     const untilWave = enemy.nextTsunamiAt - enemy.zombieClock;
     if (untilWave <= EPSILON) {
       beginTsunami(game, enemy); enemy.nextTsunamiAt += 10;

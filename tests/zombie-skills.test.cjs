@@ -152,22 +152,28 @@ test('Phàm ăn healing respects max HP and its pursuit tracks a moving player r
   assert.equal(boss.health, boss.maxHealth);
 });
 
-test('Phàm ăn leaps from a ledge, can hit or be shielded, and preserves the ten-hit armor', () => {
+test('Phàm ăn leaps from a ledge and its pursuit can overlap the periodic fifteen-second ward', () => {
   for (const shielded of [false, true]) {
     const {game, boss, skills} = fixture();
-    boss.nextTsunamiAt = Infinity; boss.nextGluttonAt = .01;
+    boss.nextTsunamiAt = Infinity; boss.nextGluttonAt = 14.5; boss.zombieClock = 14.49;
+    boss.health = boss.maxHealth - 10;
     Object.assign(boss, {x:game.player.x - 40, y:170, abilityState:'ledge', platform:{x:440,y:170,w:150,dir:1,offset:0,walkDir:1}});
     game.player.shieldTime = shielded ? 5 : 0; game.player.shieldHits = shielded ? 3 : 0;
     skills.update(game, .01);
     assert.equal(boss.gluttonJump, true);
+    assert.equal(boss.health, boss.maxHealth - 5, 'the chase still heals five HP');
     advance(game, .2, skills); assert.ok(boss.y < 170, 'the arc rises before descending toward the player');
     for (let index = 0; index < 10; index++) assert.equal(skills.hit(game, boss), true);
+    assert.equal(boss.hardenedTime, 0, 'ten bullets do not create a defensive shield');
+    advance(game, .3, skills);
+    assert.equal(boss.gluttonState, 'chase');
+    assert.equal(boss.health, boss.maxHealth - 3, 'the periodic ward independently heals two HP');
     assert.equal(boss.hardenedTime, 2); assert.equal(skills.hit(game, boss), false);
-    advance(game, .8, skills);
+    advance(game, .5, skills);
     assert.equal(game.player.health, shielded ? 30 : 28);
     assert.equal(game.player.shieldHits, shielded ? 2 : 0);
     assert.equal(boss.gluttonState, null); assert.equal(boss.y, 438); assert.equal(boss.platform, null);
-    assert.ok(boss.hardenedTime > 1.19 && boss.hardenedTime < 1.21);
+    assert.ok(boss.hardenedTime > 1.49 && boss.hardenedTime < 1.51);
   }
 });
 
