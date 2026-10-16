@@ -37,7 +37,7 @@
     lionMan: {w:38,h:54,speed:55,health:3,score:260,damage:1,ability:'spear',archetype:'lion'},
     medusa: {w:38,h:54,speed:38,health:3,score:280,damage:0,ability:'petrify'},
     goatman: {w:57,h:81,speed:40,health:5,score:320,damage:1,ability:'axe'},
-    chimera: {w:180,h:126,speed:48,health:120,score:3200,damage:2,ability:'chimera-hunt'}
+    chimera: {w:300,h:210,speed:48,health:120,score:3200,damage:2,ability:'chimera-hunt'}
   };
 
   const chapters = [
@@ -373,8 +373,8 @@
     return {
       x: side === -1 ? -50 : 1010,
       y: 438,
-      w: boss ? (archetype === 'golem' ? 156 : archetype === 'werewolf' ? 80 : archetype === 'kong' ? 126 : archetype === 'dragon' ? 252 : archetype === 'chimera' ? 180 : Math.max(96, stats.w * 1.85)) : stats.w,
-      h: boss ? (archetype === 'golem' ? 172 : archetype === 'werewolf' ? 108 : archetype === 'kong' ? 138 : archetype === 'dragon' ? 190 : archetype === 'chimera' ? 126 : Math.max(94, stats.h * 1.5)) : stats.h,
+      w: boss ? (archetype === 'golem' ? 156 : archetype === 'werewolf' ? 80 : archetype === 'kong' ? 126 : archetype === 'dragon' ? 252 : archetype === 'chimera' ? 300 : Math.max(96, stats.w * 1.85)) : stats.w,
+      h: boss ? (archetype === 'golem' ? 172 : archetype === 'werewolf' ? 108 : archetype === 'kong' ? 138 : archetype === 'dragon' ? 190 : archetype === 'chimera' ? 210 : Math.max(94, stats.h * 1.5)) : stats.h,
       dir: side === -1 ? 1 : -1,
       type: boss ? 'boss' : enemyType,
       archetype: archetype,

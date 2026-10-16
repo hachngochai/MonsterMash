@@ -1,8 +1,8 @@
 <!doctype html><html lang="vi"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Kiểm tra hiệu ứng boss · 3.0.1</title><link rel="stylesheet" href="../assets/fonts/fonts.css?v=3.0.1">
-<style>html{scroll-behavior:smooth;scroll-padding-top:84px}body{margin:20px;background:#101714;color:#e9eade;font:14px/1.5 'Noto Sans',sans-serif}main{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}h1{font-size:20px}h2{font-size:14px;margin:0 0 6px}canvas{display:block;box-sizing:border-box;width:100%;border:1px solid #ffffff25;border-radius:8px}nav{position:sticky;top:0;z-index:2;display:flex;flex-wrap:wrap;gap:8px;padding:12px 0;background:#101714f5}nav a{color:#e9eade;text-decoration:none;border:1px solid #ffffff35;border-radius:6px;padding:7px 12px}nav a:hover,nav a:focus-visible{background:#334438}@media(max-width:700px){main{grid-template-columns:1fr}nav a{font-size:12px;padding:5px 8px}}</style>
-<h1>Kiểm tra hiệu ứng và dấu tiếng Việt · 3.0.1</h1><nav aria-label="Chọn bối cảnh"><a href="#dragon-models">Tạo hình mới</a><a href="#preview-10">Boss 10–50</a><a href="#preview-51">Thung lũng</a><a href="#preview-70">Lang Vương</a><a href="#preview-80">KingKong</a><a href="#preview-81">Ngũ hành</a><a href="#preview-90">Rồng ngàn tuổi</a><a href="#preview-91">Thần thoại</a><a href="#preview-100">Chimera</a><a href="../" target="_blank" rel="noopener">Chơi trực tiếp ↗</a></nav><main id="previews"></main>
-<script src="../js/typography.js?v=3.0.1"></script><script src="../js/campaign.js?v=3.0.1"></script><script src="../js/bosses.js?v=3.0.1"></script><script src="../js/golem.js?v=3.0.1"></script><script src="../js/wolves.js?v=3.0.1"></script><script src="../js/kong.js?v=3.0.1"></script><script src="../js/dragons.js?v=3.0.1"></script><script src="../js/mythic.js?v=3.0.1"></script><script src="../js/renderer.js?v=3.0.1"></script><script src="../js/game.js?v=3.0.1"></script>
+<title>Kiểm tra hiệu ứng boss · 3.0.2</title><link rel="stylesheet" href="../assets/fonts/fonts.css?v=3.0.2">
+<style>html{scroll-behavior:smooth;scroll-padding-top:128px}body{margin:20px;background:#101714;color:#e9eade;font:14px/1.5 'Noto Sans',sans-serif}main{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}h1{font-size:20px}h2{font-size:14px;margin:0 0 6px}canvas{display:block;box-sizing:border-box;width:100%;border:1px solid #ffffff25;border-radius:8px}nav{position:sticky;top:0;z-index:2;display:flex;flex-wrap:wrap;gap:8px;padding:12px 0;background:#101714f5}nav a,nav button{color:#e9eade;background:transparent;font:inherit;cursor:pointer;text-decoration:none;border:1px solid #ffffff35;border-radius:6px;padding:7px 12px}nav a:hover,nav a:focus-visible,nav button:hover,nav button:focus-visible{background:#334438}@media(max-width:700px){main{grid-template-columns:1fr}nav a{font-size:12px;padding:5px 8px}}</style>
+<h1>Kiểm tra hiệu ứng và dấu tiếng Việt · 3.0.2</h1><nav aria-label="Chọn bối cảnh"><button id="preview-motion" type="button" aria-pressed="false">▶ Chạy hiệu ứng</button><a href="#dragon-models">Tạo hình mới</a><a href="#preview-10">Boss 10–50</a><a href="#preview-51">Thung lũng</a><a href="#preview-70">Lang Vương</a><a href="#preview-80">KingKong</a><a href="#preview-81">Ngũ hành</a><a href="#preview-90">Rồng ngàn tuổi</a><a href="#preview-91">Thần thoại</a><a href="#preview-100">Chimera</a><a href="../" target="_blank" rel="noopener">Chơi trực tiếp ↗</a></nav><main id="previews"></main>
+<script src="../js/typography.js?v=3.0.2"></script><script src="../js/campaign.js?v=3.0.2"></script><script src="../js/bosses.js?v=3.0.2"></script><script src="../js/golem.js?v=3.0.2"></script><script src="../js/wolves.js?v=3.0.2"></script><script src="../js/kong.js?v=3.0.2"></script><script src="../js/dragons.js?v=3.0.2"></script><script src="../js/mythic.js?v=3.0.2"></script><script src="../js/renderer.js?v=3.0.2"></script><script src="../js/game.js?v=3.0.2"></script>
 <script>
 (async()=>{
 await MM.Typography.ready;
@@ -64,7 +64,7 @@ samples.push(
 );
 const dragon=(g,b,variant)=>{b.archetype='dragon';b.variant=variant;b.x=690;b.y=245;b.dir=-1;b.airborne=true;b.abilityState='ground';b.platform=null;g.player.weaponMode='highAim';g.player.aimAngle=-.6;};
 const zone=(owner,kind,x,w,phase='impact',extra={})=>({owner,kind,x,y:438,w,h:438,phase,timer:.55,total:1.1,...extra});
-const crownForm=(g,type,x,health,variant)=>{const e=g.spawn(type);Object.assign(e,{phase:'active',boss:true,x,y:438,w:152,h:216,baseW:152,baseH:216,health,maxHealth:health,variant,mythicCrowned:true,chimeraForm:true,abilityState:'ground',platform:null,dir:x<440?1:-1});return e;};
+const crownForm=(g,type,x,health,variant)=>{const e=g.spawn(type);Object.assign(e,{phase:'active',boss:true,x,y:438,w:76,h:108,baseW:76,baseH:108,health,maxHealth:health,variant,mythicCrowned:true,chimeraForm:true,abilityState:'ground',platform:null,dir:x<440?1:-1});return e;};
 samples.push(
  [70,'70 · Lộn xoay né cào — nhấn đôi phím hoặc nút di chuyển',(g,b)=>{bloodMoon(g,b);b.x=675;b.wolfState='claw';b.clawIndex=1;g.player.x=325;g.player.vx=-760;g.player.rollDir=-1;g.player.rollTime=.17;g.player.rollDuration=.32;g.player.rollProgress=.46;g.wolfZones=[{owner:b,kind:'claw',x:510,y:438,w:210,h:64,phase:'impact',timer:.08,total:.1,damage:2,clawIndex:1}];} ],
  [81,'81 · Rồng lửa bay cao — ngọn lửa và thiêu đốt 2 giây',(g,b)=>{dragon(g,b,'fire');g.dragonZones=[zone(b,'fire',440,132)];g.player.burnTime=1.6;},'fireDragon'],
@@ -78,11 +78,11 @@ samples.push(
  [90,'90 · Kị sĩ rồng — thánh thương, năm sóng âm và tích khiên',(g,b)=>{b.archetype='dragon';b.variant='yinYang';b.dragonForm='knight';b.dragonState='knight';b.w=38;b.h=54;b.x=615;b.y=438;b.dir=-1;b.spearProgress=.8;b.knightHits=7;b.skillWarning={name:'KỊ SĨ RỒNG · LIÊN KÍCH THÁNH THƯƠNG',remaining:.6,total:.9};g.dragonZones=[zone(b,'spear',440,150,'warning',{h:74})];g.dragonShots=Array.from({length:5},(_,i)=>({owner:b,kind:'sonic',x:530-i*10,y:385+(i-2)*22,vx:-350,vy:(i-2)*27,w:26,h:18,life:2}));}],
  [91,'91 · Bộ ba thần thoại — Sư tử giáo, Medusa tóc rắn, Goatman rìu',(g,b)=>{b.x=240;b.dir=1;for(const[type,x]of[['medusa',625],['goatman',790]]){const e=g.spawn(type);e.phase='active';e.x=x;e.y=438;e.dir=-1;}g.mythicShots=[{kind:'spear',x:345,y:400,vx:350,vy:0,w:38,h:10,rotation:0,life:2}];},'lionMan'],
  [94,'94 · Medusa hóa đá — khiên là cách hóa giải',(g,b)=>{b.x=660;b.dir=-1;b.mythicState='petrify';b.tell=true;g.player.petrifyTime=1.3;g.player.stunTime=1.3;g.mythicZones=[zone(b,'petrify',480,960)];g.settings.effects=false;},'medusa'],
- [100,'100 · Chimera mặt đất — đầu sư tử, sừng dê, cánh và đuôi rắn',(g,b)=>{b.x=705;b.dir=-1;b.mythicState='laser';g.mythicZones=[zone(b,'laser',550,350,'impact',{x1:650,y1:360,x2:440,y2:412})];}],
+ [100,'100 · Chimera mặt đất — đầu sư tử, sừng dê, cánh và đuôi rắn',(g,b)=>{b.x=705;b.dir=-1;b.mythicState='laser';g.mythicZones=[zone(b,'laser',550,350,'impact',{x1:b.x+b.dir*b.w*.2,y1:b.y-b.h*.62,x2:440,y2:412})];}],
  [100,'100 · Chimera nhảy cắn — hai sát thương và hàm răng khổng lồ',(g,b)=>{b.x=570;b.y=335;b.dir=-1;b.mythicState='pounce';g.mythicZones=[zone(b,'bite',440,190,'impact',{h:85})];}],
- [100,'100 · Chimera tung cánh — Hỏa phong phủ 1/3 map',(g,b)=>{b.x=665;b.y=235;b.dir=-1;b.mythicAir=true;b.mythicState='roar-windup';b.health=b.maxHealth;g.player.weaponMode='highAim';g.player.aimAngle=-.7;g.mythicZones=[zone(b,'roar',480,320,'warning',{timer:.9,total:1.55})];b.skillWarning={name:'CHIMERA · HỎA PHONG · RỜI VÙNG ĐỎ',remaining:.9,total:1.55};}],
+ [100,'100 · Chimera tung cánh — Hỏa phong phủ 1/3 map',(g,b)=>{b.x=665;b.y=320;b.dir=-1;b.mythicAir=true;b.mythicState='roar-windup';b.health=b.maxHealth;g.player.weaponMode='highAim';g.player.aimAngle=-.7;g.mythicZones=[zone(b,'roar',480,320,'warning',{timer:.9,total:1.55})];b.skillWarning={name:'CHIMERA · HỎA PHONG · RỜI VÙNG ĐỎ',remaining:.9,total:1.55};}],
  [100,'100 · Chimera khóa mục tiêu — lao xuống săn mồi, bật khiên',(g,b)=>{b.x=490;b.y=322;b.dir=-1;b.mythicAir=true;b.mythicState='swoop';g.player.shieldTime=3;g.player.shieldHits=2;g.mythicZones=[zone(b,'swoop',440,100,'impact',{h:85})];g.settings.effects=false;}],
- [100,'100 · Phân hóa — ba vương thú khổng lồ và khiên Goatman',(g,b)=>{b.dead=true;b.health=0;const encounter={damage:6,totalDamage:46};for(const[type,x,hp,variant]of[['lionMan',190,30,'crowned'],['medusa',490,20,'queen'],['goatman',795,40,'radiant']]){const f=crownForm(g,type,x,hp,variant);f.encounter=encounter;if(type==='goatman')f.mythicShield=true;}g.player.x=350;}],
+ [100,'100 · Phân hóa — ba vương thú nhỏ gọn và khiên Goatman',(g,b)=>{b.dead=true;b.health=0;const encounter={damage:6,totalDamage:46};for(const[type,x,hp,variant]of[['lionMan',190,30,'crowned'],['medusa',490,20,'queen'],['goatman',795,40,'radiant']]){const f=crownForm(g,type,x,hp,variant);f.encounter=encounter;if(type==='goatman')f.mythicShield=true;}g.player.x=350;}],
  [100,'100 · Sư tử Vương — nhảy cào với ngọn giáo và vương miện',(g,b)=>{b.dead=true;b.health=0;const lion=crownForm(g,'lionMan',580,30,'crowned');lion.y=338;lion.mythicState='pounce';g.mythicZones=[zone(lion,'claw',440,170,'impact',{h:85})];}],
  [100,'100 · Medusa Queen — triệu hồi Medusa thường mỗi 10 giây',(g,b)=>{b.dead=true;b.health=0;const queen=crownForm(g,'medusa',690,20,'queen');queen.mythicState='petrify';queen.tell=true;for(const x of [190,300]){const e=g.spawn('medusa');Object.assign(e,{phase:'active',x,y:438,dir:1,ownerBoss:queen,minion:true});}g.player.shieldTime=2.5;g.player.shieldHits=1;g.settings.effects=false;}]
 );
@@ -98,13 +98,34 @@ samples.unshift(
  [90,'Mẫu rồng mới · Đổi hướng bay — đầu vuông, hàm răng sắc và cánh dơi',(g,b)=>{Object.assign(b,{x:390,y:350,dir:1,wingTime:2,dragonState:'laser-windup'});g.player.x=760;},'boss','dragon-facing-model'],
  [90,'Mẫu rồng mới · Tắt hiệu ứng — vẫn rõ răng, gai, cánh và vương miện',(g,b)=>{Object.assign(b,{x:635,y:360,dir:-1});g.player.x=270;g.settings.effects=false;},'boss','dragon-static-model'],
  [91,'Tạo hình mới · Sư tử, Medusa và Goatman — phóng to bản vẽ của bạn',(g,b)=>{for(const[type,x]of[['lionMan',235],['medusa',485],['goatman',745]]){const e=type==='lionMan'?b:g.spawn(type);Object.assign(e,{phase:'active',x,y:438,dir:type==='goatman'?-1:1});e.w*=3;e.h*=3;}g.player.x=70;},'lionMan','mythic-models'],
- [100,'Tạo hình mới · Chimera — giữ nguyên đầu, sừng, cánh và đuôi rắn',(g,b)=>{Object.assign(b,{x:635,y:438,dir:-1,w:270,h:189});g.player.x=270;},'boss','chimera-model']
+ [100,'Tạo hình mới · Chimera — giữ nguyên đầu, sừng, cánh và đuôi rắn',(g,b)=>{Object.assign(b,{x:635,y:438,dir:-1});g.player.x=270;},'boss','chimera-model']
 );
-const previewed=new Set();
+samples.push(
+ [84,'84 · Băng chạm đất — tinh thể vỡ và hơi lạnh lan ra',(g,b)=>{dragon(g,b,'ice');g.dragonZones=[260,360,460,560].map(x=>zone(b,'ice',x,52,'impact',{h:52,timer:.07,total:.15}));},'iceDragon','ice-impact-preview'],
+ [87,'87 · Sét phân nhánh — chớp sáng và vòng điện chạm đất',(g,b)=>{dragon(g,b,'lightning');b.x=440;g.dragonZones=[zone(b,'lightning',440,100,'impact',{timer:.13,total:.25})];g.player.shieldTime=2;g.player.shieldHits=3;},'lightningDragon','lightning-effects-preview'],
+ [90,'90 · Âm Dương toàn hiệu ứng — hai luồng plasma và sóng chấn',(g,b)=>{dragon(g,b,'yinYang');b.w=252;b.h=190;b.y=286;b.dragonGuarded=true;b.dragonState='laser';g.dragonZones=[zone(b,'yin-yang',320,640,'impact',{timer:.25,total:.55})];g.player.x=805;g.player.shieldTime=2;g.player.shieldHits=1;},'boss','yin-yang-effects-preview']
+);
+const previewed=new Set(),previewViews=[];
 for(const[id,title,configure,type='boss',anchor]of samples){
  const g=new MM.Game({headless:true,random:()=>.5,storage:{getItem:()=>null,setItem:()=>{}}});g.start(id);g.levelKills=type==='boss'?g.level.target:0;g.bossSpawned=type==='boss';g.time=7;
  const b=g.spawn(type);b.phase='active';b.x=680;b.y=438;g.player.x=440;g.player.invulnerable=0;configure(g,b);
- const section=document.createElement('section'),heading=document.createElement('h2'),canvas=document.createElement('canvas');if(anchor)section.id=anchor;else if(!previewed.has(id)){section.id='preview-'+id;previewed.add(id);}heading.textContent=title;canvas.width=960;canvas.height=540;section.append(heading,canvas);document.getElementById('previews').append(section);MM.Renderer.draw(canvas.getContext('2d'),g);
+ const section=document.createElement('section'),heading=document.createElement('h2'),canvas=document.createElement('canvas');if(anchor)section.id=anchor;else if(!previewed.has(id)){section.id='preview-'+id;previewed.add(id);}heading.textContent=title;canvas.width=960;canvas.height=540;section.append(heading,canvas);document.getElementById('previews').append(section);MM.Renderer.draw(canvas.getContext('2d'),g);previewViews.push({game:g,canvas,iceFalls:g.dragonZones.filter(z=>z.kind==='ice'&&z.phase==='falling')});
+}
+if(typeof window.requestAnimationFrame==='function'){
+ const motion=document.getElementById('preview-motion');let running=false,last=0,animationFrame=0;
+ function animate(stamp){
+   if(!running)return;
+   if(stamp-last>=1000/30){const dt=last?Math.min(.05,(stamp-last)/1000):0;last=stamp;
+     for(const view of previewViews){const rect=view.canvas.getBoundingClientRect();if(rect.bottom<=0||rect.top>=window.innerHeight)continue;view.game.time+=dt;
+       view.iceFalls.forEach((z,i)=>{const phase=((view.game.time-7+i*.12)%1.85+1.85)%1.85;
+         if(phase<.95){z.phase='warning';z.y=438;z.timer=.95-phase;z.total=.95;}
+         else if(phase<1.7){z.phase='falling';z.y=20+(438-20)*(phase-.95)/.75;z.timer=1.7-phase;z.total=.75;}
+         else{z.phase='impact';z.y=438;z.timer=1.85-phase;z.total=.15;}
+       });MM.Renderer.draw(view.canvas.getContext('2d'),view.game);}
+   }
+   animationFrame=window.requestAnimationFrame(animate);
+ }
+ motion?.addEventListener('click',()=>{running=!running;motion.setAttribute('aria-pressed',String(running));motion.textContent=running?'Ⅱ Dừng hiệu ứng':'▶ Chạy hiệu ứng';last=0;if(animationFrame)window.cancelAnimationFrame(animationFrame);animationFrame=running?window.requestAnimationFrame(animate):0;});
 }
 })();
 </script></html>

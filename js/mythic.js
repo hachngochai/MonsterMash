@@ -11,6 +11,7 @@
   const warning = (g, e, n = .9) => Math.max(pressure(g,e).warningFloor || .9, n);
   const overlaps = (p,z) => Math.abs(p.x-z.x)<(p.w*.75+z.w)/2 && p.y>z.y-z.h && p.y-p.h*.86<z.y;
   const activeShield = g => g.player.shieldTime > EPS && g.player.shieldHits > 0;
+  const flightY = (g,e) => Math.min(GROUND-54,Math.max(235,(g.viewTop||0)+e.h*1.2+68));
 
   function setup(g,e) {
     if (!accepts(e)) return;
@@ -123,7 +124,7 @@
     for(const [type,variant,health,x] of definitions) {
       const form=g.spawn(type,x<W/2?-1:1);
       Object.assign(form,{archetype:type==='lionMan'?'lion':type,variant,boss:true,minion:false,phase:'active',warning:0,
-        w:152,h:216,baseW:152,baseH:216,x,y:GROUND,health,maxHealth:health,
+        w:76,h:108,baseW:76,baseH:108,x,y:GROUND,health,maxHealth:health,
         encounter,mythicCrowned:true,score:450,chimeraForm:true,abilityState:'ground'});
       setup(g,form);form.encounter=encounter;form.mythicCrowned=true;form.chimeraForm=true;
       encounter.forms.push(form);
@@ -183,7 +184,7 @@
       // receive its full duration instead of losing one frame immediately.
       a.elapsed=Math.max(0,e.mythicTime-a.startAt);
       if(a.kind==='rise') {
-        const t=clamp(a.elapsed/a.duration,0,1);e.y=GROUND+(235-GROUND)*t;e.mythicProgress=t;
+        const t=clamp(a.elapsed/a.duration,0,1);e.y=GROUND+(flightY(g,e)-GROUND)*t;e.mythicProgress=t;
         if(a.elapsed+EPS>=a.duration){e.intangible=false;e.mythicClock=0;e.mythicState='air';}
       } else {
         const leap=a.leap||0;
@@ -195,7 +196,7 @@
             if(!returning) {
               e.x=a.startX+(g.player.x-a.startX)*t;e.y=a.startY+(GROUND-a.startY)*t;
               a.zone.x=g.player.x;
-            }else{const up=clamp((a.elapsed-a.warning-leap)/.55,0,1);e.y=GROUND+(235-GROUND)*up;}
+            }else{const up=clamp((a.elapsed-a.warning-leap)/.55,0,1);e.y=GROUND+(flightY(g,e)-GROUND)*up;}
           }else{e.x=a.startX+(a.targetX-a.startX)*t;e.y=GROUND-Math.sin(Math.PI*t)*155;}
         }
         if(a.elapsed+EPS>=a.warning+leap)impact(g,e,a);
@@ -224,7 +225,7 @@
     if(kind(e)==='chimera') {
       if(!rising) {
         if(e.mythicAir) {
-          if(!e.mythicActions.some(a=>a.kind==='swoop')){e.x=clamp(e.x+Math.sin(e.mythicClock*.85)*dt*22,110,W-110);e.y=235+Math.sin(e.mythicClock*2)*8;}
+          if(!e.mythicActions.some(a=>a.kind==='swoop')){const margin=Math.max(110,e.w*.6);e.x=clamp(e.x+Math.sin(e.mythicClock*.85)*dt*22,margin,W-margin);e.y=flightY(g,e)+Math.sin(e.mythicClock*2)*8;}
           if(e.mythicClock+EPS>=e.nextRoarAt){e.nextRoarAt+=4;roar(g,e);}
           if(e.mythicClock+EPS>=e.nextSwoopAt){e.nextSwoopAt+=6;swoop(g,e);}
         }else {

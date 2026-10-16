@@ -465,6 +465,6 @@ test('mythic ruins contain only the three new humanoids and an independent Chime
   assert.equal(goat.w,57);assert.equal(goat.h,81);
   const boss=campaign.createEnemy('boss',100,'normal',1,()=>.5);
   assert.equal(boss.archetype,'chimera');assert.equal(boss.maxHealth,120);
-  assert.equal(boss.w,180);assert.equal(boss.h,126);
+  assert.equal(boss.w,300);assert.equal(boss.h,210);
   assert.equal(boss.bossSkills.join(','),'laser,giant-bite,aerial-hunt,three-forms');
 });

@@ -18,6 +18,12 @@ function waitFor(game,predicate,seconds=15,step=1/60) {let elapsed=0;while(!pred
 function fly(fixture) {const {game,enemy,skills}=fixture;skills.hit(game,enemy,Math.ceil(enemy.maxHealth/2));advance(game,1.2);assert.equal(enemy.mythicState,'air');return fixture;}
 function split(fixture) {fly(fixture);fixture.skills.hit(fixture.game,fixture.enemy,fixture.enemy.health);return fixture;}
 function silence(e) {e.nextAttackAt=e.nextClawAt=e.nextSummonAt=e.nextShieldAt=e.nextLaserAt=e.nextPounceAt=e.nextRoarAt=e.nextSwoopAt=Infinity;}
+function assertChimeraFlight(enemy) {
+  assert.equal(enemy.mythicState,'air');
+  assert.ok(enemy.y>=312-.001&&enemy.y<=328+.001,'flight stays within the eight-pixel hover around y=320');
+  assert.ok(enemy.y<411,'flying feet remain above the normal horizontal shot line');
+  assert.ok(enemy.y-enemy.h*1.2>=50,'the enlarged sprite keeps at least 50 pixels of clearance above its top');
+}
 
 test('lion spears are fixed-target projectiles while nearby attacks use a warned stab',()=>{
   for(const near of [false,true]) {
@@ -101,7 +107,7 @@ test('a lethal ground shot cannot skip full-health flight, and same-frame follow
   assert.equal(enemy.intangible,true);assert.equal(skills.hit(game,enemy,5),false);
   assert.equal(game.getWeaponProfile().kind,'highAim');assert.equal(game.getWeaponProfile().locked,true);
   assert.equal(game.shoot(-1),false);advance(game,1.2);assert.equal(enemy.intangible,false);
-  assert.equal(enemy.mythicState,'air');assert.ok(enemy.y<260);assert.equal(game.getWeaponProfile().locked,false);
+  assertChimeraFlight(enemy);assert.equal(game.getWeaponProfile().locked,false);
   skills.hit(game,enemy,5);assert.equal(enemy.health,hp-5);
 });
 
@@ -126,7 +132,7 @@ test('six-second aerial swoops track escape attempts, require an active shield, 
     advance(game,action.warning+.55);
     assert.equal(effects.at(-1).kind,'mythic-swoop');assert.equal(effects.at(-1).forceHit,true);
     assert.equal(game.player.health,shield?100:98);
-    advance(game,.6);assert.equal(enemy.mythicState,'air');assert.ok(enemy.y<260);
+    advance(game,.6);assertChimeraFlight(enemy);
   }
 });
 
@@ -138,7 +144,7 @@ test('air health at ten or a lethal same-frame hit creates exactly three crowned
     assert.equal(skills.hit(game,enemy,1),false);
     const forms=enemy.encounter.forms;assert.equal(forms.length,3);
     assert.deepEqual(Array.from(forms,e=>[e.archetype,e.health,e.variant]),[['lion',30,'crowned'],['medusa',20,'queen'],['goatman',40,'radiant']]);
-    assert.ok(forms.every(e=>e.boss&&e.phase==='active'&&e.w===152&&e.h===216));
+    assert.ok(forms.every(e=>e.boss&&e.phase==='active'&&e.w===76&&e.h===108));
     assert.equal(game.getWeaponProfile().kind,'normal');assert.equal(game.bossDefeated,false);
   }
 });

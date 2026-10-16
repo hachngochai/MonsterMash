@@ -1,8 +1,8 @@
 # Monster Mash — The Midnight Hunt
 
-Rebuild 07 (v3.0.1) của game Monster Mash của KIO. Native Canvas 2D, không cần Processing.js, CDN, thư viện hoặc cài package. Có thể mở `index.html` trực tiếp; nên dùng preview local để tiến trình lưu cùng một địa chỉ trình duyệt.
+Rebuild 07 (v3.0.2) của game Monster Mash của KIO. Native Canvas 2D, không cần Processing.js, CDN, thư viện hoặc cài package. Có thể mở `index.html` trực tiếp; nên dùng preview local để tiến trình lưu cùng một địa chỉ trình duyệt.
 
-Bản 3.0.1 dùng ảnh PNG trong suốt tách từ mẫu nhân vật do tác giả cung cấp: rồng, Người Sư tử, Medusa, Goatman và Chimera. Năm hệ rồng có bảng màu riêng: lửa đỏ, băng xanh lam, gió xanh ngọc, đất nâu và chớp tím vàng. Rồng ngàn tuổi mang vương miện, giữ màu đen trắng cùng vòng Âm Dương. Game tải sẵn sprite từ `assets/sprites/` rồi vẽ lên Canvas; tạo hình bằng code vẫn làm dự phòng nếu ảnh chưa tải được. Kỹ năng và cơ chế chiến đấu giữ nguyên.
+Bản 3.0.2 dùng ảnh PNG trong suốt tách từ mẫu nhân vật do tác giả cung cấp: rồng, Người Sư tử, Medusa, Goatman và Chimera. Năm hệ rồng có bảng màu riêng: lửa đỏ, băng xanh lam, gió xanh ngọc, đất nâu và chớp tím vàng. Rồng ngàn tuổi mang vương miện, giữ màu đen trắng cùng vòng Âm Dương. Game tải sẵn sprite từ `assets/sprites/` rồi vẽ lên Canvas; tạo hình bằng code vẫn làm dự phòng nếu ảnh chưa tải được. Chimera được phóng lớn thành 300 × 210 pixel, còn ba bản thể thu về 76 × 108 pixel để cân đối hơn với người chơi. Kỹ năng và cơ chế chiến đấu giữ nguyên.
 
 Chơi bản public: [Monster Mash trên GitHub Pages](https://hachngochai.github.io/MonsterMash/).
 
@@ -46,7 +46,7 @@ GitHub Pages của repo xuất bản từ nhánh `master`, thư mục gốc `/`,
 - **Rồng ngàn tuổi màn 90** có 100 máu ở Cân bằng, thân hình đen trắng khổng lồ và vòng Âm Dương xoay phía sau. Mỗi 5 giây chọn ngẫu nhiên một trong năm kỹ năng nguyên tố. Lần đầu chạm nửa máu dùng **Âm Dương luân hồi**, báo trước vùng laze đen trắng phủ 2/3 sân: rời vùng báo để tránh; trúng mất 3 máu, nếu bật khiên vẫn mất 1 máu. Khi hết máu dạng rồng, boss đáp xuống thành **Kị sĩ rồng** bằng kích thước người chơi, cầm thánh thương, giữ vòng Âm Dương và hồi đầy máu. Kị sĩ bắn 5 sóng âm mỗi 6 giây, liên kích thương mỗi 3 giây. Cứ **10 phát đạn bắn trúng Kị sĩ** nhận 1 khiên tích, tối đa 3; hạ Kị sĩ mới kết thúc màn.
 - Màn 91–100 gồm **Người sư tử** bằng người chơi, phóng giáo từ xa và đâm khi gần; **Medusa** tóc rắn, chạm hoặc sau mỗi 5 giây dùng ánh nhìn hóa đá người chơi 1,5 giây; **Goatman** cao gấp 1,5 lần người chơi, giơ rìu bổ xuống khi áp sát. Hóa đá khóa di chuyển, nhảy và bắn; khiên đang bật chặn, kích hoạt khiên hóa giải trạng thái đang có.
 - **Chimera màn 100** có 120 máu ở Cân bằng, đi bốn chân, đầu sư tử, sừng dê, cánh và đuôi rắn. Dạng mặt đất bắn laze né được mỗi 5 giây, nhảy cắn gây 2 máu mỗi 3 giây. Khi chạm nửa máu sẽ hồi đầy và bay lên một lần. Dạng bay gầm lửa kèm hất tung trong 1/3 sân mỗi 4 giây; né vùng báo hoặc bật khiên. Cứ 6 giây sà xuống khóa mục tiêu, chỉ khiên đang bật chặn được, rồi trở lại trời. Người chơi tự chuyển súng tầm cao khi boss bay.
-- Khi Chimera dạng bay còn 10 máu hoặc ít hơn, boss phân hóa thành ba bản thể có vương miện, mỗi bản thể cao/rộng gấp 4 lần người chơi: **Sư tử vương 30 máu** dùng giáo và thêm nhảy cào; **Medusa Queen 20 máu** giữ hóa đá và gọi Medusa mỗi 10 giây; **Goatman huy hoàng 40 máu** giữ bổ rìu và bật lá chắn miễn đạn 2 giây mỗi 8 giây. Cứ **10 máu thực sự gây lên Chimera hoặc các bản thể** nhận 1 khiên tích, tối đa 3; phần tiến độ được giữ khi chuyển pha và dùng chung giữa các bản thể. Hạ đủ cả ba mới thắng; đạn lúc boss bất tử không cộng tiến độ.
+- Khi Chimera dạng bay còn 10 máu hoặc ít hơn, boss phân hóa thành ba bản thể có vương miện, mỗi bản thể cao/rộng gấp 2 lần người chơi (76 × 108 pixel): **Sư tử vương 30 máu** dùng giáo và thêm nhảy cào; **Medusa Queen 20 máu** giữ hóa đá và gọi Medusa mỗi 10 giây; **Goatman huy hoàng 40 máu** giữ bổ rìu và bật lá chắn miễn đạn 2 giây mỗi 8 giây. Cứ **10 máu thực sự gây lên Chimera hoặc các bản thể** nhận 1 khiên tích, tối đa 3; phần tiến độ được giữ khi chuyển pha và dùng chung giữa các bản thể. Hạ đủ cả ba mới thắng; đạn lúc boss bất tử không cộng tiến độ.
 - Sinh lực 7 / 5 / 4 ở chế độ Thư giãn / Cân bằng / Thử thách. Đạn có giới hạn, mỗi phát tiêu hao 1 viên; nhịp bắn 0,17 giây. Nhặt thùng **AMMO** rơi từ trên xuống để tiếp tế, kể cả lúc đánh boss. Khi hết đạn, súng hạ xuống và bộ đếm đạn chuyển màu cảnh báo.
 - Mỗi 10 địch hạ được nhận 1 khiên, tích tối đa 3. Tiến độ cộng dồn qua màn. Khiên kéo dài 5 giây và chặn tối đa 3 lần va chạm; không chồng nhiều khiên cùng lúc.
 - Sau khi trúng đòn có 1,35 giây bất tử. Qua màn hồi 1 máu, màn hồi phục hồi 2. Mỗi 7 địch rơi vật phẩm máu nếu đang thiếu máu.
@@ -72,6 +72,8 @@ Tiếp tế đạn ở chế độ Cân bằng:
 Thư giãn nhân lượng đạn khởi đầu và tiếp tế với 1,35; Thử thách nhân với 0,85, làm tròn thành số viên nguyên. Sức chứa giữ nguyên. Màn hồi phục giảm khoảng tiếp tế 0,3 giây, tối thiểu 4,3 giây; khi boss xuất hiện có thêm một thùng. Đạn còn lại được mang sang màn kế tiếp, cộng thêm lượng đầu màn và giới hạn theo sức chứa. Thùng tiếp tế rơi theo nhịp; không tự nạp đạn khi bắn hết.
 
 Thùng rơi với tốc độ 180 pixel/giây rồi nằm trên đất 8 giây ở chế độ Cân bằng (Thư giãn 10; Thử thách 6), tối đa 3 thùng đồng thời. Có thể nhảy nhặt khi thùng còn đang rơi. Tăng nhịp tấn công không làm giảm lượng tiếp tế hoặc tăng máu địch.
+
+Hiệu ứng nguyên tố dùng luồng lửa từ miệng rồng, băng có hơi lạnh và mảnh vỡ, xoáy gió cuốn bụi lá, khe dung nham phân nhánh, sét phân nhánh và plasma Âm Dương. Vùng báo đòn vẫn rõ khi tắt hiệu ứng. Trong bản xem, nút **Chạy hiệu ứng** cho xem chuyển động; chỉ các cảnh đang nhìn thấy được vẽ lại.
 
 ## Điều khiển
 
