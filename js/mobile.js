@@ -21,8 +21,10 @@
       this.ownsOrientation = false;
       this.lockPending = null;
       this.wasFullscreen = Boolean(this.document?.fullscreenElement);
+      this.layoutKey = null;
+      this.rotated = false;
       this.onFullscreenChange = this.handleFullscreenChange.bind(this);
-      this.onResize = () => { this.game.resize?.(); this.sync(); };
+      this.onResize = () => { this.sync(); this.game.resize?.(); };
       this.onButton = () => {
         this.landingArmed = false;
         if (this.document?.fullscreenElement) this.leave(true);
@@ -42,6 +44,8 @@
       this.document?.addEventListener?.('pointerup', this.onLandingGesture);
       this.root.addEventListener?.('resize', this.onResize);
       this.root.addEventListener?.('orientationchange', this.onResize);
+      this.root.visualViewport?.addEventListener?.('resize', this.onResize);
+      this.root.visualViewport?.addEventListener?.('scroll', this.onResize);
       this.root.screen?.orientation?.addEventListener?.('change', this.onResize);
       this.button?.addEventListener?.('click', this.onButton);
       this.sync();
@@ -204,15 +208,30 @@
         this.game.lastTime = 0;
         if (this.game.screen === 'playing') this.game.togglePause?.();
       }
-      this.game.resize?.();
       this.sync();
+      this.game.resize?.();
     }
 
     sync() {
       const fullscreen = Boolean(this.document?.fullscreenElement);
-      const width = this.root.innerWidth || this.target?.clientWidth || 0;
-      const height = this.root.innerHeight || this.target?.clientHeight || 0;
+      const visual = this.root.visualViewport;
+      const width = visual?.width || this.root.innerWidth || this.target?.clientWidth || 0;
+      const height = visual?.height || this.root.innerHeight || this.target?.clientHeight || 0;
       const portrait = width > 0 && height > 0 ? height > width : String(this.root.screen?.orientation?.type || '').startsWith('portrait');
+      const rotated = portrait && (this.mobile || (width > 0 && width <= 600));
+      const left = Number.isFinite(visual?.offsetLeft) ? visual.offsetLeft : 0;
+      const top = Number.isFinite(visual?.offsetTop) ? visual.offsetTop : 0;
+      const key = [rotated,width,height,left,top].join(':');
+      const changed = key !== this.layoutKey;
+      if(changed) {
+        const hadLayout = this.layoutKey !== null;
+        this.layoutKey = key;this.rotated = rotated;this.game.mobileRotation = rotated;
+        if(this.target?.dataset)this.target.dataset.landscape = rotated ? 'rotated' : 'native';
+        const style=this.target?.style;
+        for(const [name,value] of [['vw',width],['vh',height],['left',left],['top',top]])style?.setProperty?.('--mobile-'+name,value+'px');
+        // A finger captured against the previous geometry must never keep moving.
+        if(hadLayout)this.game.clearInputs?.();
+      }
       const label = fullscreen ? 'Thoát toàn màn hình' : this.mobile && portrait && this.game.screen === 'home' ? 'Chơi ngang' : 'Toàn màn hình';
       if (this.button) {
         const text = this.button.querySelector?.('[data-fullscreen-label]');
@@ -224,7 +243,9 @@
       }
       if (this.hint) {
         this.hint.hidden = !(this.mobile && portrait && ['home', 'playing'].includes(this.game.screen));
+        if(rotated)this.hint.textContent='↻ Khung ngang · xoay máy để cầm dễ hơn';
       }
+      return changed;
     }
   }
 

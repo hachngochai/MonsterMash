@@ -19,7 +19,9 @@
     e.baseW ||= e.w; e.baseH ||= e.h;
     e.mythicClock = 0; e.mythicTime = 0; e.mythicActions = []; e.mythicState = 'ground'; e.mythicProgress = 0;
     e.mythicAir = false; e.mythicAirTriggered = false; e.mythicSplit = false;
-    e.nextLaserAt = 5; e.nextPounceAt = 3; e.nextRoarAt = 4; e.nextSwoopAt = 6;
+    // The parent chooses one phase-appropriate skill per four-second cast slot.
+    // Its crowned heirs keep their separate attack and special-skill clocks.
+    e.nextSkillAt = 4;
     e.nextAttackAt = kind(e)==='medusa' ? 5 : 1.8; e.nextSummonAt = 10;
     e.nextClawAt = 6; e.nextShieldAt = 8; e.mythicShieldUntil = 0;
     e.mythicContactAt = 0; e.mythicShield = false; e.mythicWarning = null;
@@ -90,6 +92,7 @@
   function pounce(g,e,crowned=false) {
     const a=windup(g,e,crowned?'claw':'bite',crowned?'SƯ TỬ VƯƠNG · NHẢY CÀO':'CHIMERA · NHẢY CẮN',targetZone(g,crowned?170:190),.95,{damage:2});
     a.startX=e.x;a.targetX=a.zone.x;a.leap=.55;a.duration=a.warning+a.leap+.2;
+    if(!crowned)Object.assign(a.zone,{facing:e.dir,attackElapsed:0,attackWindup:a.warning,attackLeap:a.leap,attackDuration:a.duration});
   }
   function spear(g,e) {
     const near=Math.abs(g.player.x-e.x)<e.w/2+90;
@@ -111,7 +114,7 @@
   }
   function rise(g,e) {
     clearOwn(g,e); e.mythicAirTriggered=e.mythicAir=true;e.health=e.maxHealth;
-    e.mythicClock=0;e.nextRoarAt=4;e.nextSwoopAt=6;e.intangible=true;
+    e.mythicClock=0;e.nextSkillAt=4;e.intangible=true;
     const a=action(g,e,'rise',0,null,{duration:1.2,startY:e.y,label:'CHIMERA TUNG CÁNH · HỒI ĐẦY MÁU'});
     e.mythicState='rise';e.mythicProgress=0;g.player.weaponMode='highAim';g.player.shotTimer=0;
     g.burst?.(e.x,e.y-e.h*.5,'#f1be80',30,'ring');g.updateUI?.();
@@ -189,6 +192,7 @@
       } else {
         const leap=a.leap||0;
         if(a.zone){a.zone.timer=Math.max(0,a.warning-a.elapsed);a.zone.phase=a.elapsed+EPS>=a.warning+leap?'impact':'warning';}
+        if(a.kind==='bite'&&a.zone)a.zone.attackElapsed=a.elapsed;
         if(leap&&a.elapsed>=a.warning) {
           const t=clamp((a.elapsed-a.warning)/leap,0,1);
           if(a.kind==='swoop') {
@@ -226,12 +230,14 @@
       if(!rising) {
         if(e.mythicAir) {
           if(!e.mythicActions.some(a=>a.kind==='swoop')){const margin=Math.max(110,e.w*.6);e.x=clamp(e.x+Math.sin(e.mythicClock*.85)*dt*22,margin,W-margin);e.y=flightY(g,e)+Math.sin(e.mythicClock*2)*8;}
-          if(e.mythicClock+EPS>=e.nextRoarAt){e.nextRoarAt+=4;roar(g,e);}
-          if(e.mythicClock+EPS>=e.nextSwoopAt){e.nextSwoopAt+=6;swoop(g,e);}
         }else {
           if(!e.mythicActions.some(a=>a.leap))e.y=GROUND;
-          if(e.mythicClock+EPS>=e.nextLaserAt){e.nextLaserAt+=5;laser(g,e);}
-          if(e.mythicClock+EPS>=e.nextPounceAt){e.nextPounceAt+=3;pounce(g,e);}
+        }
+        if(e.mythicClock+EPS>=e.nextSkillAt&&!e.mythicActions.length) {
+          e.nextSkillAt=e.mythicClock+4;
+          const sample=clamp(Number(g.random?.()??Math.random())||0,0,1);
+          if(e.mythicAir)sample<.5?roar(g,e):swoop(g,e);
+          else sample<.5?laser(g,e):pounce(g,e);
         }
       }
     }else {

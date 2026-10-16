@@ -4,6 +4,8 @@
   const MM = root.MM = root.MM || {};
   const W = 960, GROUND = 438, EPS = 1e-8;
   const ELEMENTS = ['fire', 'ice', 'wind', 'earth', 'lightning'];
+  // Cast cadence uses active combat time, independently of pressure scaling.
+  const skillInterval = e => e.boss ? 3 : 4;
   const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
   const isDragon = e => (e?.archetype || e?.type) === 'dragon';
   const alive = e => e && !e.dead && e.health > 0;
@@ -20,7 +22,7 @@
     e.dragonForm = 'dragon'; e.dragonState = 'air'; e.airborne = true;
     e.dragonClock = 0; e.wingTime = 0; e.dragonGuarded = false;
     e.yinYangTriggered = false; e.knightTriggered = false; e.knightHits = 0;
-    e.nextDragonSkillAt = e.boss ? 5 : e.variant === 'wind' ? 15 : 7;
+    e.nextDragonSkillAt = skillInterval(e);
     e.dragonPatrolDir = e.dir || 1; e.dragonHomeY = e.boss ? 288 : 244;
     e.x = clamp(e.x, e.w / 2 + 16, W - e.w / 2 - 16); e.y = e.dragonHomeY;
     e.dragonWarning = null; e.skillWarning = null;
@@ -154,7 +156,7 @@
     }
     for (const z of game.dragonZones) if (z.kind === 'yin-yang' && z.phase === 'impact' && z.timer <= EPS) {
       const e = z.owner; e.dragonGuarded = false; e.dragonState = 'air'; e.yinYangZone = null; warning(e, null);
-      e.nextDragonSkillAt = e.dragonClock + 5;
+      e.nextDragonSkillAt = e.dragonClock + skillInterval(e);
     }
     game.dragonZones = game.dragonZones.filter(z => z.timer > EPS && alive(z.owner));
   }
@@ -227,7 +229,7 @@
       if (e.dragonWarning.remaining <= EPS && !e.dragonGuarded) warning(e, null);
     }
     if (!e.dragonGuarded && e.dragonClock + EPS >= e.nextDragonSkillAt) {
-      e.nextDragonSkillAt += e.boss ? 5 : e.variant === 'wind' ? 15 : 7;
+      e.nextDragonSkillAt += skillInterval(e);
       const element = e.boss ? ELEMENTS[Math.min(4, Math.floor((game.random?.() ?? Math.random()) * 5))] : e.variant;
       castElement(game, e, ELEMENTS.includes(element) ? element : 'fire');
     }

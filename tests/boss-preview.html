@@ -1,8 +1,8 @@
 <!doctype html><html lang="vi"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Kiểm tra hiệu ứng boss · 3.1.0</title><link rel="stylesheet" href="../assets/fonts/fonts.css?v=3.1.0">
+<title>Kiểm tra hiệu ứng boss · 3.1.1</title><link rel="stylesheet" href="../assets/fonts/fonts.css?v=3.1.1">
 <style>html{scroll-behavior:smooth;scroll-padding-top:128px}body{margin:20px;background:#101714;color:#e9eade;font:14px/1.5 'Noto Sans',sans-serif}main{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}h1{font-size:20px}h2{font-size:14px;margin:0 0 6px}canvas{display:block;box-sizing:border-box;width:100%;border:1px solid #ffffff25;border-radius:8px}nav{position:sticky;top:0;z-index:2;display:flex;flex-wrap:wrap;gap:8px;padding:12px 0;background:#101714f5}nav a,nav button{color:#e9eade;background:transparent;font:inherit;cursor:pointer;text-decoration:none;border:1px solid #ffffff35;border-radius:6px;padding:7px 12px}nav a:hover,nav a:focus-visible,nav button:hover,nav button:focus-visible{background:#334438}@media(max-width:700px){main{grid-template-columns:1fr}nav a{font-size:12px;padding:5px 8px}}</style>
-<h1>Kiểm tra hiệu ứng và dấu tiếng Việt · 3.1.0</h1><nav aria-label="Chọn bối cảnh"><button id="preview-motion" type="button" aria-pressed="false">▶ Chạy hiệu ứng</button><a href="#dragon-models">Tạo hình mới</a><a href="#preview-10">Boss 10–50</a><a href="#preview-51">Thung lũng</a><a href="#preview-70">Lang Vương</a><a href="#preview-80">KingKong</a><a href="#preview-81">Ngũ hành</a><a href="#preview-90">Rồng ngàn tuổi</a><a href="#preview-91">Thần thoại</a><a href="#preview-100">Chimera</a><a href="../" target="_blank" rel="noopener">Chơi trực tiếp ↗</a></nav><main id="previews"></main>
-<script src="../js/typography.js?v=3.1.0"></script><script src="../js/campaign.js?v=3.1.0"></script><script src="../js/bosses.js?v=3.1.0"></script><script src="../js/golem.js?v=3.1.0"></script><script src="../js/wolves.js?v=3.1.0"></script><script src="../js/kong.js?v=3.1.0"></script><script src="../js/dragons.js?v=3.1.0"></script><script src="../js/mythic.js?v=3.1.0"></script><script src="../js/renderer.js?v=3.1.0"></script><script src="../js/game.js?v=3.1.0"></script>
+<h1>Kiểm tra hiệu ứng và dấu tiếng Việt · 3.1.1</h1><nav aria-label="Chọn bối cảnh"><button id="preview-motion" type="button" aria-pressed="false">▶ Chạy hiệu ứng</button><a href="#dragon-models">Tạo hình mới</a><a href="#preview-10">Boss 10–50</a><a href="#preview-51">Thung lũng</a><a href="#preview-70">Lang Vương</a><a href="#preview-80">KingKong</a><a href="#preview-81">Ngũ hành</a><a href="#preview-90">Rồng ngàn tuổi</a><a href="#preview-91">Thần thoại</a><a href="#preview-100">Chimera</a><a href="../" target="_blank" rel="noopener">Chơi trực tiếp ↗</a></nav><main id="previews"></main>
+<script src="../js/typography.js?v=3.1.1"></script><script src="../js/campaign.js?v=3.1.1"></script><script src="../js/bosses.js?v=3.1.1"></script><script src="../js/golem.js?v=3.1.1"></script><script src="../js/wolves.js?v=3.1.1"></script><script src="../js/kong.js?v=3.1.1"></script><script src="../js/dragons.js?v=3.1.1"></script><script src="../js/mythic.js?v=3.1.1"></script><script src="../js/renderer.js?v=3.1.1"></script><script src="../js/game.js?v=3.1.1"></script>
 <script>
 (async()=>{
 await MM.Typography.ready;
@@ -109,7 +109,10 @@ const previewed=new Set(),previewViews=[];
 for(const[id,title,configure,type='boss',anchor]of samples){
  const g=new MM.Game({headless:true,random:()=>.5,storage:{getItem:()=>null,setItem:()=>{}}});g.start(id);g.levelKills=type==='boss'?g.level.target:0;g.bossSpawned=type==='boss';g.time=7;
  const b=g.spawn(type);b.phase='active';b.x=680;b.y=438;g.player.x=440;g.player.invulnerable=0;configure(g,b);
- const section=document.createElement('section'),heading=document.createElement('h2'),canvas=document.createElement('canvas');if(anchor)section.id=anchor;else if(!previewed.has(id)){section.id='preview-'+id;previewed.add(id);}heading.textContent=title;canvas.width=960;canvas.height=540;section.append(heading,canvas);document.getElementById('previews').append(section);MM.Renderer.draw(canvas.getContext('2d'),g);previewViews.push({game:g,canvas,iceFalls:g.dragonZones.filter(z=>z.kind==='ice'&&z.phase==='falling')});
+ const wolfCasts=g.wolfZones.filter(z=>z.kind==='claw'&&z.owner?.bloodMoon);
+ for(const z of wolfCasts){z.castDuration=1.5;z.castElapsed=z.clawIndex===2?1.42:.95;z.castProgress=z.castElapsed/1.5;z.owner.bloodCombo={duration:1.5,firstAt:.9,secondAt:1.35,firstDone:true,secondDone:z.clawIndex===2};}
+ const bites=g.mythicZones.filter(z=>z.kind==='bite');for(const z of bites){z.attackWindup=.95;z.attackLeap=.55;z.attackElapsed=1.57;z.previewStartX=z.owner.x;}
+ const section=document.createElement('section'),heading=document.createElement('h2'),canvas=document.createElement('canvas');if(anchor)section.id=anchor;else if(!previewed.has(id)){section.id='preview-'+id;previewed.add(id);}heading.textContent=title;canvas.width=960;canvas.height=540;section.append(heading,canvas);document.getElementById('previews').append(section);MM.Renderer.draw(canvas.getContext('2d'),g);previewViews.push({game:g,canvas,wolfCasts,bites,iceFalls:g.dragonZones.filter(z=>z.kind==='ice'&&z.phase==='falling')});
 }
 if(typeof window.requestAnimationFrame==='function'){
  const motion=document.getElementById('preview-motion');let running=false,last=0,animationFrame=0;
@@ -121,7 +124,10 @@ if(typeof window.requestAnimationFrame==='function'){
          if(phase<.95){z.phase='warning';z.y=438;z.timer=.95-phase;z.total=.95;}
          else if(phase<1.7){z.phase='falling';z.y=20+(438-20)*(phase-.95)/.75;z.timer=1.7-phase;z.total=.75;}
          else{z.phase='impact';z.y=438;z.timer=1.85-phase;z.total=.15;}
-       });MM.Renderer.draw(view.canvas.getContext('2d'),view.game);}
+       });
+       view.wolfCasts.forEach(z=>{const elapsed=(view.game.time-7)%1.5,second=elapsed>=1;z.castElapsed=elapsed;z.castProgress=elapsed/1.5;z.clawIndex=second?2:1;z.owner.clawIndex=z.clawIndex;z.owner.bloodCombo.firstDone=elapsed>=.9;z.owner.bloodCombo.secondDone=elapsed>=1.35;z.phase=(elapsed>=.9&&elapsed<1)||elapsed>=1.35?'impact':'warning';z.timer=Math.max(0,(second?1.35:.9)-elapsed);z.total=second ? .35 : .9;z.owner.wolfState=z.phase==='impact'?'claw':'claw-windup';z.owner.wolfProgress=z.castProgress;});
+       view.bites.forEach(z=>{const elapsed=(view.game.time-7)%4,travel=Math.max(0,Math.min(1,(elapsed-.95)/.55));z.attackElapsed=elapsed;z.expired=elapsed>=1.7;z.phase=elapsed<1.5?'warning':'impact';z.timer=Math.max(0,.95-elapsed);z.owner.x=z.previewStartX+(z.x-z.previewStartX)*travel;z.owner.y=elapsed>=.95&&elapsed<1.5?438-Math.sin(travel*Math.PI)*155:438;z.owner.mythicState=elapsed<.95?'bite-windup':elapsed<1.7?'bite':'ground';});
+       MM.Renderer.draw(view.canvas.getContext('2d'),view.game);}
    }
    animationFrame=window.requestAnimationFrame(animate);
  }

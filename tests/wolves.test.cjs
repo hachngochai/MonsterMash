@@ -156,8 +156,11 @@ test('blood moon completes two claws in every 1.5-second cycle at 60/20 FPS and 
       const start=cycle*1.5;
       assert.equal(enemy.wolfState,'blood-windup');
       assert.equal(enemy.nextBloodAt,start+1.5);
+      assert.equal(enemy.bloodCombo.duration,1.5);
+      assert.equal(enemy.bloodCombo.secondAt,1.35);
       assert.ok(enemy.comboFirstImpactAt>=game.getPressure(enemy).warningFloor);
       assert.equal(game.wolfZones[0].total,enemy.comboFirstImpactAt);
+      assert.equal(game.wolfZones[0].castDuration,1.5);
       advance(game,1.49,step);
       const claws=hits.filter(hit=>hit.kind==='wolf-claw');
       assert.equal(claws.length,cycle*2,`${difficulty}, dt=${step}, cycle=${cycle}`);
@@ -166,10 +169,33 @@ test('blood moon completes two claws in every 1.5-second cycle at 60/20 FPS and 
       assert.ok(pair.every(hit=>hit.damage===2&&hit.forceHit&&hit.time>=start+enemy.comboFirstImpactAt-1e-8&&hit.time<start+1.5));
       assert.ok(pair[1].time-pair[0].time>=.2);
       assert.equal(game.player.health,30-cycle*4);
-      assert.equal(enemy.wolfState,'recover','the second impact completes before the next cycle');
+      assert.equal(enemy.wolfState,'claw','the final slash remains visible through the full 1.5-second cast');
+      assert.ok(Math.abs(game.wolfZones[0].castProgress-1.49/1.5)<1e-7);
       if(cycle<4)advance(game,.01,step);
     }
   }
+});
+
+test('the 1.5-second blood claw cast keeps two one-shot impacts and replaces its trail only at the next cast', () => {
+  const {game, enemy, hits} = enterBlood(fresh({boss:true}));
+  advance(game, 1.5);
+  const area = game.wolfZones[0], combo = enemy.bloodCombo;
+  advance(game, combo.firstAt - .01);
+  assert.equal(hits.length, 0); assert.equal(game.player.health, 30);
+  advance(game, .01);
+  assert.equal(hits.length, 1); assert.equal(game.player.health, 28);
+  advance(game, combo.secondAt - combo.firstAt - .01);
+  assert.equal(hits.length, 1); assert.equal(game.player.health, 28);
+  advance(game, .01);
+  assert.equal(hits.length, 2); assert.equal(game.player.health, 26);
+  advance(game, .14);
+  assert.equal(hits.length, 2, 'the visible final slash never deals extra damage on later frames');
+  assert.equal(game.wolfZones[0], area); assert.equal(area.phase, 'impact');
+  assert.ok(Math.abs(area.castElapsed - 1.49) < 1e-7);
+  advance(game, .01);
+  assert.equal(hits.length, 2); assert.equal(enemy.wolfState, 'blood-windup');
+  assert.notEqual(game.wolfZones[0], area); assert.notEqual(enemy.bloodCombo, combo);
+  assert.ok(game.wolfZones[0].castElapsed < 1e-7);
 });
 
 test('both blood claws can be blocked despite shield invulnerability between strikes', () => {

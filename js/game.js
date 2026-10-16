@@ -157,9 +157,25 @@
       if (!event.repeat && ['KeyA','KeyJ','KeyD','KeyL'].includes(code)) this.shoot(['KeyA','KeyJ'].includes(code) ? -1 : 1);
     }
     keyUp(event) { if(MM.InputManager?.keyUp(this,event))return;this.keys.delete(event.code); }
+    inputPoint(event) {
+      const rect = this.canvas?.getBoundingClientRect() || {left:0,top:0,width:W,height:H};
+      if(this.mobileRotation)return {x:event.clientY-rect.top,y:(rect.right??rect.left+rect.width)-event.clientX};
+      return {x:event.clientX-rect.left,y:event.clientY-rect.top};
+    }
     point(event) {
       const rect = this.canvas?.getBoundingClientRect() || {left:0,top:0,width:W,height:H};
-      return {x:(event.clientX-rect.left)*W/rect.width,y:(event.clientY-rect.top)*H/rect.height};
+      const point=this.inputPoint(event),width=this.mobileRotation?rect.height:rect.width,height=this.mobileRotation?rect.width:rect.height;
+      const style=this.canvas?root.getComputedStyle?.(this.canvas):null,fit=style?.objectFit||'fill';
+      if(!['cover','contain'].includes(fit))return {x:point.x*W/width,y:point.y*H/height};
+      const scale=fit==='contain'?Math.min(width/W,height/H):Math.max(width/W,height/H);
+      const position=(style?.objectPosition||'50% 50%').split(/\s+/);
+      const offset=(value,space)=>{
+        if(['left','top'].includes(value))return 0;
+        if(['right','bottom'].includes(value))return space;
+        if(value==='center')return space*.5;
+        return value?.endsWith('%')?space*parseFloat(value)/100:value?.endsWith('px')?parseFloat(value):space*.5;
+      };
+      return {x:(point.x-offset(position[0],width-W*scale))/scale,y:(point.y-offset(position[1],height-H*scale))/scale};
     }
     pointerDown(event) {
       if(this.weaponPicker?.open)return;
@@ -169,12 +185,13 @@
       this.canvas?.focus({preventScroll:true});
       try { this.canvas?.setPointerCapture(event.pointerId); } catch { /* Synthetic test pointers have no capture. */ }
       const p = this.point(event);
-      this.pointers.set(event.pointerId,{startX:event.clientX,startY:event.clientY,x:event.clientX,y:event.clientY,worldX:p.x,age:0,mode:'pending',move:0,shot:false,mouse:event.pointerType==='mouse'});
+      const pixel=this.inputPoint(event);
+      this.pointers.set(event.pointerId,{startX:pixel.x,startY:pixel.y,x:pixel.x,y:pixel.y,worldX:p.x,age:0,mode:'pending',move:0,shot:false,mouse:event.pointerType==='mouse'});
       if (event.pointerType === 'mouse') { this.shoot(p.x<W/2 ? -1 : 1); this.pointers.get(event.pointerId).shot = true; }
     }
     pointerMove(event) {
       const pointer = this.pointers.get(event.pointerId); if (!pointer) return;
-      event.preventDefault?.(); pointer.x = event.clientX; pointer.y = event.clientY;
+      event.preventDefault?.();const pixel=this.inputPoint(event);pointer.x=pixel.x;pointer.y=pixel.y;
       const dx = pointer.x-pointer.startX, dy = pointer.y-pointer.startY;
       // Pixel thresholds work on both narrow mobile screens and large desktops.
       if (pointer.mode === 'pending' && Math.max(Math.abs(dx),Math.abs(dy)) >= 22) {
@@ -751,12 +768,13 @@
     resize() {
       if(this.headless)return;const dpr=Math.min(root.devicePixelRatio||1,2);this.canvas.width=W*dpr;this.canvas.height=H*dpr;this.dpr=dpr;this.ctx.setTransform(dpr,0,0,dpr,0,0);
       const rect=this.canvas.getBoundingClientRect();
+      const boxWidth=this.mobileRotation?rect.height:rect.width,boxHeight=this.mobileRotation?rect.width:rect.height;
       // Cover may trim distant sky, but must never crop the arena's left/right edges.
       this.canvas.style.objectFit='';
       const requestedFit=root.getComputedStyle?.(this.canvas).objectFit||'fill';
-      const fit=requestedFit==='cover'&&rect.width/Math.max(1,rect.height)<W/H?'contain':requestedFit;
+      const fit=requestedFit==='cover'&&boxWidth/Math.max(1,boxHeight)<W/H?'contain':requestedFit;
       this.canvas.style.objectFit=fit;
-      this.viewTop=fit==='cover'?Math.max(0,H-W*rect.height/Math.max(1,rect.width)):0;
+      this.viewTop=fit==='cover'?Math.max(0,H-W*boxHeight/Math.max(1,boxWidth)):0;
       for(const enemy of this.enemies){
         if(enemy.homeY){enemy.homeY=Math.min(GROUND-45,Math.max(enemy.baseHomeY||enemy.homeY,this.viewTop+enemy.h+25));if(enemy.platform)enemy.platform.y=enemy.homeY;}
       }

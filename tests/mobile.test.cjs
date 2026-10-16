@@ -217,16 +217,18 @@ test('unexpected fullscreen exit clears input, resets timing, unlocks and pauses
   assert.equal(count(f.calls, 'pause'), 1);
 });
 
-test('sync updates viewport hint without changing input, timing, resize or game state', () => {
+test('sync is idle until viewport geometry changes, then releases held input without changing game timing', () => {
   const f = fixture();
   f.calls.length = 0;
   for (let index = 0; index < 30; index++) f.controller.sync();
   assert.equal(f.hint.hidden, false);
+  assert.deepEqual(f.calls, []);
   f.root.innerWidth = 844;
   f.root.innerHeight = 390;
   f.controller.sync();
   assert.equal(f.hint.hidden, true);
-  assert.deepEqual(f.calls, []);
+  assert.deepEqual(f.calls, ['clear']);
+  f.controller.sync();assert.equal(count(f.calls,'clear'),1);
   assert.equal(f.game.lastTime, 44);
   assert.equal(f.game.screen, 'playing');
   f.root.emit('resize');

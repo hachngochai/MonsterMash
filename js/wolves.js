@@ -2,7 +2,7 @@
 (function (root) {
   'use strict';
   const MM = root.MM = root.MM || {};
-  const W = 960, GROUND = 438, EPSILON = 1e-8, BLOOD_INTERVAL = 1.5;
+  const W = 960, GROUND = 438, EPSILON = 1e-8, BLOOD_INTERVAL = 1.5, BLOOD_CAST_DURATION = 1.5;
   const HOWL_DURATION = 4, PACK_SIZE = 5, PACK_LIMIT = 10;
   const clamp = (value, low, high) => Math.max(low, Math.min(high, value));
   const isWolf = enemy => (enemy?.archetype || enemy?.type) === 'werewolf';
@@ -94,9 +94,11 @@
     // Announce the full reaction floor, including flight. Absolute offsets keep
     // both impacts intact even when frames have uneven durations.
     const firstAt = clamp(pressure(game, enemy).warningFloor || .9, .75, 1.1);
-    enemy.bloodCombo = {startAt, firstAt, secondAt:firstAt + .25, firstDone:false, secondDone:false};
+    enemy.bloodCombo = {startAt, firstAt, secondAt:BLOOD_CAST_DURATION - .15,
+      duration:BLOOD_CAST_DURATION, firstDone:false, secondDone:false};
     enemy.comboFirstImpactAt = firstAt; enemy.clawIndex = 1;
-    zone(game, enemy, 'claw', firstAt, 2, 1);
+    const area = zone(game, enemy, 'claw', firstAt, 2, 1);
+    area.castDuration = BLOOD_CAST_DURATION; area.castElapsed = 0; area.castProgress = 0;
     state(enemy, 'blood-windup', firstAt - .5, 'TRĂNG MÁU · SONG TRẢO · 2 × 2 MÁU');
   }
   function startHowl(game, enemy) {
@@ -175,7 +177,7 @@
     else if (elapsed < combo.firstAt - EPSILON) { name = 'claw-windup'; startAt = leapEnd; endAt = combo.firstAt; label = 'SONG TRẢO · 1/2 · 2 MÁU'; }
     else if (elapsed < combo.firstAt + .1 - EPSILON) { name = 'claw'; startAt = combo.firstAt; endAt = combo.firstAt + .1; }
     else if (elapsed < combo.secondAt - EPSILON) { name = 'claw-windup'; startAt = combo.firstAt + .1; endAt = combo.secondAt; label = 'SONG TRẢO · 2/2 · 2 MÁU'; }
-    else if (elapsed < combo.secondAt + .1 - EPSILON) { name = 'claw'; startAt = combo.secondAt; endAt = combo.secondAt + .1; }
+    else if (elapsed < combo.duration - EPSILON) { name = 'claw'; startAt = combo.secondAt; endAt = combo.duration; }
     else { clearZones(game, enemy); enemy.y = GROUND; state(enemy, 'recover', Math.max(0, BLOOD_INTERVAL - elapsed)); return; }
     const second = elapsed >= combo.firstAt + .1 - EPSILON;
     const index = second ? 2 : 1;
@@ -189,6 +191,9 @@
     } else if (elapsed >= leapEnd - EPSILON) { enemy.x = enemy.wolfEndX; enemy.y = GROUND; }
     const area = enemy.wolfZone;
     if (!area) return;
+    // Cosmetic trails span the full cast; damage still occurs once per claw.
+    area.castElapsed = clamp(elapsed, 0, combo.duration);
+    area.castProgress = area.castElapsed / combo.duration;
     area.clawIndex = index;
     const striking = name === 'claw';
     if (striking && !(second ? combo.secondDone : combo.firstDone)) {
@@ -198,7 +203,7 @@
     }
     area.phase = striking ? 'impact' : 'warning';
     area.timer = Math.max(0, striking ? endAt - elapsed : (second ? combo.secondAt : combo.firstAt) - elapsed);
-    if (second) area.total = .15;
+    if (second) area.total = combo.duration - combo.secondAt;
     applyImpact(game, enemy);
   }
   function updatePup(game, enemy, dt) {

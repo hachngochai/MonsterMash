@@ -20,7 +20,7 @@
       const image=new ImageType(),entry=spriteEntries[name];entry.image=image;image.decoding='async';
       image.onload=()=>{entry.ready=(image.naturalWidth||image.width)>0;resolve();};
       image.onerror=()=>{entry.ready=false;resolve();};
-      image.src=spriteBase+file+'?v=3.1.0';
+      image.src=spriteBase+file+'?v=3.1.1';
     });
   }));
   window.MM=window.MM||{};
@@ -1158,6 +1158,22 @@
           ellipse(c, left + width * (i + .5) / 4, y - 3 - Math.sin(progress * Math.PI) * 11, 12 + progress * 10, 5 + progress * 3, '#bcb79830');
         }
       }
+      if(zone.kind==='claw'&&zone.castDuration>0){
+        const elapsed=Math.max(0,zone.castElapsed||0),duration=zone.castDuration;
+        const combo=zone.owner?.bloodCombo,first=!!combo?.firstDone||(zone.phase==='impact'&&zone.clawIndex===1),second=!!combo?.secondDone||(zone.phase==='impact'&&zone.clawIndex===2);
+        // Both claw trails belong to one 1.5-second cast; they add no hit windows.
+        c.save();c.globalAlpha=effects ? .78 : .58;c.lineCap='round';
+        for(const [released,lean] of [[first,1],[second,-1]])if(released){
+          for(let i=0;i<3;i++){
+            const sx=left+width*(.23+i*.23);
+            c.beginPath();c.moveTo(sx-lean*24,y-height+1);c.bezierCurveTo(sx+lean*23,y-height*.85,sx+lean*27,y-height*.32,sx-lean*3,y-3);
+            c.strokeStyle='#a2364e';c.lineWidth=effects?8:5;c.stroke();c.strokeStyle='#ffb6a5';c.lineWidth=3;c.stroke();
+            c.strokeStyle='#fff0cf';c.lineWidth=1;c.stroke();
+          }
+        }
+        c.globalAlpha=1;rounded(c,x-64,y+13,128,17,4,'#30222ced','#ffba9c88');
+        c.font=`600 9px ${font}`;c.textAlign='center';c.fillStyle='#ffd7bd';c.fillText(`SONG TRẢO · ${Math.max(0,duration-elapsed).toFixed(1)}s`,x,y+25);c.restore();
+      }
       c.restore();
     }
   }
@@ -1948,10 +1964,72 @@
     else if(z.kind==='earth')drawDragonEarth(c,z,t,effects);
     else if(z.kind==='lightning')drawDragonLightning(c,z,t,effects,viewTop);
   }
+  function drawChimeraBite(c,z,t,effects,viewTop) {
+    const x=z.x||0,y=z.y||GROUND,w=z.w||190,h=z.h||85;
+    const warning=z.phase==='warning',windup=z.attackWindup||z.total||.95,leap=z.attackLeap||.55;
+    const elapsed=Number.isFinite(z.attackElapsed)?z.attackElapsed:warning?windup-(z.timer||0):windup+leap+.07;
+    const travel=Math.max(0,Math.min(1,(elapsed-windup)/leap));
+    const impactAge=Math.max(0,elapsed-windup-leap),opening=warning ? .3+Math.sin(travel*Math.PI*.8)*.7 : Math.max(.03,.18-impactAge*1.1);
+    const centerY=y-h*.48,half=w*.46,gap=5+opening*18;
+    c.save();c.lineCap='round';c.lineJoin='round';
+    // The fixed footprint stays identical to the damage zone, even while the
+    // creature leaps. Teeth are an attack silhouette, not a second hitbox.
+    rect(c,x-w/2,y-5,w,5,warning?'#e2ab7170':'#f7d39bc9');
+    if(warning) {
+      const ratio=Math.max(0,Math.min(1,elapsed/(windup+leap)));
+      rect(c,x-w/2,y-3,w*ratio,3,'#f6d5a0');
+      c.setLineDash([7,5]);c.strokeStyle='#e8bb8080';c.lineWidth=1.2;c.strokeRect(x-w/2,Math.max(viewTop+15,y-h),w,Math.min(h,y-viewTop-15));c.setLineDash([]);
+      const labelY=Math.max(viewTop+39,y-h-12);rounded(c,x-72,labelY-15,144,21,4,'#1b2734ed','#dfa975aa');
+      c.font=`600 10px ${font}`;c.textAlign='center';c.fillStyle='#f0c081';c.fillText('NHẢY CẮN · RỜI VÙNG',x,labelY);
+      if(travel<=0){c.restore();return;}
+    }
+    if(effects) {
+      const owner=z.owner,sx=owner?owner.x+(z.facing||owner.dir||1)*owner.w*.22:x,sy=owner?owner.y-owner.h*.61:centerY-65;
+      if(warning){
+        c.beginPath();c.moveTo(sx,sy);c.quadraticCurveTo((sx+x)*.5,Math.min(sy,centerY)-26,x,centerY);
+        c.strokeStyle='#f1c88a45';c.lineWidth=9;c.stroke();c.strokeStyle='#ffe2ac83';c.lineWidth=1.4;c.stroke();
+      } else halo(c,x,centerY,w*.6,'#f7c58b',.17*Math.max(.2,1-impactAge*3));
+    }
+    c.translate(x,centerY);c.globalAlpha*=warning?Math.min(.88,.28+travel*.65):Math.max(.25,1-impactAge*2.7);
+    const jaw=(lower)=>{
+      c.save();c.translate(0,lower?gap:-gap);if(lower)c.scale(1,-1);
+      const depth=lower?15:21;
+      c.beginPath();c.moveTo(-half,3);c.bezierCurveTo(-half*.99,-depth*.7,-half*.68,-depth-6,-half*.3,-depth);
+      c.quadraticCurveTo(0,-depth-10,half*.3,-depth);c.bezierCurveTo(half*.72,-depth-4,half*1.04,-depth*.55,half,3);
+      c.quadraticCurveTo(half*.55,10,0,6);c.quadraticCurveTo(-half*.52,11,-half,3);c.closePath();
+      const skin=c.createLinearGradient(0,-depth-7,0,7);skin.addColorStop(0,'#2b2533');skin.addColorStop(.6,'#68444b');skin.addColorStop(1,'#a36b68');
+      c.fillStyle=skin;c.fill();c.strokeStyle='#f0c291';c.lineWidth=2;c.stroke();
+      c.beginPath();c.moveTo(-half*.9,1);c.quadraticCurveTo(0,-4,half*.9,1);c.quadraticCurveTo(0,11,-half*.9,1);c.fillStyle='#642c3b';c.fill();
+      const count=lower?6:7;
+      for(let i=0;i<count;i++) {
+        const u=(i+.5)/count,tx=(u*2-1)*half*.89,rootY=2+(1-Math.abs(u*2-1))*2;
+        const canine=i===1||i===count-2,len=canine?(lower?21:27):12+Math.sin(u*Math.PI)*4,width=canine?7:6;
+        c.beginPath();c.moveTo(tx-width,rootY-2);c.quadraticCurveTo(tx-2,rootY+len*.7,tx+Math.sign(tx)*2,rootY+len);
+        c.quadraticCurveTo(tx+width*.6,rootY+len*.48,tx+width,rootY-1);c.closePath();
+        const ivory=c.createLinearGradient(tx,rootY,tx,rootY+len);ivory.addColorStop(0,'#b59e83');ivory.addColorStop(.5,'#f8e9c8');ivory.addColorStop(1,'#fff8e1');c.fillStyle=ivory;c.fill();c.strokeStyle='#52373b';c.lineWidth=.8;c.stroke();
+      }
+      c.beginPath();c.moveTo(-half*.75,-depth*.45);c.quadraticCurveTo(0,-depth*.85,half*.76,-depth*.42);c.strokeStyle='#f0c7a044';c.lineWidth=1.3;c.stroke();c.restore();
+    };
+    jaw(false);jaw(true);
+    if(!warning) {
+      // Closing fangs land once; the crack and grit fade during the existing
+      // impact window, without adding flashes or a new combat event.
+      const spread=1+impactAge*4;
+      c.beginPath();c.moveTo(-half*.72,2);c.lineTo(-half*.4,-4);c.lineTo(-half*.1,4);c.lineTo(half*.18,-3);c.lineTo(half*.5,3);c.lineTo(half*.77,-1);c.strokeStyle='#fff0c7';c.lineWidth=2.1;c.stroke();
+      if(effects)for(let i=0;i<10;i++) {
+        const angle=i*Math.PI*.2+.21,r=(21+i%3*8)*spread,px=Math.cos(angle)*r,py=Math.sin(angle)*r*.5;
+        polygon(c,[[px-2,py],[px,py-4],[px+3,py+1]],i%2?'#dba97c':'#f8deaa');
+      }
+    }
+    c.restore();
+  }
   function drawRealmZones(c, zones, t, effects, viewTop=0) {
     const styles={fire:['#ed9269','LỬA · THIÊU ĐỐT'],ice:['#b6e9f4','BĂNG RƠI'],wind:['#b3e7ce','GIÓ · HẤT TUNG'],earth:['#efa16a','DUNG NHAM'],lightning:['#f0d89b','SÉT · CHOÁNG'],'yin-yang':['#e9e6da','ÂM DƯƠNG · RỜI VÙNG SÁNG'],spear:['#e6d5a7','THÁNH THƯƠNG'],laser:['#f3b39b','TIA HỦY DIỆT'],bite:['#f0c081','NHẢY CẮN'],claw:['#f0c081','NHẢY CÀO'],roar:['#efab7c','HỎA PHONG'],stab:['#e1c994','ĐÂM GIÁO'],axe:['#d6c1b0','BỔ RÌU'],petrify:['#bee0b0','ÁNH NHÌN HÓA ĐÁ · BẬT KHIÊN'],swoop:['#e7bf98','KHÓA MỤC TIÊU · BẬT KHIÊN']};
     for(const z of zones||[]){
       if(dragonZoneColors[z.kind]){c.save();c.lineJoin='round';drawDragonZone(c,z,t,effects,viewTop);c.restore();continue;}
+      // Biting jaws close over their prey after the creature/player pass, so
+      // the giant body cannot hide the actual impact silhouette.
+      if(z.kind==='bite')continue;
       const style=styles[z.kind]||['#e9cfa0','NGUY HIỂM'],color=style[0],warning=z.phase==='warning',x=z.x||0,y=z.y||GROUND,w=z.w||90,h=z.h||70,left=x-w/2,top=Math.max(viewTop+15,y-h);
       c.save();c.lineJoin='round';
       if(z.kind==='laser'&&Number.isFinite(z.x1)){
@@ -1988,8 +2066,7 @@
         rect(c,left,top,w,y-top,'#9ebba418');for(let i=0;i<5;i++){const radius=35+i*18;c.strokeStyle=color+(i%2?'88':'4f');c.lineWidth=2;c.beginPath();c.arc(z.owner?.x||x,(z.owner?.y||y)-(z.owner?.h||54)*.6,radius,-.4,Math.PI*.8);c.stroke();}
       }else{
         rect(c,left,y-Math.min(h,90),w,Math.min(h,90),color+'22');
-        if(z.kind==='bite'){c.beginPath();c.ellipse(x,y-35,w*.44,28,0,0,TAU);c.strokeStyle=color;c.lineWidth=3;c.stroke();for(let i=0;i<7;i++){const fx=left+12+i*(w-24)/6;polygon(c,[[fx-4,y-57],[fx,y-43],[fx+4,y-57]],'#f4ddaa');polygon(c,[[fx-4,y-13],[fx,y-26],[fx+4,y-13]],'#f4ddaa');}}
-        else for(let i=0;i<3;i++){const sx=left+20+i*w*.24;line(c,sx,y-64,sx+w*.25,y-9,color,3);}
+        for(let i=0;i<3;i++){const sx=left+20+i*w*.24;line(c,sx,y-64,sx+w*.25,y-9,color,3);}
       }
       c.restore();
     }
@@ -2291,6 +2368,7 @@
       }
       for (const e of game.enemies || []) drawDraculaDrain(c, e, game.player, t, effects);
       if (game.player) drawHunter(c, game.player, t, effects,game);
+      for (const z of game.mythicZones || []) if(z.kind==='bite'&&!z.expired)drawChimeraBite(c,z,t,effects,game.viewTop||0);
       for (const b of game.bullets || []) drawBullet(c, b, effects);
       for (const shot of game.enemyShots || []) drawEnemyShot(c, shot, t, effects);
       for (const shot of game.dragonShots || []) drawRealmShot(c,shot,t,effects);
