@@ -217,7 +217,7 @@
     game.groundCracks = game.groundCracks.filter(crack => crack.life > 0 && alive(crack.owner));
     game.golemZones = game.golemZones.filter(zone => alive(zone.owner));
     for (const enemy of game.enemies) {
-      if (!alive(enemy) || !isGolem(enemy) || enemy.phase !== 'active') continue;
+      if (!alive(enemy) || !isGolem(enemy) || enemy.phase !== 'active' || (enemy.petrifiedTime || 0) > 1e-8) continue;
       updateEntity(game, enemy, dt);
       if (game.screen !== 'playing') break;
     }

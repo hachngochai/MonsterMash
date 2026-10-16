@@ -214,7 +214,7 @@
     }
     game.bananaPeels=(game.bananaPeels||[]).filter(p=>p.life>0&&alive(p.owner));
     for(const e of [...game.enemies]){
-      if(alive(e)&&isKong(e)&&e.phase==='active')updateEntity(game,e,dt);
+      if(alive(e)&&isKong(e)&&e.phase==='active'&&!(e.petrifiedTime>1e-8))updateEntity(game,e,dt);
       if(game.screen!=='playing')break;
     }
   }

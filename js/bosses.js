@@ -206,6 +206,7 @@
   function updateHazards(game, dt) {
     for (const hazard of game.bossHazards) {
       if (!alive(hazard.owner)) continue;
+      if ((hazard.owner.petrifiedTime || 0) > EPSILON) continue;
       hazard.timer -= dt; hazard.life -= dt; hazard.pulse += dt;
       if (hazard.phase === 'warning' && hazard.timer <= EPSILON) {
         hazard.phase = 'active';
@@ -248,6 +249,7 @@
   function updateTsunamiChildren(game, dt) {
     for (const child of game.enemies) {
       if (!child.tsunamiChild || !alive(child)) continue;
+      if ((child.petrifiedTime || 0) > EPSILON) continue;
       if (!alive(child.ownerBoss)) { child.dead = true; child.health = 0; continue; }
       let travel = dt;
       if (child.tsunamiDelay > EPSILON) {
@@ -467,7 +469,7 @@
     updateTsunamiChildren(game, dt);
     if (game.screen !== 'playing') return;
     for (const enemy of game.enemies.slice()) {
-      if (!enemy.boss || !alive(enemy)) continue;
+      if (!enemy.boss || !alive(enemy) || (enemy.petrifiedTime || 0) > EPSILON) continue;
       if (!enemy.skillTimers) setup(game, enemy);
       if (enemy.phase !== 'active') continue;
       enemy.hardenedTime = Math.max(0, (enemy.hardenedTime || 0) - dt);
@@ -507,5 +509,12 @@
     game.bossEggs = game.bossEggs.filter(egg => alive(egg.owner) && egg.health > 0);
   }
 
-  MM.BossCombat = {setup, update, hit, hitEgg, webHit, spiderlingHit, cleanup};
+  function afterDamage(game, enemy) {
+    // Multishot weapons can cross half HP and deal the lethal hit in a single
+    // frame. Spawn Dracula's second body before killEnemy checks the encounter.
+    if (enemy?.boss && enemy.skillLevel === 50 && !enemy.splitTriggered && enemy.health <= enemy.maxHealth / 2) {
+      updateDracula(game, enemy, 0);
+    }
+  }
+  MM.BossCombat = {setup, update, hit, hitEgg, webHit, spiderlingHit, cleanup, afterDamage};
 })(typeof window !== 'undefined' ? window : globalThis);

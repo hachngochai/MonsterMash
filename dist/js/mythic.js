@@ -277,7 +277,7 @@
     dt=clamp(Number.isFinite(dt)?dt:0,0,.05);
     g.mythicZones ||= [];g.mythicShots ||= [];
     for(const e of g.enemies.slice()) {
-      if(alive(e)&&accepts(e)&&e.phase==='active')updateEntity(g,e,dt);
+      if(alive(e)&&accepts(e)&&e.phase==='active'&&!(e.petrifiedTime>EPS))updateEntity(g,e,dt);
       if(g.screen!=='playing')break;
     }
     g.mythicZones=g.mythicZones.filter(z=>!z.expired&&alive(z.owner));

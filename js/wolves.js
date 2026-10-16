@@ -275,7 +275,7 @@
     game.wolfZones = (game.wolfZones || []).filter(area => alive(area.owner));
     // Summoning appends a pack; only entities present at frame start act now.
     for (const enemy of game.enemies.slice()) {
-      if (!alive(enemy) || !isWolf(enemy) || enemy.phase !== 'active') continue;
+      if (!alive(enemy) || !isWolf(enemy) || enemy.phase !== 'active' || (enemy.petrifiedTime || 0) > 1e-8) continue;
       updateEntity(game, enemy, dt);
       if (game.screen !== 'playing') break;
     }

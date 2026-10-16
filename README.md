@@ -1,6 +1,8 @@
 # Monster Mash — The Midnight Hunt
 
-Rebuild 07 (v3.0.2) của game Monster Mash của KIO. Native Canvas 2D, không cần Processing.js, CDN, thư viện hoặc cài package. Có thể mở `index.html` trực tiếp; nên dùng preview local để tiến trình lưu cùng một địa chỉ trình duyệt.
+Rebuild 07 (v3.1.0) của game Monster Mash của KIO. Native Canvas 2D, không cần Processing.js, CDN, thư viện hoặc cài package. Có thể mở `index.html` trực tiếp; nên dùng preview local để tiến trình lưu cùng một địa chỉ trình duyệt.
+
+V3 thêm phần thưởng vĩnh viễn sau boss 10–100: Xương Phân Ba, Khiên Bất Tử, Nhảy Cao, Hắc Hóa, Hút Máu, Chùy Golem, chọn tầm bắn, Cung Hắc Ám, Giáo Bạch Kim, Song Rìu và Hóa Đá. Chỉ Song Rìu có Lăn Chém gây sát thương; lướt riêng màn 70 không gây sát thương. Sáu manager và UI dùng chung cho PC/mobile, lưu trong dữ liệu hiện có và không thưởng trùng. Xem [thông số và vị trí tích hợp V3](docs/V3-design.md).
 
 Bản 3.0.2 dùng ảnh PNG trong suốt tách từ mẫu nhân vật do tác giả cung cấp: rồng, Người Sư tử, Medusa, Goatman và Chimera. Năm hệ rồng có bảng màu riêng: lửa đỏ, băng xanh lam, gió xanh ngọc, đất nâu và chớp tím vàng. Rồng ngàn tuổi mang vương miện, giữ màu đen trắng cùng vòng Âm Dương. Game tải sẵn sprite từ `assets/sprites/` rồi vẽ lên Canvas; tạo hình bằng code vẫn làm dự phòng nếu ảnh chưa tải được. Chimera được phóng lớn thành 300 × 210 pixel, còn ba bản thể thu về 76 × 108 pixel để cân đối hơn với người chơi. Kỹ năng và cơ chế chiến đấu giữ nguyên.
 
@@ -80,10 +82,14 @@ Hiệu ứng nguyên tố dùng luồng lửa từ miệng rồng, băng có hơ
 | Thao tác | PC | Mobile |
 | --- | --- | --- |
 | Đi trái / phải | ← / → | Vuốt ngang rồi giữ; nhả ngón tay để dừng |
-| Nhảy | ↑ hoặc W | Vuốt lên hoặc nút ↑ |
+| Nhảy / nhảy cao sau boss 30 | ↑; nhấn đúp ↑ để nhảy cao. W còn nhảy trước boss 80 | Vuốt lên hoặc nút ↑; nhấn đúp nút ↑ để nhảy cao |
 | Bắn trái | Giữ A hoặc J | Chạm / giữ nửa trái sân chơi |
 | Bắn phải | Giữ D hoặc L | Chạm / giữ nửa phải sân chơi |
 | Khiên | Space | Vuốt xuống hoặc nút ◇ |
+| Bất Tử sau boss 20 | Nhấn đúp Space, có ít nhất 3 khiên, tiêu hao 2, kéo dài 12s | Nhấn đúp nút ◇ hoặc vuốt xuống hai lần |
+| Đổi vũ khí sau boss 10 / chọn sau boss 60 | Nhấn F / giữ F .35s; mũi tên chọn, Enter xác nhận | Nhấn / giữ nút vũ khí, chạm chọn và Trang bị |
+| Chọn tầm bắn sau boss 80 | W: cao 35°, S: mặt đất; không đổi vũ khí | Nút Tầm cao / Mặt đất |
+| Lăn Chém Song Rìu | Chỉ khi trang bị Song Rìu, nhấn đúp ← / → | Nhấn đúp nút đi hoặc vuốt ngang hai lần cùng hướng |
 | Lộn trong Trăng Máu màn 70 | Nhấn nhanh hai lần cùng phím ← hoặc → | Chạm hai lần cùng nút đi, hoặc vuốt ngang hai lần cùng hướng |
 | Tạm dừng | Esc / P hoặc nút Ⅱ | Nút Ⅱ |
 

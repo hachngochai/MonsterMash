@@ -27,7 +27,7 @@
     const resume=valid(raw.resume)?Campaign.getLevel(raw.resume).id:1;
     const newChapter=Campaign.levels.length>previousSize&&resume===previousSize&&completed.includes(previousSize);
     return {
-      version: 2, campaignSize:Campaign.levels.length, completed,
+      version: 2, campaignSize:Campaign.levels.length, completed, progression:raw.progression,
       resume: newChapter?previousSize+1:resume,
       best: valid(raw.best) ? Math.floor(raw.best) : 0,
       settings: { difficulty: ['story','normal','hard'].includes(settings.difficulty) ? settings.difficulty : 'normal', controls: ['both','gestures','buttons'].includes(settings.controls) ? settings.controls : 'both', sound: settings.sound === true, effects: settings.effects !== false, reducedMotion: settings.reducedMotion === true }
@@ -56,6 +56,8 @@
       this.random = options.random || Math.random;
       try { this.storage = options.storage || root.localStorage; } catch { this.storage = null; }
       this.save = readSave(this.storage);
+      this.progression = MM.SaveManager?.normalize(this.save.progression,this.save.completed);
+      if(this.progression)this.save.progression=this.progression;
       this.settings = this.save.settings;
       if (!this.headless && root.matchMedia?.('(prefers-reduced-motion: reduce)').matches) this.settings.reducedMotion = true;
       this.level = Campaign.getLevel(this.save.resume);
@@ -71,6 +73,7 @@
       this.shake = 0; this.flash = 0; this.toastTime = 0; this.bannerTime = 0;
       this.tuning = Campaign.tuning(this.settings.difficulty); this.player = this.makePlayer();
       this.sound = new Sound(this); this.checkpoint = null; this.resultAction = null;
+      MM.WeaponManager?.init(this);MM.SkillManager?.init(this);MM.InputManager?.init(this);
       if (!this.headless) {
         this.canvas = document.getElementById('canvas'); this.ctx = this.canvas.getContext('2d');
         this.ui = {}; document.querySelectorAll('[id]').forEach(node => this.ui[node.id] = node);
@@ -86,7 +89,7 @@
       const ammo=Math.max(1,Math.round((this.level.initialAmmo||3)*(this.tuning.ammoMultiplier||1)));
       return {x:W/2,y:GROUND,w:38,h:54,dir:1,vx:0,vy:0,grounded:true,health,maxHealth:this.tuning.health,ammo,maxAmmo:this.level.ammoCapacity||18,shieldTime:0,shieldHits:0,invulnerable:1.5,shotTimer:0,shotCooldown:.17,weaponMode:'normal',dryCooldown:0,jumpBuffer:0,coyote:.1,stunTime:0,stunGrace:0,stunStyle:'web',knockdownTime:0,rollTime:0,rollCooldown:0,rollDuration:.32,rollProgress:0,rollDir:1,petrifyTime:0,petrifyGrace:0,burnTime:0,burnTick:1};
     }
-    persist() { try { this.storage?.setItem(SAVE_KEY,JSON.stringify(this.save)); } catch { /* Game remains playable without localStorage. */ } }
+    persist() { if(this.progression)this.save.progression=this.progression;try { this.storage?.setItem(SAVE_KEY,JSON.stringify(this.save)); } catch { /* Game remains playable without localStorage. */ } }
     start(id = this.save.resume, options = {}) {
       const {carry = false, retry = false} = options;
       const oldHealth = this.player.health, oldAmmo=this.player.ammo;
@@ -95,6 +98,7 @@
       } else if (!carry) { this.score = 0; this.totalKills = 0; this.shieldCount = 0; }
       this.level = Campaign.getLevel(id); this.activeDifficulty = this.settings.difficulty; this.tuning = Campaign.tuning(this.activeDifficulty);
       this.player = this.makePlayer(carry ? clamp(oldHealth + (this.level.recovery ? 2 : 1),1,this.tuning.health) : this.tuning.health);
+      MM.WeaponManager?.init(this);MM.SkillManager?.reset(this);MM.InputManager?.init(this);this.aimMode='ground';
       if(carry)this.player.ammo=Math.min(this.player.maxAmmo,oldAmmo+this.player.ammo);
       else if(retry&&this.checkpoint)this.player.ammo=clamp(this.checkpoint.ammo??this.player.ammo,0,this.player.maxAmmo);
       this.checkpoint = {score:this.score,totalKills:this.totalKills,shieldCount:this.shieldCount,ammo:this.player.ammo};
@@ -118,6 +122,7 @@
       this.updateUI();
     }
     goHome() {
+      MM.InputManager?.close(this,false);
       this.save.best = Math.max(this.save.best,this.score); this.persist();
       this.screen = 'home'; this.clearInputs(); this.enemies = []; this.bullets = []; this.particles = []; this.pickups = []; this.floats = [];
       this.ammoCrates=[];this.enemyShots=[];
@@ -133,10 +138,13 @@
       this.keys.clear(); this.pointers.clear(); this.padInputs.clear();
       this.player.vx = 0; this.player.jumpBuffer = 0;
       this.moveTapDir=0;this.moveTapTime=-Infinity;
+      MM.InputManager?.reset(this);
+      if(this.skillState){this.skillState.shieldTapAt=-Infinity;this.skillState.jumpTapAt=-Infinity;}
       if(!this.headless)document.querySelectorAll('[data-control].held').forEach(button=>button.classList.remove('held'));
     }
     keyDown(event) {
       const code = event.code;
+      if(MM.InputManager?.keyDown(this,event))return;
       if (event.target && /^(INPUT|SELECT|TEXTAREA|BUTTON|A)$/.test(event.target.tagName)) return;
       if (!this.headless && document.querySelector('dialog[open]')) return;
       if (['Escape','KeyP'].includes(code)) { event.preventDefault?.(); if (!event.repeat) this.togglePause(); return; }
@@ -144,16 +152,17 @@
       if (['ArrowLeft','ArrowRight','ArrowUp','KeyW','KeyA','KeyD','KeyJ','KeyL','Space'].includes(code)) event.preventDefault?.();
       if(!event.repeat&&!this.keys.has(code)&&['ArrowLeft','ArrowRight'].includes(code))this.moveTap(code==='ArrowLeft'?-1:1);
       this.keys.add(code); this.sound.unlock();
-      if (!event.repeat && ['ArrowUp','KeyW'].includes(code)) this.jump();
-      if (!event.repeat && code === 'Space') this.activateShield();
+      if (!event.repeat && ['ArrowUp','KeyW'].includes(code)) this.jumpAction();
+      if (!event.repeat && code === 'Space') this.shieldAction();
       if (!event.repeat && ['KeyA','KeyJ','KeyD','KeyL'].includes(code)) this.shoot(['KeyA','KeyJ'].includes(code) ? -1 : 1);
     }
-    keyUp(event) { this.keys.delete(event.code); }
+    keyUp(event) { if(MM.InputManager?.keyUp(this,event))return;this.keys.delete(event.code); }
     point(event) {
       const rect = this.canvas?.getBoundingClientRect() || {left:0,top:0,width:W,height:H};
       return {x:(event.clientX-rect.left)*W/rect.width,y:(event.clientY-rect.top)*H/rect.height};
     }
     pointerDown(event) {
+      if(this.weaponPicker?.open)return;
       if (this.screen !== 'playing' || event.button > 0) return;
       if (event.pointerType !== 'mouse' && this.settings.controls === 'buttons') return;
       event.preventDefault?.(); this.sound.unlock();
@@ -170,7 +179,7 @@
       // Pixel thresholds work on both narrow mobile screens and large desktops.
       if (pointer.mode === 'pending' && Math.max(Math.abs(dx),Math.abs(dy)) >= 22) {
         if (Math.abs(dx) > Math.abs(dy)*1.15) { pointer.mode = 'move'; pointer.move = Math.sign(dx); this.moveTap(pointer.move); }
-        else if (Math.abs(dy) > Math.abs(dx)*1.15) { pointer.mode = 'vertical'; if (dy < 0) this.jump(); else this.activateShield(); }
+        else if (Math.abs(dy) > Math.abs(dx)*1.15) { pointer.mode = 'vertical'; if (dy < 0) this.jumpAction(); else this.shieldAction(); }
       } else if (pointer.mode === 'move') { pointer.move = Math.abs(dx) > 12 ? Math.sign(dx) : 0; }
     }
     pointerUp(event, cancelled = false) {
@@ -181,7 +190,7 @@
     }
     padDown(event, button) {
       event.preventDefault?.();
-      if (this.screen !== 'playing') return;
+      if (this.screen !== 'playing'||this.weaponPicker?.open) return;
       this.sound.unlock();
       this.canvas?.focus({preventScroll:true});
       const action = button.dataset.control;
@@ -189,8 +198,8 @@
       this.padInputs.set(event.pointerId, action);
       button.classList?.add('held');
       try { button.setPointerCapture(event.pointerId); } catch { /* Optional capture. */ }
-      if (action === 'jump') this.jump();
-      if (action === 'shield') this.activateShield();
+      if (action === 'jump') this.jumpAction();
+      if (action === 'shield') this.shieldAction();
       if (action === 'fire-left' || action === 'fire-right') this.shoot(action === 'fire-left' ? -1 : 1);
     }
     padUp(event, button) {
@@ -199,13 +208,16 @@
       try { button.releasePointerCapture(event.pointerId); } catch { /* Optional capture. */ }
     }
     jump() { if (this.screen === 'playing' && this.player.stunTime <= 0 && this.player.petrifyTime <= 0 && this.player.rollTime <= 0) this.player.jumpBuffer = .14; }
+    jumpAction(){return MM.SkillManager?MM.SkillManager.jumpTap(this):this.jump();}
+    shieldAction(){return MM.SkillManager?MM.SkillManager.shieldTap(this):this.activateShield();}
     moveTap(dir) {
+      if(MM.InputManager)return MM.InputManager.directionTap(this,dir);
       if(this.moveTapDir===dir&&this.time-this.moveTapTime<=.28){this.tryRoll(dir);this.moveTapDir=0;this.moveTapTime=-Infinity;}
       else{this.moveTapDir=dir;this.moveTapTime=this.time;}
     }
     tryRoll(dir) {
       const p=this.player,blood=this.enemies.some(e=>e.boss&&e.archetype==='werewolf'&&e.bloodMoon&&!e.dead&&e.health>0&&e.wolfState!=='transform');
-      if(this.screen!=='playing'||!blood||p.rollCooldown>1e-8||p.stunTime>0||p.petrifyTime>0||p.rollTime>0)return false;
+      if(this.screen!=='playing'||this.level.id!==70||!blood||this.rollSlash?.time>0||p.rollCooldown>1e-8||p.stunTime>0||p.petrifyTime>0||p.rollTime>0)return false;
       p.rollTime=p.rollDuration=.32;p.rollCooldown=.9;p.rollProgress=0;p.rollDir=dir<0?-1:1;p.dir=p.rollDir;p.vx=p.rollDir*850;p.jumpBuffer=0;
       this.burst(p.x,p.y-22,'#e5c39c',12);return true;
     }
@@ -221,7 +233,7 @@
       const aerialBoss=this.enemies.find(e=>e.boss&&e.archetype==='kong'&&e.vinePhase&&!e.kongFinalTriggered&&!e.dead&&e.health>0);
       if(aerialBoss)return {kind:'highAim',cost:1,damage:2,cooldown:.22,speed:1050,locked:aerialBoss.kongState==='vine-rise',target:aerialBoss};
       const bloodBoss=this.enemies.find(e=>e.boss&&e.archetype==='werewolf'&&e.bloodMoon&&!e.dead&&e.health>0);
-      if(bloodBoss)return {kind:'sniper',cost:5,damage:5,cooldown:.5,speed:1280,locked:bloodBoss.wolfState==='transform'};
+      if(bloodBoss&&this.level.id===70)return {kind:'sniper',cost:5,damage:5,cooldown:.5,speed:1280,locked:bloodBoss.wolfState==='transform'};
       const air=this.enemies.filter(e=>!e.dead&&e.health>0&&e.phase==='active'&&((e.archetype==='dragon'&&e.dragonForm!=='knight')||(e.archetype==='chimera'&&e.mythicAir)));
       if(air.length){
         const side=air.filter(e=>(e.x-this.player.x)*dir>=0),pool=side.length?side:air;
@@ -233,6 +245,7 @@
       return {kind:'normal',cost:1,damage:1,cooldown:.17,speed:780,locked:false};
     }
     shoot(dir) {
+      if(MM.WeaponManager)return MM.WeaponManager.fire(this,dir);
       if (this.screen !== 'playing' || this.player.shotTimer > .001 || this.player.stunTime > 0 || this.player.petrifyTime > 0 || this.player.rollTime > 0) return false;
       const p = this.player,weapon=this.getWeaponProfile(dir); p.dir = dir;p.weaponMode=weapon.kind;
       if(weapon.locked)return false;
@@ -274,13 +287,13 @@
     }
     updateAmmoUI() {
       if(this.headless||!this.ui['ammo-count'])return;
-      const p=this.player,weapon=this.getWeaponProfile(),sniper=weapon.kind==='sniper',high=weapon.kind==='highAim';p.weaponMode=weapon.kind;
+      const p=this.player,weapon=MM.WeaponManager?.profile(this)||this.getWeaponProfile(),sniper=weapon.kind==='sniper',high=weapon.kind==='highAim';p.weaponMode=weapon.kind;
       this.ui['ammo-count'].textContent=`${String(p.ammo).padStart(2,'0')} / ${p.maxAmmo}`;
       this.ui['ammo-status'].classList.toggle('low',p.ammo>=weapon.cost&&p.ammo<=(sniper?10:3));
       this.ui['ammo-status'].classList.toggle('empty',p.ammo<weapon.cost);
       this.ui['ammo-status'].classList.toggle('sniper',sniper);
-      this.ui['ammo-status'].setAttribute('aria-label',`${sniper?'Súng ngắm: 5 đạn / 5 sát thương. ':high?`Bắn tầm cao: 1 đạn / 2 sát thương.${weapon.target.archetype==='kong'?' Mỗi 5 phát nhận 1 khiên.':''} `:''}Đạn ${p.ammo} / ${p.maxAmmo}. Nhặt hòm AMMO để tiếp tế.`);
-      if(this.ui['ammo-mode'])this.ui['ammo-mode'].textContent=sniper?(weapon.locked?'NGẮM · CHỜ':p.shotTimer>0?`NGẮM ${p.shotTimer.toFixed(1)}s`:'NGẮM · 5 ĐẠN'):high?(weapon.locked?'TẦM CAO · CHỜ':weapon.target.archetype==='kong'?`TẦM CAO · ${weapon.target.highAimShots%5}/5`:'TẦM CAO · 2 SÁT THƯƠNG'):'ĐẠN';
+      this.ui['ammo-status'].setAttribute('aria-label',`${weapon.name||'Súng'}: ${weapon.cost} đạn / lượt. ${sniper?'Súng ngắm: 5 sát thương. ':high?`Bắn tầm cao.${weapon.target?.archetype==='kong'?' Mỗi 5 phát nhận 1 khiên.':''} `:''}Đạn ${p.ammo} / ${p.maxAmmo}. Nhặt hòm AMMO để tiếp tế.`);
+      if(this.ui['ammo-mode'])this.ui['ammo-mode'].textContent=sniper?(weapon.locked?'NGẮM · CHỜ':p.shotTimer>0?`NGẮM ${p.shotTimer.toFixed(1)}s`:'NGẮM · 5 ĐẠN'):high?(weapon.locked?'TẦM CAO · CHỜ':weapon.target?.archetype==='kong'?`TẦM CAO · ${weapon.target.highAimShots%5}/5`:'TẦM CAO'):weapon.equipped&&weapon.equipped!=='gun'?weapon.name:'ĐẠN';
       this.ui['touch-controls']?.classList.toggle('empty',p.ammo<weapon.cost);
       document.querySelectorAll('.fire-control').forEach(button=>{button.querySelector('small').textContent=sniper?'NGẮM':high?'BẮN CAO':'BẮN';button.setAttribute('aria-label',`${sniper?'Bắn ngắm':high?'Bắn tầm cao':'Bắn'} ${button.dataset.control==='fire-left'?'trái':'phải'}`);});
     }
@@ -366,6 +379,7 @@
       this.burst(x,y,'#dfd5b0',10);enemy.abilityState='ground';enemy.tell=false;enemy.charging=false;enemy.abilityTimer=6;
     }
     updateEnemy(e,dt) {
+      if(MM.SkillManager?.frozen(e))return;
       e.age+=dt;e.hit=Math.max(0,e.hit-dt);
       if(e.tsunamiChild)return; // The wave owns its staggered entry and one-way movement.
       if(e.phase==='warning'){
@@ -446,6 +460,7 @@
         this.bossDefeated = !this.enemies.some(other=>other!==enemy&&other.boss&&!other.dead&&other.health>0);
         MM.BossCombat?.cleanup(this,enemy);
       } else if(!enemy.minion)this.levelKills++;
+      MM.SkillManager?.onKill(this,enemy);MM.BossManager?.onDefeated(this,enemy);
       this.burst(enemy.x,enemy.y-enemy.h/2,enemy.boss?'#ffd391':'#bbc4a5',enemy.boss?36:14);
       this.floating(enemy.x,enemy.y-enemy.h-10,'+'+(enemy.score||100)); this.sound.play('kill');
       if (this.totalKills % 10 === 0) {
@@ -459,6 +474,7 @@
     }
     hurt(enemy) {
       const p = this.player; if ((p.invulnerable > 0 && !enemy.forceHit) || p.rollTime>0 || this.screen !== 'playing') return;
+      const immortal=p.immortalTime>0;
       if(enemy.phantomStrike){
         this.shieldCount=Math.max(0,this.shieldCount-1);p.shieldTime=0;p.shieldHits=0;
         p.knockdownTime=.75;p.stunTime=Math.max(p.stunTime,.75);this.clearInputs();
@@ -470,9 +486,9 @@
         if (p.shieldHits === 0) p.shieldTime = 0;
       } else {
         const damage=clamp(Number.isFinite(enemy.damage)?Math.trunc(enemy.damage):1,1,3);
-        p.health = Math.max(0,p.health-damage); p.invulnerable = 1.35;
+        p.health = Math.max(0,p.health-(immortal?0:damage)); p.invulnerable = 1.35;
         if(enemy.stun>0){p.stunTime=Math.max(p.stunTime,Math.min(2,enemy.stun));p.stunStyle=enemy.kind==='web'?'web':'stars';this.clearInputs();}
-        if(damage>1)this.floating(p.x,p.y-p.h-16,`−${damage} MÁU`,'#ffb391');
+        if(damage>1&&!immortal)this.floating(p.x,p.y-p.h-16,`−${damage} MÁU`,'#ffb391');
         const dir = Math.sign(p.x-enemy.x || 1); p.x = clamp(p.x+dir*42,28,W-28); p.vy = -160; p.grounded = false;
         this.shake = 6; this.flash = .12; this.burst(p.x,p.y-26,'#ff9a87',14); this.sound.play('hit');
         if (p.health === 0) this.finish(false);
@@ -482,11 +498,12 @@
     applyCombatEffect(spec={}) {
       const p=this.player;
       if(this.screen!=='playing'||p.rollTime>0||(p.invulnerable>0&&!spec.forceHit))return false;
-      const damage=clamp(Number.isFinite(spec.damage)?Math.trunc(spec.damage):0,0,3);
+      const immortal=p.immortalTime>0;
+      const damage=immortal?0:clamp(Number.isFinite(spec.damage)?Math.trunc(spec.damage):0,0,3);
       if(p.shieldTime>0&&p.shieldHits>0){
         p.shieldHits--;if(p.shieldHits===0)p.shieldTime=0;p.invulnerable=.45;
         this.burst(p.x,p.y-28,'#91e3d1',10,'ring');this.sound.play('shield');
-        const pierced=clamp(Number(spec.pierceShield)||0,0,3);
+        const pierced=immortal?0:clamp(Number(spec.pierceShield)||0,0,3);
         if(pierced>0){p.health=Math.max(0,p.health-pierced);this.floating(p.x,p.y-p.h-15,`−${pierced} MÁU · KHIÊN GIẢM ĐÒN`,'#ffd9a2');if(p.health===0)this.finish(false);}
         this.updateUI();return pierced>0;
       }
@@ -516,6 +533,7 @@
     drainTarget(owner) {
       if(this.screen!=='playing'||owner.dead||owner.health<=0)return;
       const p=this.player;
+      if(p.immortalTime>0){this.burst(p.x,p.y-28,'#e4d18f',8,'ring');return;}
       if(p.shieldTime>0&&p.shieldHits>0){
         p.shieldHits--;if(p.shieldHits===0)p.shieldTime=0;
         this.burst(p.x,p.y-28,'#91e3d1',10,'ring');this.floating(p.x,p.y-p.h-12,'KHIÊN CHẶN HÚT MÁU','#91e3d1');this.sound.play('shield');
@@ -545,6 +563,9 @@
     }
     update(dt) {
       dt = clamp(Number.isFinite(dt) ? dt : 0,0,.05);
+      MM.InputManager?.update(this,dt);
+      MM.ProgressionUI?.sync(this);
+      if(this.weaponPicker?.open)return;
       if (this.screen !== 'playing') { if (this.screen === 'home') this.time += dt; return; }
       this.time += dt; this.levelTime += dt; this.restTimer = Math.max(0,(this.restTimer||0)-dt);
       const p = this.player; p.invulnerable = Math.max(0,p.invulnerable-dt); p.shieldTime = Math.max(0,p.shieldTime-dt); p.shotTimer = Math.max(0,p.shotTimer-dt);p.dryCooldown=Math.max(0,p.dryCooldown-dt);
@@ -553,6 +574,7 @@
       if(p.stunTime<1e-8)p.stunTime=0;if(p.knockdownTime<1e-8)p.knockdownTime=0;
       if(wasStunned&&p.stunTime===0)p.stunGrace=.6;
       this.updatePlayerEffects(dt);if(this.screen!=='playing')return;
+      MM.SkillManager?.update(this,dt);
       let move = (this.keys.has('ArrowRight')?1:0)-(this.keys.has('ArrowLeft')?1:0);
       let fire = this.keys.has('KeyA')||this.keys.has('KeyJ') ? -1 : this.keys.has('KeyD')||this.keys.has('KeyL') ? 1 : 0;
       this.pointers.forEach(pointer => {
@@ -570,12 +592,14 @@
       const speed=285, acceleration=2100;
       const desired=move*speed; p.vx += clamp(desired-p.vx,-acceleration*dt,acceleration*dt); if (move) p.dir=move;
       if(p.rollTime>0){p.vx=p.rollDir*850;p.dir=p.rollDir;fire=0;}
+      if(this.rollSlash?.time>0){p.vx=this.rollSlash.dir*850;p.dir=this.rollSlash.dir;fire=0;p.jumpBuffer=0;}
       p.x=clamp(p.x+p.vx*dt,26,W-26);
       p.coyote = p.grounded ? .1 : Math.max(0,p.coyote-dt);
-      if (p.jumpBuffer > 0 && p.coyote > 0) { p.vy=-610; p.grounded=false; p.jumpBuffer=0; p.coyote=0; this.burst(p.x,GROUND,'#9aad94',6); }
+      if (p.jumpBuffer > 0 && p.coyote > 0) { p.vy=MM.SkillManager?.jumpVelocity(this,-610)??-610; p.grounded=false; p.jumpBuffer=0; p.coyote=0; this.burst(p.x,GROUND,'#9aad94',6); }
       p.jumpBuffer = Math.max(0,p.jumpBuffer-dt); p.vy += 1420*dt; p.y += p.vy*dt;
       if (p.y>=GROUND) { p.y=GROUND; p.vy=0; p.grounded=true; }
       if (fire) this.shoot(fire);
+      MM.WeaponManager?.update(this,dt);
       this.updateAmmo(dt);
       this.spawnTimer -= dt;
       const alive = this.enemies.filter(e=>!e.boss&&!e.minion).length;
@@ -632,19 +656,7 @@
         const e=candidates[0];
         if(e) {
           spent.add(bullet);
-          if(MM.BossCombat?.hit(this,e)===false){this.burst(e.x,bullet.y,'#a7edab',4);continue;}
-          const damage=clamp(Number.isFinite(bullet.damage)?bullet.damage:1,1,5);
-          const wolfHit=MM.WolfCombat?.hit(this,e,damage);
-          if(wolfHit===false){this.burst(e.x,e.y-e.h*.55,'#d6c7ed',5);continue;}
-          const kongHit=MM.KongCombat?.hit(this,e,damage);
-          if(kongHit===false){this.burst(e.x,e.y-e.h*.55,'#f5bf78',5);continue;}
-          const dragonHit=MM.DragonCombat?.hit(this,e,damage,bullet);
-          if(dragonHit===false){this.burst(e.x,e.y-e.h*.55,'#e8dfbc',5);continue;}
-          const mythicHit=MM.MythicCombat?.hit(this,e,damage,bullet);
-          if(mythicHit===false){this.burst(e.x,e.y-e.h*.55,'#dab9e5',5);continue;}
-          if(wolfHit!==true&&kongHit!==true&&dragonHit!==true&&mythicHit!==true)e.health-=damage;
-          e.hit=.12;if(!e.vinePhase&&!e.airborne&&!e.mythicAir)e.x=clamp(e.x+bullet.dir*(e.boss?2:7),18,W-18);
-          this.burst(e.x,bullet.y,'#ffdaa0',5); if(e.health<=0)this.killEnemy(e);
+          this.dealEnemyDamage(e,bullet.damage,bullet);
         }
       }
       if(this.screen!=='playing')return;
@@ -665,6 +677,24 @@
       this.persist();
       if(!this.headless){this.ui['stage-banner'].hidden=true;this.ui['toast'].hidden=true;this.showResult();this.buildMap();}
       this.updateUI();
+    }
+    // Every player weapon shares boss immunity, phase transitions and death accounting.
+    dealEnemyDamage(e,amount,attack={}) {
+      if(this.screen!=='playing'||!e||e.dead||e.health<=0||e.intangible||e.bulletUntargetable||e.phase!=='active')return false;
+      const damage=Math.max(1,Number.isFinite(amount)?amount:1);
+      if(MM.BossCombat?.hit(this,e)===false){this.burst(e.x,e.y-e.h*.5,'#a7edab',4);return false;}
+      let handled=false;
+      for(const combat of [MM.WolfCombat,MM.KongCombat,MM.DragonCombat,MM.MythicCombat]){
+        const result=combat?.hit(this,e,damage,attack);
+        if(result===false){this.burst(e.x,e.y-e.h*.55,'#d6c7ed',5);return false;}
+        if(result===true)handled=true;
+      }
+      if(!handled)e.health-=damage;
+      MM.BossCombat?.afterDamage?.(this,e);
+      e.hit=.12;if(!e.vinePhase&&!e.airborne&&!e.mythicAir)e.x=clamp(e.x+(attack.dir||this.player.dir)*(e.boss?2:7),18,W-18);
+      this.burst(e.x,Number.isFinite(attack.y)?attack.y:e.y-e.h*.5,'#ffdaa0',5);
+      if(e.health<=0)this.killEnemy(e);
+      return true;
     }
     togglePause() {
       if(this.screen==='playing'){this.screen='paused';this.clearInputs();if(!this.headless)this.showResult();}
@@ -693,6 +723,7 @@
     }
     updateUI() {
       if(this.headless)return;
+      MM.ProgressionUI?.sync(this);
       const campaignLabels={'campaign-total':Campaign.levels.length,'hero-level-total':Campaign.levels.length,'hero-world-total':Campaign.worlds.length,'campaign-range':`001—${String(Campaign.levels.length).padStart(3,'0')}`,'campaign-title':`${Campaign.levels.length} đêm trong bóng tối.`};
       Object.entries(campaignLabels).forEach(([id,text])=>{if(this.ui[id])this.ui[id].textContent=text;});
       const home=this.screen==='home',p=this.player;document.body.className=home?'home':'playing';
@@ -739,7 +770,7 @@
       root.addEventListener('keydown',event=>this.keyDown(event));root.addEventListener('keyup',event=>this.keyUp(event));root.addEventListener('blur',()=>{if(this.screen==='playing')this.togglePause();else this.clearInputs();});
       document.addEventListener('visibilitychange',()=>{if(document.hidden&&this.screen==='playing')this.togglePause();this.lastTime=0;});root.addEventListener('resize',()=>this.resize());
       this.canvas.addEventListener('pointerdown',event=>this.pointerDown(event));this.canvas.addEventListener('pointermove',event=>this.pointerMove(event));this.canvas.addEventListener('pointerup',event=>this.pointerUp(event));this.canvas.addEventListener('pointercancel',event=>this.pointerUp(event,true));this.canvas.addEventListener('lostpointercapture',event=>this.pointerUp(event,true));this.canvas.addEventListener('contextmenu',event=>event.preventDefault());
-      this.ui['start-button'].addEventListener('click',()=>this.start());this.ui['pause-button'].addEventListener('click',()=>this.togglePause());this.ui['shield-button'].addEventListener('click',()=>{this.activateShield();this.canvas.focus({preventScroll:true});});
+      this.ui['start-button'].addEventListener('click',()=>this.start());this.ui['pause-button'].addEventListener('click',()=>this.togglePause());this.ui['shield-button'].addEventListener('click',()=>{this.shieldAction();this.canvas.focus({preventScroll:true});});
       this.ui['result-primary'].addEventListener('click',()=>this.resultAction?.());this.ui['result-home'].addEventListener('click',()=>this.goHome());this.ui.brand.addEventListener('click',event=>{event.preventDefault();this.goHome();});
       ['open-levels','home-levels'].forEach(id=>this.ui[id].addEventListener('click',()=>{this.buildMap();this.openDialog('levels-dialog');}));this.ui['open-help'].addEventListener('click',()=>this.openDialog('help-dialog'));this.ui['open-settings'].addEventListener('click',()=>this.openDialog('settings-dialog'));
       document.querySelectorAll('[data-close]').forEach(button=>button.addEventListener('click',()=>button.closest('dialog').close()));this.ui['help-done'].addEventListener('click',()=>this.ui['help-dialog'].close());
@@ -753,6 +784,7 @@
         ['pointerup','pointercancel','lostpointercapture'].forEach(type=>button.addEventListener(type,event=>this.padUp(event,button)));
       });
       if(root.matchMedia?.('(pointer:coarse)').matches)this.ui['control-mode'].textContent='GESTURES & CẢM ỨNG';
+      MM.ProgressionUI?.bind(this);
     }
   }
   MM.Game = Game; MM.readSave = readSave; MM.overlaps = overlaps;

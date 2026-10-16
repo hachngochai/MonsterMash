@@ -99,7 +99,7 @@
       game.sound?.play('shield'); game.updateUI?.();
     }
   }
-  function hit(game, e, damage = 1) {
+  function hit(game, e, damage = 1, attack = {}) {
     if (!isDragon(e)) return null;
     if (game.screen !== 'playing' || !alive(e) || e.intangible || e.dragonGuarded) return false;
     if (!e.dragonState) setup(game, e);
@@ -108,7 +108,7 @@
     if (e.boss && e.dragonForm === 'dragon') {
       if (!e.yinYangTriggered && e.health <= e.maxHealth / 2) beginReincarnation(game, e);
       else if (e.health <= 0) becomeKnight(game, e);
-    } else if (e.boss && e.dragonForm === 'knight') rewardKnightHit(game, e);
+    } else if (e.boss && e.dragonForm === 'knight' && !attack.melee) rewardKnightHit(game, e);
     return true;
   }
   function apply(game, source) {
@@ -130,6 +130,9 @@
   function updateZones(game, dt) {
     for (const z of game.dragonZones) {
       if (!alive(z.owner)) { z.timer = 0; continue; }
+      // Released ice keeps falling; a frozen caster cannot advance a pending
+      // cast or continue a beam, gust, or ground eruption.
+      if ((z.owner.petrifiedTime || 0) > EPS && !(z.kind === 'ice' && z.phase === 'falling')) continue;
       z.timer -= dt;
       if (z.phase === 'warning' && z.timer <= EPS) {
         if (z.kind === 'ice') {
@@ -242,7 +245,7 @@
     dt = clamp(Number.isFinite(dt) ? dt : 0, 0, .05);
     game.dragonZones = game.dragonZones || []; game.dragonShots = game.dragonShots || [];
     for (const e of [...game.enemies]) {
-      if (!alive(e) || !isDragon(e) || e.phase !== 'active') continue;
+      if (!alive(e) || !isDragon(e) || e.phase !== 'active' || (e.petrifiedTime || 0) > EPS) continue;
       if (!e.dragonState) setup(game, e);
       if (e.dragonForm === 'knight') updateKnight(game, e, dt); else updateAir(game, e, dt);
       if (game.screen !== 'playing') return;
