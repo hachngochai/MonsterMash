@@ -58,3 +58,34 @@ test('new runs remain playable when browser storage is denied',()=>{
  const MM=load(),storage={getItem(){throw new Error('private');},setItem(){throw new Error('private');}};
  const g=new MM.Game({headless:true,storage,newRun:true});g.start(1);g.update(.016);assert.equal(g.screen,'playing');assert.equal(g.level.id,1);assert.deepEqual(plain(g.progression.rewards),[]);
 });
+
+test('each land has exactly five independent treasure sites tied to its boss rewards',()=>{
+ const {Story:S}=load();
+ assert.deepEqual(plain(S.milestones(S.get(1)).map(m=>m.level)),[10,20,30,40,50]);
+ assert.deepEqual(plain(S.milestones(S.get(2)).map(m=>m.level)),[60,70,80,90,100]);
+ const first=S.milestones(S.get(1),[10,30,30,60,100]),second=S.milestones(S.get(2),[10,30,60,100]);
+ assert.deepEqual(plain(first.map(m=>m.mark)),['O','X','O','X','X']);
+ assert.deepEqual(plain(second.map(m=>m.mark)),['O','X','X','X','O']);
+});
+
+test('each treasure route has nine normal stages before every boss and different island layouts',()=>{
+ const {Story:S}=load(),routes=S.stories.map(s=>S.trail(s));
+ for(let i=0;i<routes.length;i++){
+  const route=routes[i],story=S.stories[i];assert.equal(route.dots.length,45);assert.equal(route.bosses.length,5);
+  assert.deepEqual(plain(route.dots.map(d=>d.level)),Array.from({length:50},(_,n)=>story.start+n).filter(level=>level%10!==0));
+  assert.equal(new Set(route.dots.map(d=>d.x+':'+d.y)).size,45);
+  for(const dot of route.dots){assert.ok(dot.x>0&&dot.x<1000);assert.ok(dot.y>0&&dot.y<400);}
+ }
+ const relative=route=>route.bosses.map(([x,y])=>[x-route.bosses[0][0],y-route.bosses[0][1]]);
+ assert.notDeepEqual(plain(relative(routes[0])),plain(relative(routes[1])));
+});
+
+test('a real boss defeat circles its treasure site before the remaining map quota and a new entry restores X',()=>{
+ const MM=load(),storage=memory(),g=new MM.Game({headless:true,storage,newRun:true}),story=MM.Story.get(1);
+ const mark=game=>MM.Story.milestones(story,game.progression.rewards)[0].mark;
+ g.start(10);assert.equal(mark(g),'X');g.spawnTimer=10000;
+ const ordinary=g.spawn('skeleton');g.killEnemy(ordinary);assert.equal(mark(g),'X');
+ const boss=g.spawn('boss');boss.phase='active';g.killEnemy(boss);assert.equal(mark(g),'O');assert.equal(g.save.completed.includes(10),false);
+ g.goHome();assert.equal(mark(g),'O');assert.equal(MM.Story.milestones(story,g.progression.rewards)[1].mark,'X');
+ const reopened=new MM.Game({headless:true,storage,newRun:true});assert.equal(mark(reopened),'X');
+});

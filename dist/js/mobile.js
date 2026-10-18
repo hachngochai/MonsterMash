@@ -27,6 +27,8 @@
       this.onResize = () => { this.sync(); this.game.resize?.(); };
       this.onButton = () => {
         this.landingArmed = false;
+        if(this.standalone)return;
+        if(this.ios&&!this.canFullscreen){this.showInstallHelp();return;}
         if (this.document?.fullscreenElement) this.leave(true);
         else this.enter(true);
         this.game.canvas?.focus?.({ preventScroll: true });
@@ -57,6 +59,14 @@
       try { coarse = this.root.matchMedia?.('(pointer:coarse)')?.matches === true; } catch { /* Detection is optional. */ }
       return coarse || Number(this.root.navigator?.maxTouchPoints) > 0;
     }
+
+    get ios(){const n=this.root.navigator;return /iPhone|iPad|iPod/.test(n?.userAgent||'')||(n?.platform==='MacIntel'&&Number(n?.maxTouchPoints)>1);}
+    get standalone(){
+      if(this.root.navigator?.standalone===true)return true;
+      try{return this.root.matchMedia?.('(display-mode: standalone)')?.matches===true;}catch{return false;}
+    }
+    get canFullscreen(){return typeof this.target?.requestFullscreen==='function'&&this.document?.fullscreenEnabled!==false;}
+    showInstallHelp(){this.game.openDialog?.('ios-install-dialog');}
 
     isCurrent(record) {
       const tracked = record.kind === 'landing' ? this.landingPending === record : this.pending === record;
@@ -99,10 +109,10 @@
       this.landingArmed = false;
       if (!this.active) this.epoch++;
       this.active = true;
-      const record = { kind: 'entry', epoch: this.epoch, requested: false, promise: null };
+      const record = { kind: 'entry', epoch: this.epoch, requested: false, manual:force, promise: null };
       this.pending = record;
       let fullscreenResult;
-      if (this.document?.fullscreenElement !== this.target && this.target &&
+      if (!this.standalone && this.document?.fullscreenElement !== this.target && this.target &&
           typeof this.target.requestFullscreen === 'function' && this.document.fullscreenEnabled !== false) {
         record.requested = true;
         try { fullscreenResult = this.target.requestFullscreen(); }
@@ -131,7 +141,9 @@
         }
         if (!this.isCurrent(record)) return false;
         this.sync();
-        return Boolean(this.target && this.document?.fullscreenElement === this.target) || this.ownsOrientation;
+        const fullscreen=Boolean(this.target && this.document?.fullscreenElement === this.target);
+        if(record.manual&&this.ios&&!this.standalone&&!fullscreen)this.showInstallHelp();
+        return fullscreen || this.standalone || this.ownsOrientation;
       } finally {
         if (this.pending === record) this.pending = null;
       }
@@ -214,6 +226,8 @@
 
     sync() {
       const fullscreen = Boolean(this.document?.fullscreenElement);
+      const standalone=this.standalone;
+      if(this.target?.dataset)this.target.dataset.appMode=standalone?'standalone':'browser';
       const visual = this.root.visualViewport;
       const width = visual?.width || this.root.innerWidth || this.target?.clientWidth || 0;
       const height = visual?.height || this.root.innerHeight || this.target?.clientHeight || 0;
@@ -232,8 +246,9 @@
         // A finger captured against the previous geometry must never keep moving.
         if(hadLayout)this.game.clearInputs?.();
       }
-      const label = fullscreen ? 'Thoát toàn màn hình' : this.mobile && portrait && this.game.screen === 'home' ? 'Chơi ngang' : 'Toàn màn hình';
+      const label = fullscreen ? 'Thoát toàn màn hình' : this.ios&&!this.canFullscreen&&!standalone ? 'Chơi trọn màn' : this.mobile && portrait && this.game.screen === 'home' ? 'Chơi ngang' : 'Toàn màn hình';
       if (this.button) {
+        this.button.hidden=standalone;
         const text = this.button.querySelector?.('[data-fullscreen-label]');
         if (text) text.textContent = label;
         else this.button.textContent = label;

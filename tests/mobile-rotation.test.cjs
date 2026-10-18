@@ -30,7 +30,7 @@ function fresh(options = {}) {
   const visualViewport = events({width:options.width || 540, height:options.height || 960, offsetLeft:0, offsetTop:0});
   const root = events({document, visualViewport, innerWidth:visualViewport.width, innerHeight:visualViewport.height,
     navigator:{maxTouchPoints:options.desktop ? 0 : 5}, screen:{orientation},
-    matchMedia:() => ({matches:!options.desktop})});
+    matchMedia:query => ({matches:query==='(pointer:coarse)'&&!options.desktop})});
   const context = vm.createContext({document,
     getComputedStyle:canvas => ({objectFit:canvas.style.objectFit || 'fill', objectPosition:canvas.style.objectPosition || '50% 100%'})});
   for (const file of ['campaign.js','game.js','mobile.js']) {

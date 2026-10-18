@@ -30,7 +30,7 @@
       version: 2, campaignSize:Campaign.levels.length, completed, progression:raw.progression,
       resume: newChapter?previousSize+1:resume,
       best: valid(raw.best) ? Math.floor(raw.best) : 0,
-      settings: { difficulty: ['story','normal','hard'].includes(settings.difficulty) ? settings.difficulty : 'normal', controls: ['both','gestures','buttons'].includes(settings.controls) ? settings.controls : 'both', sound: settings.sound === true, effects: settings.effects !== false, reducedMotion: settings.reducedMotion === true }
+      settings: { difficulty: ['story','normal','hard'].includes(settings.difficulty) ? settings.difficulty : 'normal', controls: ['both','gestures','buttons'].includes(settings.controls) ? settings.controls : 'both', sound: settings.sound === true, effects: settings.effects !== false, reducedMotion: settings.reducedMotion === true, keyBindings:MM.KeyBindings?.normalize(settings.keyBindings)||settings.keyBindings }
     };
   }
   class Sound {
@@ -147,6 +147,8 @@
       if(!this.headless)document.querySelectorAll('[data-control].held').forEach(button=>button.classList.remove('held'));
     }
     keyDown(event) {
+      if(MM.KeyBindings?.capture(this,event))return;
+      if(MM.KeyBindings){event=MM.KeyBindings.translate(this,event);if(!event)return;}
       const code = event.code;
       if(MM.InputManager?.keyDown(this,event))return;
       if (event.target && /^(INPUT|SELECT|TEXTAREA|BUTTON|A)$/.test(event.target.tagName)) return;
@@ -160,7 +162,7 @@
       if (!event.repeat && code === 'Space') this.shieldAction();
       if (!event.repeat && ['KeyA','KeyJ','KeyD','KeyL'].includes(code)) this.shoot(['KeyA','KeyJ'].includes(code) ? -1 : 1);
     }
-    keyUp(event) { if(MM.InputManager?.keyUp(this,event))return;this.keys.delete(event.code); }
+    keyUp(event) { if(MM.KeyBindings){event=MM.KeyBindings.translate(this,event,true);if(!event)return;}if(MM.InputManager?.keyUp(this,event))return;this.keys.delete(event.code); }
     inputPoint(event) {
       const rect = this.canvas?.getBoundingClientRect() || {left:0,top:0,width:W,height:H};
       if(this.mobileRotation)return {x:event.clientY-rect.top,y:(rect.right??rect.left+rect.width)-event.clientX};
@@ -765,11 +767,13 @@
       this.ui['start-label'].textContent=this.save.resume>1?'Tiếp tục · Màn '+this.save.resume:'Bắt đầu cuộc săn';this.ui['save-label'].textContent=this.save.completed.length?`${this.save.completed.length} / ${Campaign.levels.length} MÀN ĐÃ HOÀN THÀNH`:'CHƯA CÓ HÀNH TRÌNH';
       this.ui['pause-button'].disabled=home;this.ui['shield-button'].disabled=home;
       MM.StoryUI?.sync(this);
+      MM.Atlas3D?.sync(this);
+      MM.KeyBindings?.sync(this);
     }
     buildMap() {
       if(this.headless)return;const map=this.ui['level-map'];map.textContent='';
       const story=MM.StoryUI?.selected(this);
-      Campaign.worlds.filter(world=>!story||(world.id>=Math.floor((story.start-1)/10)&&world.id<=Math.floor((story.end-1)/10))).forEach(world=>{const section=document.createElement('section');section.className='world-map';const title=document.createElement('h3');title.innerHTML=`<span>${String(world.id+1).padStart(2,'0')}</span> ${world.name} <small>${world.subtitle}</small>`;section.append(title);const grid=document.createElement('div');grid.className='level-grid';
+      Campaign.worlds.filter(world=>!story||(world.id>=Math.floor((story.start-1)/10)&&world.id<=Math.floor((story.end-1)/10))).forEach(world=>{const section=document.createElement('section');section.className='world-map';section.id='world-map-'+world.id;const title=document.createElement('h3');title.innerHTML=`<span>${String(world.id+1).padStart(2,'0')}</span> ${world.name} <small>${world.subtitle}</small>`;section.append(title);const grid=document.createElement('div');grid.className='level-grid';
         if(story){const lore=document.createElement('p');lore.className='world-lore';lore.textContent=story.arcs[world.id-Math.floor((story.start-1)/10)];section.append(lore);}
         Campaign.levels.filter(level=>level.world===world.id).forEach(level=>{const button=document.createElement('button');button.className='level-tile'+(level.boss?' boss':'')+(this.save.completed.includes(level.id)?' completed':'')+(this.save.resume===level.id?' current':'');button.textContent=String(level.id).padStart(2,'0');button.title=`Màn ${level.id}: ${level.name}${level.boss?' · Boss':''}`;button.setAttribute('aria-label',button.title);button.addEventListener('click',()=>this.start(level.id));grid.append(button);});section.append(grid);map.append(section);});
     }
@@ -792,7 +796,14 @@
       this.ctx.setTransform(this.dpr,0,0,this.dpr,0,0);MM.Renderer.draw(this.ctx,this);
       this.raf=root.requestAnimationFrame(this.frame);
     }
+    nativeInteraction(event) {
+      if(this.screen!=='playing')return false;
+      if(event.target?.closest?.('input,textarea,select,[contenteditable="true"]'))return false;
+      if(event.type!=='copy'&&!event.target?.closest?.('.app'))return false;
+      event.preventDefault();return true;
+    }
     bind() {
+      for(const type of ['selectstart','dragstart','contextmenu','copy'])document.addEventListener(type,event=>this.nativeInteraction(event));
       root.addEventListener('keydown',event=>this.keyDown(event));root.addEventListener('keyup',event=>this.keyUp(event));root.addEventListener('blur',()=>{if(this.screen==='playing')this.togglePause();else this.clearInputs();});
       document.addEventListener('visibilitychange',()=>{if(document.hidden&&this.screen==='playing')this.togglePause();this.lastTime=0;});root.addEventListener('resize',()=>this.resize());
       this.canvas.addEventListener('pointerdown',event=>this.pointerDown(event));this.canvas.addEventListener('pointermove',event=>this.pointerMove(event));this.canvas.addEventListener('pointerup',event=>this.pointerUp(event));this.canvas.addEventListener('pointercancel',event=>this.pointerUp(event,true));this.canvas.addEventListener('lostpointercapture',event=>this.pointerUp(event,true));this.canvas.addEventListener('contextmenu',event=>event.preventDefault());
@@ -812,6 +823,8 @@
       if(root.matchMedia?.('(pointer:coarse)').matches)this.ui['control-mode'].textContent='GESTURES & CẢM ỨNG';
       MM.ProgressionUI?.bind(this);
       MM.StoryUI?.bind(this);
+      MM.KeyBindings?.bind(this);
+      this.ui['open-install-help']?.addEventListener('click',()=>{this.ui['settings-dialog'].close();this.openDialog('ios-install-dialog');});
     }
   }
   MM.Game = Game; MM.readSave = readSave; MM.overlaps = overlaps;

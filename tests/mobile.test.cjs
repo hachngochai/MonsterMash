@@ -51,7 +51,7 @@ function fixture(options = {}) {
     return Promise.resolve();
   };
   const orientation = events({ type: 'portrait-primary', lock(value) { calls.push('lock:' + value); return options.lock ? options.lock() : Promise.resolve(); }, unlock() { calls.push('unlock'); if (options.unlock) options.unlock(); } });
-  const root = events({ document, innerWidth: 390, innerHeight: 844, navigator: { maxTouchPoints: options.touchPoints ?? 1 }, screen: { orientation }, matchMedia: () => ({ matches: options.coarse ?? true }) });
+  const root = events({ document, innerWidth: 390, innerHeight: 844, navigator: { maxTouchPoints: options.touchPoints ?? 1, userAgent:options.ua||'', standalone:options.standalone===true }, screen: { orientation }, matchMedia: query => ({ matches:query==='(display-mode: standalone)' ? options.standalone===true : options.coarse ?? true }) });
   const game = { screen: options.screen || 'playing', lastTime: 44, canvas: { focus() { calls.push('focus'); } }, resize() { calls.push('resize'); }, clearInputs() { calls.push('clear'); }, togglePause() { calls.push('pause'); this.screen = this.screen === 'playing' ? 'paused' : 'playing'; } };
   const controller = new Controller(game, root);
   return { controller, game, root, document, target, orientation, button, hint, calls };
@@ -76,6 +76,25 @@ test('touch entry requests the whole document synchronously, then locks landscap
   assert.equal(f.button.textContent, 'Thoát toàn màn hình');
   assert.equal(f.button.title, 'Thoát toàn màn hình');
   assert.equal(f.button.attributes['aria-pressed'], 'true');
+});
+
+test('iPhone without fullscreen gives installation help only on a manual request',async()=>{
+ const f=fixture({ua:'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)'});
+ delete f.target.requestFullscreen;delete f.orientation.lock;
+ const dialogs=[];f.game.openDialog=id=>{dialogs.push(id);f.game.togglePause();};f.controller.sync();
+ assert.equal(f.button.title,'Chơi trọn màn');assert.equal(await f.controller.enter(),false);assert.deepEqual(dialogs,[]);
+ f.button.emit('click');assert.deepEqual(dialogs,['ios-install-dialog']);assert.equal(f.game.screen,'paused');assert.equal(count(f.calls,'request'),0);
+});
+
+test('iPhone rejected fullscreen falls back to install help after its manual click',async()=>{
+ const f=fixture({ua:'iPhone',request:()=>Promise.reject(new Error('unsupported'))}),dialogs=[];
+ f.game.openDialog=id=>{dialogs.push(id);f.game.togglePause();};f.button.emit('click');await settle();
+ assert.deepEqual(dialogs,['ios-install-dialog']);assert.equal(f.game.screen,'paused');assert.equal(f.document.fullscreenElement,null);
+});
+
+test('installed iPhone app uses standalone without another fullscreen request or install prompt',async()=>{
+ const f=fixture({ua:'iPhone',standalone:true});assert.equal(f.controller.standalone,true);assert.equal(f.button.hidden,true);
+ assert.equal(await f.controller.enter(),true);assert.equal(count(f.calls,'request'),0);assert.equal(f.game.screen,'playing');
 });
 
 test('touch points detect touch without relying on the user agent', async () => {

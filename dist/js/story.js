@@ -18,7 +18,21 @@
   const forLevel=id=>stories.find(s=>id>=s.start&&id<=s.end)||stories[0];
   const progress=(story,completed=[])=>new Set(completed.filter(id=>Number.isInteger(id)&&id>=story.start&&id<=story.end)).size;
   const nextLevel=(story,completed=[])=>{const done=new Set(completed);for(let id=story.start;id<=story.end;id++)if(!done.has(id))return id;return story.start;};
-  MM.Story={stories,get,forLevel,progress,nextLevel};
+  const milestones=(story,rewards=[])=>Array.from({length:5},(_,i)=>{const level=story.start+9+i*10,cleared=rewards.includes(level);return {level,cleared,mark:cleared?'O':'X'};});
+  const routes={
+    1:{points:[[110,140],[150,208],[260,180],[360,236],[290,320],[160,308]],controls:[[75,185],[175,145],[338,160],[370,302],[212,355]]},
+    2:{points:[[600,135],[650,185],[850,165],[790,265],[620,280],[880,315]],controls:[[585,175],[730,100],[875,245],[705,225],[735,375]]}
+  };
+  function trail(story){
+    const route=routes[story.id],dots=[];let path='M'+route.points[0].join(' ');
+    route.controls.forEach((control,i)=>{
+      const from=route.points[i],to=route.points[i+1];path+='Q'+control.join(' ')+' '+to.join(' ');
+      for(let n=0;n<9;n++){const t=(i===0?0:.2)+(i===0?.8:.6)*n/8,u=1-t;
+        dots.push({level:story.start+i*10+n,x:u*u*from[0]+2*u*t*control[0]+t*t*to[0],y:u*u*from[1]+2*u*t*control[1]+t*t*to[1]});}
+    });
+    return {path,dots,bosses:route.points.slice(1)};
+  }
+  MM.Story={stories,get,forLevel,progress,nextLevel,milestones,trail};
   const selected=g=>get(g.selectedStory||1);
   function select(g,id){g.selectedStory=get(id).id;g.buildMap?.();g.updateUI?.();}
   function sync(g){
@@ -31,7 +45,25 @@
     text('campaign-title',story.name);text('map-story-description',story.tagline+' Chọn một điểm trên hành trình.');
     g.ui['home-overlay']?.setAttribute('data-story',String(story.id));
     for(const button of document.querySelectorAll('[data-story-choice]'))button.setAttribute('aria-pressed',String(Number(button.dataset.storyChoice)===story.id));
-    for(const s of stories)text('story-progress-'+s.id,`${progress(s,g.save.completed)}/50 màn`);
+    const rewards=g.progression?.rewards||[];
+    g.ui['atlas-crossing']?.classList.toggle('open',rewards.includes(50));
+    const signature=g.save.completed.join(',');
+    if(g.storyDotSignature!==signature){
+      g.storyDotSignature=signature;const completed=new Set(g.save.completed);
+      for(const dot of g.storyDots||[])dot.node.classList.toggle('cleared',completed.has(dot.level));
+    }
+    for(const s of stories){
+      const marks=milestones(s,rewards);
+      text('story-progress-'+s.id,`${marks.filter(m=>m.cleared).length}/5 boss · ${progress(s,g.save.completed)}/50 màn`);
+      for(const mark of marks){
+        const button=g.ui['atlas-boss-'+mark.level];if(!button)continue;
+        const label=`Boss màn ${mark.level} · ${mark.cleared?'Đã khám phá':'Chưa đánh bại'} · Xem hành trình`;
+        if(button.getAttribute('aria-label')===label)continue;
+        button.setAttribute('aria-label',label);button.title=label;
+        button.classList.toggle('cleared',mark.cleared);
+        button.querySelector('.atlas-mark-symbol').textContent=mark.mark;
+      }
+    }
   }
   function open(g,id=selected(g).id,launch){
     select(g,id);const s=selected(g);
@@ -44,7 +76,20 @@
     g.openDialog('story-dialog');
   }
   function bind(g){
+    const dotsGroup=g.ui['atlas-level-dots'];g.storyDots=[];
+    if(dotsGroup)for(const story of stories){
+      const route=trail(story),path=g.ui['atlas-trail-'+story.id];path?.setAttribute('d',route.path);
+      route.bosses.forEach(([x,y],i)=>{const button=g.ui['atlas-boss-'+(story.start+9+i*10)];button?.style.setProperty('--mark-x',x/10+'%');button?.style.setProperty('--mark-y',y/4+'%');});
+      for(const dot of route.dots){
+        const circle=document.createElementNS('http://www.w3.org/2000/svg','circle');circle.setAttribute('cx',dot.x);circle.setAttribute('cy',dot.y);circle.setAttribute('r','3.2');circle.setAttribute('class','atlas-level-dot');circle.setAttribute('data-level-dot',dot.level);
+        const title=document.createElementNS('http://www.w3.org/2000/svg','title');title.textContent='Màn '+dot.level;circle.append(title);dotsGroup.append(circle);g.storyDots.push({level:dot.level,node:circle});
+      }
+    }
     for(const button of document.querySelectorAll('[data-story-choice]'))button.addEventListener('click',()=>open(g,Number(button.dataset.storyChoice)));
+    for(const button of document.querySelectorAll('[data-boss-marker]'))button.addEventListener('click',()=>{
+      const level=Number(button.dataset.bossMarker);select(g,forLevel(level).id);g.openDialog('levels-dialog');
+      g.ui['level-map'].querySelector('#world-map-'+Math.floor((level-1)/10))?.scrollIntoView({block:'start'});
+    });
     g.ui['story-begin']?.addEventListener('click',()=>{const launch=g.storyLaunch;g.ui['story-dialog'].close();if(launch)g.start(launch.level,launch.options);});
   }
   function result(g){
