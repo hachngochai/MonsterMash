@@ -1,8 +1,10 @@
 # Monster Mash — The Midnight Hunt
 
-Rebuild 07 (v3.1.1) của game Monster Mash của KIO. Native Canvas 2D, không cần Processing.js, CDN, thư viện hoặc cài package. Có thể mở `index.html` trực tiếp; nên dùng preview local để tiến trình lưu cùng một địa chỉ trình duyệt.
+Rebuild 08 (v3.2.0) của game Monster Mash của KIO. Native Canvas 2D, không cần Processing.js, CDN, thư viện hoặc cài package. Có thể mở `index.html` trực tiếp hoặc dùng preview local. Mỗi lần mở hoặc tải lại trang bắt đầu một chuyến đi mới, reset tiến độ màn và kỹ năng; kỷ lục cùng thiết lập vẫn được giữ.
 
-V3 thêm phần thưởng vĩnh viễn sau boss 10–100: Xương Phân Ba, Khiên Bất Tử, Nhảy Cao, Hắc Hóa, Hút Máu, Chùy Golem, chọn tầm bắn, Cung Hắc Ám, Giáo Bạch Kim, Song Rìu và Hóa Đá. Chỉ Song Rìu có Lăn Chém gây sát thương; lướt riêng màn 70 không gây sát thương. Sáu manager và UI dùng chung cho PC/mobile, lưu trong dữ liệu hiện có và không thưởng trùng. Xem [thông số và vị trí tích hợp V3](docs/V3-design.md).
+Màn mở đầu là bản đồ hai miền đất: **Miền Nhật Thực** (1–50) và **Lời Nguyền Cổ Thú** (51–100). Mỗi miền có lời dẫn, năm chặng đường và kết thúc mở. Chọn miền để đọc cốt truyện rồi lên đường; vẫn có thể chọn màn trong miền để luyện tập. Xem [cốt truyện và quy tắc chuyến đi](docs/story-campaign.md).
+
+V3 thêm phần thưởng sau boss 10–100: Xương Phân Ba, Khiên Bất Tử, Nhảy Cao, Hắc Hóa, Hút Máu, Chùy Golem, chọn tầm bắn, Cung Hắc Ám, Giáo Bạch Kim, Song Rìu và Hóa Đá. Chỉ Song Rìu có Lăn Chém gây sát thương; lướt riêng màn 70 không gây sát thương. Sáu manager và UI dùng chung cho PC/mobile, không thưởng trùng trong chuyến đi. Từ v3.2.0, phần thưởng giữ khi chuyển màn hoặc về bản đồ trong cùng trang, và reset khi mở lại hoặc tải lại trang. Xem [thông số và vị trí tích hợp V3](docs/V3-design.md).
 
 Bản 3.0.2 dùng ảnh PNG trong suốt tách từ mẫu nhân vật do tác giả cung cấp: rồng, Người Sư tử, Medusa, Goatman và Chimera. Năm hệ rồng có bảng màu riêng: lửa đỏ, băng xanh lam, gió xanh ngọc, đất nâu và chớp tím vàng. Rồng ngàn tuổi mang vương miện, giữ màu đen trắng cùng vòng Âm Dương. Game tải sẵn sprite từ `assets/sprites/` rồi vẽ lên Canvas; tạo hình bằng code vẫn làm dự phòng nếu ảnh chưa tải được. Chimera được phóng lớn thành 300 × 210 pixel, còn ba bản thể thu về 76 × 108 pixel để cân đối hơn với người chơi. Kỹ năng và cơ chế chiến đấu giữ nguyên.
 
@@ -54,7 +56,7 @@ GitHub Pages của repo xuất bản từ nhánh `master`, thư mục gốc `/`,
 - Sau khi trúng đòn có 1,35 giây bất tử. Qua màn hồi 1 máu, màn hồi phục hồi 2. Mỗi 7 địch rơi vật phẩm máu nếu đang thiếu máu.
 - Địch có cổng báo trước, giới hạn số lượng đồng thời và khoảng nghỉ sau mỗi nhóm. Giữ lại kỹ năng riêng từ source gốc: zombie di chuyển trên bệ lơ lửng rồi nhảy xuống; nhện đu trên sợi tơ, nhấp nhô rồi thả xuống; ma bay theo sóng sin rồi bổ nhào; ma cà rồng hóa dơi, bay lên, tuần tra, lao xuống và trở lại hình người. Boss giữ kỹ năng theo loài. Dấu báo vàng chỉ vị trí đáp trước khi địch tấn công.
 - Nhịp tấn công tăng dần theo thời gian thực trong từng màn, bằng đường cong mượt có giới hạn. Quái bắt đầu tăng sau 12 giây (16 giây ở màn hồi phục); boss có đồng hồ riêng, tăng sau 4 giây giao chiến. Ở chế độ Cân bằng, nhịp quái đạt tối đa ×1,50–1,725 và boss ×1,70–1,925 tùy vùng. Di chuyển, bay, bổ nhào và đạn xương tăng nhẹ hơn nhịp hồi kỹ năng. Dấu báo vẫn có ít nhất 0,9 giây thực để phản ứng (Thư giãn 1,1; Thử thách 0,75). Tạm dừng cũng dừng quá trình tăng tốc; màn mới bắt đầu lại nhịp đầu.
-- Tiến trình, kỷ lục và thiết lập tự lưu trong localStorage. Save cũ đã hoàn thành chiến dịch 50, 60, 70 hoặc 80 màn tiếp tục ở màn 51, 61, 71 hoặc 81 tương ứng; giữ nguyên kỷ lục, các màn đã qua và thiết lập. Không gửi dữ liệu ra ngoài. Khi browser chặn lưu trữ, game vẫn chơi được trong phiên hiện tại.
+- Mở hoặc tải lại trang reset các màn đã qua, màn tiếp tục, phần thưởng boss, vũ khí đang cầm và bộ đếm Hút Máu. Trong cùng trang, chuyển màn, thử lại hoặc về bản đồ vẫn giữ phần thưởng của chuyến đi. Kỷ lục và thiết lập được lưu trong localStorage; không gửi dữ liệu ra ngoài. Khi browser chặn lưu trữ, game vẫn chơi được trong phiên hiện tại.
 
 Tiếp tế đạn ở chế độ Cân bằng:
 

@@ -1,5 +1,7 @@
 # V3: phần thưởng boss 10–100
 
+Từ v3.2.0, quy tắc lưu vĩnh viễn được thay bằng chuyến đi mới mỗi lần mở hoặc tải lại trang theo yêu cầu mới. Các chỉ số và điều kiện nhận thưởng bên dưới giữ nguyên; phần thưởng, trang bị và bộ đếm Hút Máu chỉ được giữ trong chuyến đi hiện tại. Xem [cốt truyện và vòng đời chuyến đi](story-campaign.md).
+
 ## Phân tích source trước khi triển khai
 
 Game gốc giữ mô phỏng, input, sát thương và lưu dữ liệu trong `js/game.js`. Các nhóm boss có bộ xử lý riêng trong `bosses.js`, `golem.js`, `wolves.js`, `kong.js`, `dragons.js`, `mythic.js`; tạo hình ở `renderer.js`, DOM ở `index.html` và `style.css`.
@@ -18,7 +20,7 @@ Save cũ chỉ chuyển các màn boss đã hoàn thành thành phần thưởng
 | Miễn sát thương | Chặn mất HP chiến đấu, kể cả hút máu, thiêu đốt và đòn xuyên khiên; khống chế vẫn có thể xảy ra. Game hiện không có bẫy môi trường gây HP độc lập |
 | Nhảy Cao | Nhấn đúp ↑ hoặc nút nhảy trong .28s; đỉnh cao bằng 1.8 lần cú nhảy thường; tăng lực cho chính cú nhảy hiện tại, giữ trọng lực và biên sàn |
 | Hắc Hóa | Mỗi 5s giao chiến chuẩn bị một đơn vị sát thương ×2; giữ tới khi dùng, không tích nhiều lần; loạt đạn chỉ một viên. Cận chiến/Lăn Chém chỉ mục tiêu hợp lệ đầu tiên được cường hóa |
-| Hút Máu | 10 kẻ địch chết riêng biệt hồi 1 HP, không quá tối đa, đặt về 0; giữ bộ đếm qua màn và tải lại. Tính boss và quái triệu hồi có thể tiêu diệt; không tính quái rút lui/nhện bất tử |
+| Hút Máu | 10 kẻ địch chết riêng biệt hồi 1 HP, không quá tối đa, đặt về 0; giữ bộ đếm qua màn trong chuyến đi, reset khi tải lại trang. Tính boss và quái triệu hồi có thể tiêu diệt; không tính quái rút lui/nhện bất tử |
 | Chùy Golem | Cận chiến 3 sát thương, tầm 95px từ mép va chạm, hồi .75s, không tốn đạn |
 | F | Nhấn ngắn đổi nhanh từ boss 10; giữ .35s mở bảng chọn từ boss 60. Mũi tên chọn, Enter xác nhận; chạm/giữ nút vũ khí dùng cùng bộ xử lý |
 | Màn 70 | Toàn màn tạm khóa vũ khí thưởng và hiệu ứng kỹ năng; giữ súng gốc/khiên thường. Trăng Máu cấp sẵn súng ngắm 5 đạn/5 sát thương/.5s và lướt không sát thương ngay lần đánh đầu. Rời màn giữ nguyên trang bị/phần thưởng đã lưu |
@@ -37,7 +39,7 @@ Sáu module yêu cầu: `js/save-manager.js`, `boss-manager.js`, `map-manager.js
 
 `Game.dealEnemyDamage()` là cổng dùng chung cho súng, xương, cung, giáo, chùy và Song Rìu, giữ miễn đạn/chuyển pha của từng boss. `player.rollTime` chỉ dành cho lướt màn 70; `game.rollSlash` có tập mục tiêu riêng, luôn kiểm tra Song Rìu. Hai trạng thái không dùng chung quyền gây sát thương.
 
-`SaveManager` giữ `save.progression = {version, rewards, equipped, lifeKills}` trong khóa localStorage cũ `monster-mash-v2`. Phần thưởng vĩnh viễn trên trình duyệt/thiết bị này, không có máy chủ tài khoản. Không thưởng lại khi đánh lại boss.
+`SaveManager` giữ `save.progression = {version, rewards, equipped, lifeKills}` trong khóa localStorage cũ `monster-mash-v2`. Bootstrap trình duyệt tạo `Game({newRun:true})`, xóa tiến độ và phần thưởng trước khi chuẩn hóa save, rồi lưu bản sạch; kỷ lục cùng thiết lập được giữ. Không thưởng lại khi đánh lại boss trong cùng chuyến đi. Khởi tạo lập trình không truyền `newRun` vẫn hỗ trợ đọc và chuẩn hóa dữ liệu cho công cụ/kiểm thử.
 
 ## Kiểm thử
 

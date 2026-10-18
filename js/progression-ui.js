@@ -123,7 +123,7 @@
       s.rewardSignature=rewardSignature;
       const fragment=root.document.createDocumentFragment();
       if(!rewards.length) {
-        const empty=root.document.createElement('p');empty.textContent='Hạ boss mỗi 10 màn để mở vũ khí và kỹ năng vĩnh viễn.';fragment.append(empty);
+        const empty=root.document.createElement('p');empty.textContent='Hạ boss mỗi 10 màn để mở vũ khí và kỹ năng trong chuyến đi này.';fragment.append(empty);
       } else rewards.forEach(level=>{
         const entry=root.document.createElement('span');entry.className='reward-entry';
         entry.textContent=level+' · '+(MM.BossManager?.rewards?.[level]?.name||'Phần thưởng');fragment.append(entry);

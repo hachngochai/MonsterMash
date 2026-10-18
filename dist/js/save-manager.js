@@ -1,4 +1,4 @@
-/* Permanent V3 rewards share the existing Monster Mash save record. */
+/* Boss rewards share the save record for the current expedition. */
 (function (root) {
   'use strict';
   const MM = root.MM = root.MM || {};

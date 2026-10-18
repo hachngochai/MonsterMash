@@ -1973,3 +1973,26 @@ html[data-landscape="rotated"] dialog{
 html[data-landscape="rotated"] .dialog-head{top:-18px}
 html[data-landscape="rotated"] .level-grid{grid-template-columns:repeat(10,minmax(0,1fr))}
 html[data-landscape="rotated"] .level-tile{height:36px}
+/* The opening atlas replaces the old stage picker without changing combat. */
+body.home .hud,body.home .game-status,body.home .control-strip{display:none}
+html .home-overlay.story-atlas{display:flex;flex-direction:column;align-items:stretch;gap:9px;padding:18px 24px;background:linear-gradient(150deg,#152b29f7,#102021f2);overflow:hidden}
+html .story-atlas .atlas-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex:0 0 auto}
+html .story-atlas .atlas-heading .eyebrow{font-size:8px;margin:0 0 5px;color:#c8b887;letter-spacing:2px}
+html .story-atlas .atlas-heading h1{font:600 clamp(18px,2.3vw,28px)/1.25 var(--font-display);letter-spacing:-.6px;margin:0;text-shadow:none;color:#f1e8ce}
+.atlas-edition{font-size:8px;color:#b5c3ad;letter-spacing:1px;white-space:nowrap}.atlas-edition i{color:#8b9478;margin:0 7px}
+.atlas-map{position:relative;flex:1;min-height:75px;isolation:isolate;border:1px solid #c3c39427;border-radius:12px;overflow:hidden;background:#14282a}
+.atlas-art{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:.95;stroke:none}
+.atlas-land{position:absolute;top:36%;width:34%;min-height:80px;padding:12px 10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;border:1px solid #b9b58a50;border-radius:10px;background:#132622d9;color:#eae3ca;box-shadow:0 7px 22px #04141266;text-align:center;touch-action:manipulation;transition:border-color .18s,background .18s}
+.atlas-land:hover,.atlas-land:focus-visible{background:#304431ed;border-color:#e7c590}.atlas-land[aria-pressed="true"]{border-color:#e5c38d;background:#3e432ae8;box-shadow:0 0 30px #dbc17a16,inset 0 0 0 1px #d7c58b2e}
+.land-west{left:9%}.land-east{right:7%}.atlas-number{font-size:8px;letter-spacing:1.4px;color:#d7c790}.atlas-land strong{font:600 clamp(13px,1.8vw,20px)/1.35 var(--font-display);color:#f0e1bb}.land-east strong{color:#cce2bd}.atlas-land-tagline{font-size:10px;color:#bbcbb8}.atlas-land small{font-size:8px;color:#a4b49b}.atlas-sea-name{position:absolute;left:43%;top:72%;font-size:7px;letter-spacing:2px;color:#b8c7b76b;pointer-events:none}
+.story-atlas[data-story="1"] .atlas-west,.story-atlas[data-story="2"] .atlas-east{stroke:#f0d59c;stroke-width:3}
+html .story-atlas .atlas-footer{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:0;max-height:none;min-height:42px;flex:0 0 auto;border:0}
+.atlas-selection{display:flex;flex-direction:column;gap:3px;min-width:0}.atlas-selection strong{font-size:12px;color:#e3d2a6}.atlas-selection span{font-size:10px;color:#a7bba8}.atlas-selection small{font-size:8px;color:#829d8c;letter-spacing:.5px}
+.atlas-actions{display:flex;gap:9px;flex:0 0 auto}.atlas-actions button{min-height:39px;padding:9px 15px;font-size:10px;white-space:nowrap}.atlas-actions .primary{gap:18px}.atlas-run-note{margin:0;font-size:8px;color:#8ca796;line-height:1.5;flex:0 0 auto}
+.story-intro{margin:16px 0 20px}.story-intro p{font-size:13px;line-height:1.9;color:#c0cdb7;margin:0 0 14px}.story-route-details{border-top:1px solid #b7c09625;padding-top:14px}.story-route-details summary{font-size:12px;color:#dbc697;cursor:pointer}.story-route-details ol{padding-left:20px;margin:15px 0}.story-route-details li{padding:0 0 12px 6px;color:#9cb6a4}.story-route-details li strong{display:block;color:#d8dbbd;font-size:12px;margin-bottom:3px}.story-route-details li span{font-size:11px;line-height:1.75}.story-dialog-actions{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-top:24px}.story-dialog-actions>span{font-size:10px;color:#8da997}.story-dialog-actions .primary{min-height:42px;font-size:11px;padding:10px 16px;white-space:nowrap}.world-lore{font-size:10px;line-height:1.7;color:#94ae99;margin:0 0 10px}
+@media(max-height:650px),(max-width:700px){html .home-overlay.story-atlas{padding:10px 14px;gap:7px}.atlas-land{padding:8px;min-height:66px;gap:3px}.atlas-land-tagline{font-size:8px}.atlas-number{font-size:7px;letter-spacing:.7px}.atlas-land small{font-size:7px}.atlas-selection span{display:none}.atlas-actions button{padding:8px 11px;font-size:9px;min-height:35px}.atlas-edition{font-size:7px}.story-dialog-actions{margin-top:16px}.story-dialog-actions>span{display:none}.story-dialog-actions .primary{margin-left:auto}}
+html[data-landscape="rotated"] .home-overlay.story-atlas{padding:10px 14px;gap:7px}
+html[data-landscape="rotated"] .story-atlas .atlas-heading h1{font-size:20px}
+html[data-landscape="rotated"] .atlas-land strong{font-size:16px}
+html[data-landscape="rotated"] .story-atlas .atlas-footer{display:flex;min-height:38px}
+html[data-landscape="rotated"] .atlas-edition{font-size:7px}

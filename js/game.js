@@ -56,6 +56,8 @@
       this.random = options.random || Math.random;
       try { this.storage = options.storage || root.localStorage; } catch { this.storage = null; }
       this.save = readSave(this.storage);
+      // A page entry is a fresh expedition. Settings and the personal best remain.
+      if(options.newRun===true){this.save.completed=[];this.save.resume=1;this.save.progression={version:1,rewards:[],equipped:'gun',lifeKills:0};}
       this.progression = MM.SaveManager?.normalize(this.save.progression,this.save.completed);
       if(this.progression)this.save.progression=this.progression;
       this.settings = this.save.settings;
@@ -74,6 +76,7 @@
       this.tuning = Campaign.tuning(this.settings.difficulty); this.player = this.makePlayer();
       this.sound = new Sound(this); this.checkpoint = null; this.resultAction = null;
       MM.WeaponManager?.init(this);MM.SkillManager?.init(this);MM.InputManager?.init(this);
+      if(options.newRun===true)this.persist();
       if (!this.headless) {
         this.canvas = document.getElementById('canvas'); this.ctx = this.canvas.getContext('2d');
         this.ui = {}; document.querySelectorAll('[id]').forEach(node => this.ui[node.id] = node);
@@ -97,6 +100,7 @@
         this.score = this.checkpoint.score; this.totalKills = this.checkpoint.totalKills; this.shieldCount = this.checkpoint.shieldCount;
       } else if (!carry) { this.score = 0; this.totalKills = 0; this.shieldCount = 0; }
       this.level = Campaign.getLevel(id); this.activeDifficulty = this.settings.difficulty; this.tuning = Campaign.tuning(this.activeDifficulty);
+      if(MM.Story)this.selectedStory=MM.Story.forLevel(this.level.id).id;
       this.player = this.makePlayer(carry ? clamp(oldHealth + (this.level.recovery ? 2 : 1),1,this.tuning.health) : this.tuning.health);
       MM.WeaponManager?.init(this);MM.SkillManager?.reset(this);MM.InputManager?.init(this);this.aimMode='ground';
       if(carry)this.player.ammo=Math.min(this.player.maxAmmo,oldAmmo+this.player.ammo);
@@ -730,6 +734,7 @@
       this.ui['result-primary'].innerHTML=(paused?'Trở lại cuộc săn':final?'Săn lại từ đầu':won?'Màn tiếp theo':'Thử lại màn này')+' <span>→</span>';
       this.resultAction=paused?()=>this.togglePause():final?()=>this.start(1):won?()=>this.start(this.level.id+1,{carry:true}):()=>this.start(this.level.id,{retry:true});
       this.ui['result-overlay'].hidden=false;
+      MM.StoryUI?.result(this);
     }
     openDialog(id) {if(this.screen==='playing')this.togglePause();this.clearInputs();this.ui[id].showModal();}
     syncSettings() {
@@ -759,10 +764,13 @@
       this.ui['score-label'].innerHTML=`${home?'KỶ LỤC':'ĐIỂM'} <b>${String(home?this.save.best:this.score).padStart(5,'0')}</b>`;this.ui['status-label'].textContent=home?'SẴN SÀNG CHO CUỘC SĂN':this.screen==='paused'?'CUỘC SĂN TẠM DỪNG':this.screen==='won'?'MÀN ĐÃ HOÀN THÀNH':this.screen==='lost'?'SẴN SÀNG THỬ LẠI':this.level.boss?'ĐÊM CỦA KẺ GIỮ CỔNG':'CUỘC SĂN ĐANG DIỄN RA';
       this.ui['start-label'].textContent=this.save.resume>1?'Tiếp tục · Màn '+this.save.resume:'Bắt đầu cuộc săn';this.ui['save-label'].textContent=this.save.completed.length?`${this.save.completed.length} / ${Campaign.levels.length} MÀN ĐÃ HOÀN THÀNH`:'CHƯA CÓ HÀNH TRÌNH';
       this.ui['pause-button'].disabled=home;this.ui['shield-button'].disabled=home;
+      MM.StoryUI?.sync(this);
     }
     buildMap() {
       if(this.headless)return;const map=this.ui['level-map'];map.textContent='';
-      Campaign.worlds.forEach(world=>{const section=document.createElement('section');section.className='world-map';const title=document.createElement('h3');title.innerHTML=`<span>0${world.id+1}</span> ${world.name} <small>${world.subtitle}</small>`;section.append(title);const grid=document.createElement('div');grid.className='level-grid';
+      const story=MM.StoryUI?.selected(this);
+      Campaign.worlds.filter(world=>!story||(world.id>=Math.floor((story.start-1)/10)&&world.id<=Math.floor((story.end-1)/10))).forEach(world=>{const section=document.createElement('section');section.className='world-map';const title=document.createElement('h3');title.innerHTML=`<span>${String(world.id+1).padStart(2,'0')}</span> ${world.name} <small>${world.subtitle}</small>`;section.append(title);const grid=document.createElement('div');grid.className='level-grid';
+        if(story){const lore=document.createElement('p');lore.className='world-lore';lore.textContent=story.arcs[world.id-Math.floor((story.start-1)/10)];section.append(lore);}
         Campaign.levels.filter(level=>level.world===world.id).forEach(level=>{const button=document.createElement('button');button.className='level-tile'+(level.boss?' boss':'')+(this.save.completed.includes(level.id)?' completed':'')+(this.save.resume===level.id?' current':'');button.textContent=String(level.id).padStart(2,'0');button.title=`Màn ${level.id}: ${level.name}${level.boss?' · Boss':''}`;button.setAttribute('aria-label',button.title);button.addEventListener('click',()=>this.start(level.id));grid.append(button);});section.append(grid);map.append(section);});
     }
     resize() {
@@ -788,7 +796,7 @@
       root.addEventListener('keydown',event=>this.keyDown(event));root.addEventListener('keyup',event=>this.keyUp(event));root.addEventListener('blur',()=>{if(this.screen==='playing')this.togglePause();else this.clearInputs();});
       document.addEventListener('visibilitychange',()=>{if(document.hidden&&this.screen==='playing')this.togglePause();this.lastTime=0;});root.addEventListener('resize',()=>this.resize());
       this.canvas.addEventListener('pointerdown',event=>this.pointerDown(event));this.canvas.addEventListener('pointermove',event=>this.pointerMove(event));this.canvas.addEventListener('pointerup',event=>this.pointerUp(event));this.canvas.addEventListener('pointercancel',event=>this.pointerUp(event,true));this.canvas.addEventListener('lostpointercapture',event=>this.pointerUp(event,true));this.canvas.addEventListener('contextmenu',event=>event.preventDefault());
-      this.ui['start-button'].addEventListener('click',()=>this.start());this.ui['pause-button'].addEventListener('click',()=>this.togglePause());this.ui['shield-button'].addEventListener('click',()=>{this.shieldAction();this.canvas.focus({preventScroll:true});});
+      this.ui['start-button'].addEventListener('click',()=>MM.StoryUI?MM.StoryUI.open(this):this.start());this.ui['pause-button'].addEventListener('click',()=>this.togglePause());this.ui['shield-button'].addEventListener('click',()=>{this.shieldAction();this.canvas.focus({preventScroll:true});});
       this.ui['result-primary'].addEventListener('click',()=>this.resultAction?.());this.ui['result-home'].addEventListener('click',()=>this.goHome());this.ui.brand.addEventListener('click',event=>{event.preventDefault();this.goHome();});
       ['open-levels','home-levels'].forEach(id=>this.ui[id].addEventListener('click',()=>{this.buildMap();this.openDialog('levels-dialog');}));this.ui['open-help'].addEventListener('click',()=>this.openDialog('help-dialog'));this.ui['open-settings'].addEventListener('click',()=>this.openDialog('settings-dialog'));
       document.querySelectorAll('[data-close]').forEach(button=>button.addEventListener('click',()=>button.closest('dialog').close()));this.ui['help-done'].addEventListener('click',()=>this.ui['help-dialog'].close());
@@ -803,8 +811,9 @@
       });
       if(root.matchMedia?.('(pointer:coarse)').matches)this.ui['control-mode'].textContent='GESTURES & CẢM ỨNG';
       MM.ProgressionUI?.bind(this);
+      MM.StoryUI?.bind(this);
     }
   }
   MM.Game = Game; MM.readSave = readSave; MM.overlaps = overlaps;
-  if(typeof document!=='undefined'&&document.getElementById('canvas'))MM.game=new Game();
+  if(typeof document!=='undefined'&&document.getElementById('canvas'))MM.game=new Game({newRun:true});
 })(typeof window!=='undefined'?window:globalThis);
