@@ -1,6 +1,6 @@
 # Monster Mash — The Midnight Hunt
 
-Rebuild 08 (v3.2.1) của game Monster Mash của KIO. Native Canvas 2D, không cần Processing.js, CDN hoặc cài package. Bản đồ mở đầu dùng Three.js đóng gói sẵn trong repo. Có thể mở `index.html` trực tiếp hoặc dùng preview local. Mỗi lần mở hoặc tải lại trang bắt đầu một chuyến đi mới, reset tiến độ màn và kỹ năng; kỷ lục cùng thiết lập vẫn được giữ.
+Rebuild 08 (v3.2.2) của game Monster Mash của KIO. Native Canvas 2D, không cần Processing.js, CDN hoặc cài package. Bản đồ mở đầu dùng Three.js đóng gói sẵn trong repo. Có thể mở `index.html` trực tiếp hoặc dùng preview local. Mỗi lần mở hoặc tải lại trang bắt đầu một chuyến đi mới, reset tiến độ màn và kỹ năng; kỷ lục cùng thiết lập vẫn được giữ.
 
 Màn mở đầu là bản đồ hai miền đất: **Miền Nhật Thực** (1–50) và **Lời Nguyền Cổ Thú** (51–100). Mỗi miền có lời dẫn, năm chặng đường và kết thúc mở. Mỗi chặng có 9 chấm màn thường và một X boss; hạ boss đổi X thành O. Hai miền có bố cục riêng và đường vượt biển từ 50 đến 60. Địa hình Three.js có góc nhìn cố định, chỉ nghiêng tối đa 0,6°/0,9° theo chuột; giảm chuyển động hoặc tắt hiệu ứng sẽ dừng chuyển động. Chọn miền để đọc cốt truyện rồi lên đường; vẫn có thể chọn màn trong miền để luyện tập. Xem [cốt truyện và quy tắc chuyến đi](docs/story-campaign.md).
 

@@ -2023,8 +2023,9 @@ html[data-landscape="rotated"] .atlas-edition{font-size:7px}
 @keyframes atlas-mist{from{background-position:0 0;opacity:.22}to{background-position:100% 70%;opacity:.5}}
 @keyframes atlas-light{0%,25%{background-position:100% 0;opacity:0}55%{opacity:.12}80%,100%{background-position:0 0;opacity:0}}
 @media(prefers-reduced-motion:reduce){.atlas-map{transition:none;transform:none}.atlas-map::before,.atlas-map::after{animation:none}}
-/* Suppress browser selection/callouts without putting a layer over touch controls. */
-body.playing .app,body.playing .app *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-body.playing .app img,body.playing .app canvas{-webkit-user-drag:none}
+/* Cover the atlas, menus and combat, while keeping native form editing available. */
+.app,.app *,dialog,dialog *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.app img,.app canvas,.app svg,.app a,dialog img,dialog svg,dialog a{-webkit-user-drag:none}
+.app :is(input,textarea,select,option,[contenteditable]:not([contenteditable="false"])),.app [contenteditable]:not([contenteditable="false"]) *,dialog :is(input,textarea,select,option,[contenteditable]:not([contenteditable="false"])),dialog [contenteditable]:not([contenteditable="false"]) *{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
 .key-setup{margin:24px 0 8px;padding-top:20px;border-top:1px solid #b8bd8b33}.key-setup h3{font:600 19px var(--font-display);color:#e2d4ac;margin:0 0 8px}.key-preset-row{display:flex;align-items:center;gap:10px;margin:14px 0}.key-preset-row select{flex:1;min-width:0;padding:10px 12px;background:#152821;color:#e5dec6;border:1px solid #aeb28b55;border-radius:6px;font-size:12px}.key-preset-row button{padding:10px 16px;font-size:12px}.key-binding-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 20px}.key-binding-row{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px;color:#bacab7;font-size:12px}.key-binding-row button{min-width:80px;padding:8px 12px;background:#152821;border:1px solid #aeb28b55;border-radius:7px;color:#f0d49b;font-size:12px}.key-binding-row button.recording{border-color:#f0bf6a;background:#493b22}.key-binding-status{font-size:11px;line-height:1.7;color:#d7bf8f;min-height:2em;margin:12px 0 0}
 @media(max-width:450px){.key-binding-grid{grid-template-columns:1fr}}html[data-landscape="rotated"] .key-binding-grid{grid-template-columns:1fr 1fr}

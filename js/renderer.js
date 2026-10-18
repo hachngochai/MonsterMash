@@ -20,7 +20,7 @@
       const image=new ImageType(),entry=spriteEntries[name];entry.image=image;image.decoding='async';
       image.onload=()=>{entry.ready=(image.naturalWidth||image.width)>0;resolve();};
       image.onerror=()=>{entry.ready=false;resolve();};
-      image.src=spriteBase+file+'?v=3.2.1';
+      image.src=spriteBase+file+'?v=3.2.2';
     });
   }));
   window.MM=window.MM||{};

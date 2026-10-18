@@ -4,6 +4,9 @@
   const MM = root.MM = root.MM || {};
   const Campaign = MM.Campaign;
   const W = 960, H = 540, GROUND = 438, SAVE_KEY = 'monster-mash-v2';
+  const interactionElement = node => node?.nodeType===3 ? node.parentElement : node;
+  const editableInteraction = node => !!(node?.isContentEditable || node?.closest?.('input,textarea,select,option,[contenteditable]:not([contenteditable="false"])'));
+  const protectedInteraction = node => !!node?.closest?.('.app,dialog');
   const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
   const overlaps = (a, b) => Math.abs(a.x - b.x) < (a.w + b.w) / 2 && a.y > b.y - b.h && a.y - a.h < b.y;
   // Return the first point of a swept bullet against a rectangle, including diagonal shots.
@@ -796,14 +799,24 @@
       this.ctx.setTransform(this.dpr,0,0,this.dpr,0,0);MM.Renderer.draw(this.ctx,this);
       this.raf=root.requestAnimationFrame(this.frame);
     }
+    clearNativeSelection() {
+      const selection=root.getSelection?.();
+      if(!selection||selection.isCollapsed)return false;
+      const anchor=interactionElement(selection.anchorNode),focus=interactionElement(selection.focusNode);
+      if(editableInteraction(anchor)||editableInteraction(focus))return false;
+      if(!protectedInteraction(anchor)&&!protectedInteraction(focus))return false;
+      selection.removeAllRanges();return true;
+    }
     nativeInteraction(event) {
-      if(this.screen!=='playing')return false;
-      if(event.target?.closest?.('input,textarea,select,[contenteditable="true"]'))return false;
-      if(event.type!=='copy'&&!event.target?.closest?.('.app'))return false;
+      const target=interactionElement(event.target);
+      if(editableInteraction(target))return false;
+      const selected=event.type==='copy'&&this.clearNativeSelection();
+      if(!protectedInteraction(target)&&!selected)return false;
       event.preventDefault();return true;
     }
     bind() {
-      for(const type of ['selectstart','dragstart','contextmenu','copy'])document.addEventListener(type,event=>this.nativeInteraction(event));
+      for(const type of ['selectstart','dragstart','contextmenu','copy'])document.addEventListener(type,event=>this.nativeInteraction(event),true);
+      document.addEventListener('selectionchange',()=>this.clearNativeSelection());this.clearNativeSelection();
       root.addEventListener('keydown',event=>this.keyDown(event));root.addEventListener('keyup',event=>this.keyUp(event));root.addEventListener('blur',()=>{if(this.screen==='playing')this.togglePause();else this.clearInputs();});
       document.addEventListener('visibilitychange',()=>{if(document.hidden&&this.screen==='playing')this.togglePause();this.lastTime=0;});root.addEventListener('resize',()=>this.resize());
       this.canvas.addEventListener('pointerdown',event=>this.pointerDown(event));this.canvas.addEventListener('pointermove',event=>this.pointerMove(event));this.canvas.addEventListener('pointerup',event=>this.pointerUp(event));this.canvas.addEventListener('pointercancel',event=>this.pointerUp(event,true));this.canvas.addEventListener('lostpointercapture',event=>this.pointerUp(event,true));this.canvas.addEventListener('contextmenu',event=>event.preventDefault());

@@ -1,6 +1,6 @@
 {
   "name": "monster-mash",
-  "version": "3.2.1",
+  "version": "3.2.2",
   "private": true,
   "description": "A 100-stage native Canvas 2D monster hunting game",
   "scripts": {

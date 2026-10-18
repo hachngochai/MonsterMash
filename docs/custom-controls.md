@@ -8,4 +8,4 @@ Lưu trong `settings.keyBindings`, giữ khi mở lại link/chuyến đi mới.
 
 Điện thoại giữ ba chế độ Vuốt + nút, Chỉ vuốt và Chỉ nút trong Cài đặt. Khi dùng bàn phím ngoài, áp dụng cùng bộ phím tùy chỉnh.
 
-Trong trận, CSS và các sự kiện selectstart/dragstart/contextmenu/copy ngăn chọn chữ, kéo ảnh, menu nhấn giữ và sao chép ngoài ý muốn. Không đặt lớp bắt sự kiện lên trên nút cảm ứng. Các menu khi tạm dừng và trường nhập liệu giữ hành vi trình duyệt thông thường. Website không thể chặn chụp màn hình từ hệ điều hành.
+Từ v3.2.2, CSS và các sự kiện selectstart/dragstart/contextmenu/copy ngăn chọn chữ, kéo ảnh, menu nhấn giữ và sao chép ngoài ý muốn trên toàn bộ giao diện: bản đồ mở đầu, trận đấu, menu tạm dừng và kết quả. Listener chạy ở capture phase; selectionchange xóa vùng chọn còn sót trong giao diện, kể cả chữ bên trong nút X/O và tên miền đất. Không đặt lớp bắt sự kiện lên trên nút cảm ứng hoặc chặn pointerdown. Các trường nhập liệu, danh sách chọn và contenteditable vẫn giữ hành vi thông thường; click nút, cuộn hộp thoại và gán phím không thay đổi. Website không thể chặn chụp màn hình từ hệ điều hành.
