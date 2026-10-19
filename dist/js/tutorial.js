@@ -134,7 +134,7 @@
     const state=pending.get(g);if(!state)return false;pending.delete(g);
     if(g.screen!=='briefing'||g.level.id!==state.level)return false;
     g.save.guidesSeen=normalizeSeen([...(g.save.guidesSeen||[]),state.start]);g.persist();
-    g.screen='playing';g.lastTime=0;g.clearInputs();g.updateUI();g.canvas?.focus({preventScroll:true});return true;
+    g.screen='playing';g.lastTime=0;g.clearInputs();g.updateUI();g.mobileView?.enter();g.canvas?.focus({preventScroll:true});return true;
   }
   function onStart(g,options={}){
     pending.delete(g);

@@ -2103,6 +2103,7 @@ body.playing .game-status { min-height:26px;padding-top:5px;padding-bottom:5px; 
 .guide-topic ul{margin:0;padding-left:18px;color:#c1cec5;font-size:12px;line-height:1.8}
 .guide-topic li+li{margin-top:7px}
 #tutorial-dialog{width:min(720px,calc(100vw - 24px))}
+html[data-landscape="rotated"] #tutorial-dialog{width:min(720px,calc(var(--mobile-vh,100dvh) - 24px))}
 #tutorial-dialog .dialog-head h2{font-size:clamp(20px,3vw,28px);line-height:1.3}
 .tutorial-content .guide-topic{padding:0 0 12px;border-bottom:1px solid var(--line)}
 .tutorial-controls{font-size:11px;line-height:1.8;color:#a3b7a7;margin:18px 0}

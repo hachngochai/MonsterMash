@@ -70,7 +70,7 @@
 
     isCurrent(record) {
       const tracked = record.kind === 'landing' ? this.landingPending === record : this.pending === record;
-      return tracked && record.epoch === this.epoch && this.active && ['home', 'playing'].includes(this.game.screen);
+      return tracked && record.epoch === this.epoch && this.active && ['home', 'playing', 'briefing'].includes(this.game.screen);
     }
 
     prepareLanding() {
