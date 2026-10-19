@@ -86,9 +86,9 @@ test('V3 every milestone has exactly one persisted reward and the right equipmen
     assert.equal(MM.BossManager.onDefeated(game,defeated()),true);
     assert.equal(MM.BossManager.onDefeated(game,defeated()),false);
   }
-  assert.equal(game.persisted,10);
-  assert.deepEqual(plain(game.progression.rewards),[10,20,30,40,50,60,70,80,90,100]);
-  for(const weapon of ['gun','bones','club','bow','spear','axes'])assert.equal(MM.SaveManager.weaponUnlocked(game,weapon),true);
+  assert.equal(game.persisted,15);
+  assert.deepEqual(plain(game.progression.rewards),[10,20,30,40,50,60,70,80,90,100,110,120,130,140,150]);
+  for(const weapon of ['gun','bones','club','bow','spear','axes','hammer','scythe'])assert.equal(MM.SaveManager.weaponUnlocked(game,weapon),true);
   assert.equal(MM.SaveManager.weaponUnlocked(game,'unknown'),false);
   assert.equal(MM.SaveManager.unlocked(game,1),false);
 });

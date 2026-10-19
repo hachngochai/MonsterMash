@@ -3,6 +3,31 @@
   'use strict';
   const font = window.MM?.Typography?.sans || '"Noto Sans", Arial, sans-serif';
   const W = 960, H = 540, GROUND = 438, TAU = Math.PI * 2;
+  const bossFacingStates = new WeakMap();
+  const bossMotionStates = new WeakMap();
+  function bossLocomotion(enemy,time,effects,type){
+    if(!effects)return {phase:0,intensity:0,bob:0,lean:0};
+    let state=bossMotionStates.get(enemy);
+    if(!state||time<state.time){state={time,x:enemy.x||0,intensity:.15};bossMotionStates.set(enemy,state);}
+    const dt=Math.max(0,Math.min(.1,time-state.time));
+    if(dt>0){
+      const dx=(enemy.x||0)-state.x,speed=Math.max(Math.abs(enemy.vx||0),Math.abs(dx)/dt);
+      const moving=speed>5||/approach|walk|patrol|charge|chase|pursuit|swoop/.test(enemy.abyssState||enemy.mythicState||enemy.dragonState||'');
+      const target=moving?Math.max(.55,Math.min(1,speed/70)):.14;
+      state.intensity+=(target-state.intensity)*(1-Math.exp(-dt*11));state.velocity=dx/dt;state.x=enemy.x||0;state.time=time;
+    }
+    const phase=time*(type==='spider'?11:type==='dragon'?5:8.4)+(enemy.motionSeed||0);
+    const attacking=/charge|swoop|pounce|claw|bite|combo|stomp|attack/.test(enemy.abyssState||enemy.mythicState||enemy.dragonState||'');
+    return {phase,intensity:state.intensity,bob:Math.sin(phase*2)*2.1*state.intensity,lean:attacking?0:Math.max(-.055,Math.min(.055,(enemy.vx||state.velocity||0)*.0006))};
+  }
+  function smoothBossFacing(enemy,time,effects){
+    const target=enemy.dir<0?-1:1;if(!effects)return target;
+    let state=bossFacingStates.get(enemy);
+    if(!state||time<state.time){state={time,value:target,target,start:target,started:time};bossFacingStates.set(enemy,state);}
+    if(state.target!==target){state.start=state.value;state.target=target;state.started=time;}
+    const p=Math.max(0,Math.min(1,(time-state.started)/.32)),ease=p*p*(3-2*p);
+    state.value=state.start+(state.target-state.start)*ease;state.time=time;return state.value;
+  }
   // User-supplied character art is decoded once; native drawings remain available
   // while an image loads or when a browser cannot load a particular asset.
   const spriteFiles = {
@@ -35,10 +60,10 @@
     const factor=dragon?1.25:name==='chimera'?1.2:1.1;
     const height=(e.h||54)*factor,width=height*iw/ih;
     const pivot=dragon ? .59 : name==='lion' ? .54 : name==='goatman' ? .47 : name==='chimera' ? .49 : .5;
-    const flying=dragon||e.mythicAir;
-    const bob=effects&&flying?Math.sin(t*3.2+(e.x||0)*.003)*Math.min(2,(e.h||54)*.008):0;
+    const flying=dragon||e.mythicAir,gait=e.boss?bossLocomotion(e,t,effects,e.type||name):null;
+    const bob=effects&&flying?Math.sin(t*4.1+(e.motionSeed||0))*Math.min(4,(e.h||54)*.018):gait?.bob||0;
     const attacking=/^(axe|stab|spear|claw|bite|swoop)$/.test(e.mythicState||'');
-    const tilt=effects?(flying?Math.sin(t*2.3)*.018:attacking?Math.sin((e.mythicProgress||0)*Math.PI)*.065:0):0;
+    const tilt=effects?(flying?Math.sin(t*3.1+(e.motionSeed||0))*.035:attacking?Math.sin((e.mythicProgress||0)*Math.PI)*.065:gait?.lean||0):0;
     c.save();
     // Undo the vector drawer's anisotropic scale before fitting the PNG.
     c.scale(40/(e.w||40),54/(e.h||54));c.scale((dir||1)*facing,1);c.translate(0,bob);c.rotate(tilt);
@@ -362,6 +387,7 @@
     polygon(c,[[0,-22],[4,-16],[0,-11],[-4,-16]],'#b14e62','#ffb6a4',.8);c.restore();
   }
   function drawRewardWeapon(c, player, weapon, game, t, effects) {
+    if(window.MM?.AbyssRenderer?.drawWeapon(c,player,weapon,game,t,effects))return;
     const dir=player.dir||1,attack=game?.weaponAttack,active=attack&&attack.time>0;
     const progress=active?1-attack.time/Math.max(.01,attack.duration):0;
     const swing=active&&attack.form==='swing'?Math.sin(progress*Math.PI):0;
@@ -460,6 +486,7 @@
       }
       c.restore();
     } else for (const side of [-1, 1]) {
+      if(game?.level?.id>=101&&side===-dir)continue;
       // Dual pistols retain the distinctive original left/right shooting pose.
       c.save();
       if (highAim && side === dir && Number.isFinite(player.aimAngle)) {
@@ -1587,7 +1614,7 @@
     const arrivingKnight = type === 'dragon' && e.dragonState === 'knight-rise';
     const arrivingMythic = type === 'chimera' && (e.mythicState === 'rise' || e.mythicState === 'split');
     const growth = transforming ? .5 + .5 * Math.max(0, Math.min(1, 1 - (e.transformTime || 0) / 1.2)) : 1;
-    const w = (e.w || (boss ? 68 : 40)) * growth, h = (e.h || (boss ? 88 : 52)) * growth, dir = e.dir || 1;
+    const w = (e.w || (boss ? 68 : 40)) * growth, h = (e.h || (boss ? 88 : 52)) * growth, gait=boss?bossLocomotion(e,t,effects,type):null, dir = boss?smoothBossFacing(e,t,effects):(e.dir||1);
     drawPhantomTell(c, e, t, effects, viewTop);
     if (e.intangible && !transforming && !grabbingVine && !arrivingKnight && !arrivingMythic) {
       if (effects) { c.save(); c.globalAlpha = .045; ellipse(c, e.x, e.y - h * .42, 17, 5, '#c5eeeb'); c.restore(); }
@@ -1640,9 +1667,14 @@
       ellipse(c, e.x - (vertical ? 0 : dir * 11), e.y - h * .46 - (vertical ? 14 : 0), w * .65, h * .34, '#a7e2df');
       ellipse(c, e.x - (vertical ? 0 : dir * 24), e.y - h * .4 - (vertical ? 33 : 0), w * .48, h * .22, '#a7e2df'); c.restore();
     }
-    c.save(); c.translate(e.x, e.y); c.scale(w / 40, h / 54); c.lineCap = 'round'; c.lineJoin = 'round';
+    c.save();
+    const locomotionPhase=gait?.phase??(Number(e.age)||t)*(type==='dragon'?3.2:2.35)+(e.motionSeed||0);
+    const settled=effects&&boss&&!['charge','swoop','pounce','claw','bite','combo','stomp'].includes(e.abyssState||e.mythicState||e.dragonState||'');
+    const idleBob=gait?gait.bob:(settled?Math.sin(locomotionPhase)*1.15:0);
+    const lean=gait?gait.lean:0;
+    c.translate(e.x, e.y+idleBob); c.rotate(lean); c.scale(w / 40, h / 54); c.lineCap = 'round'; c.lineJoin = 'round';
     if (e.abilityState === 'shadow-windup') c.globalAlpha = .6;
-    const walk = effects ? Math.sin((e.age || t) * (type === 'spider' ? 13 : 8) + e.x * .007) * 2.7 : 0;
+    const walk = effects ? Math.sin(locomotionPhase)*(boss?4.8*(gait?.intensity||.15):2.7) : 0;
     if (boss) {
       c.save(); c.globalAlpha = .25;
       c.strokeStyle = e.kongState === 'final-rage' ? '#ffae77' : e.bloodMoon ? '#ffa68d' : palettes[world].glow; c.lineWidth = 1.2; c.beginPath(); c.ellipse(0, -32, 31, 37, 0, 0, TAU); c.stroke(); c.restore();
@@ -2341,7 +2373,9 @@
     if (!scenes.has(sceneWorld)) scenes.set(sceneWorld, createScene(sceneWorld));
     c.save();
     if (effects && game.shake > 0) c.translate(Math.sin(t * 83) * game.shake, Math.cos(t * 97) * game.shake * .6);
-    c.drawImage(scenes.get(sceneWorld), 0, 0); drawAtmosphere(c, sceneWorld, t, effects);
+    const abyss=window.MM?.AbyssRenderer;
+    const abyssScene=abyss?.drawBackground(c,game,t);
+    if(!abyssScene){c.drawImage(scenes.get(sceneWorld), 0, 0); drawAtmosphere(c, sceneWorld, t, effects);}
     drawBloodMoon(c, game, t, effects);
     drawKongRage(c, game);
     if (game.screen === 'home' && (!game.enemies || !game.enemies.length)) drawHomeCast(c, t, effects, world, game.level);
@@ -2354,36 +2388,49 @@
       drawRealmZones(c,game.dragonZones,t,effects,game.viewTop||0);
       drawRealmZones(c,game.mythicZones,t,effects,game.viewTop||0);
       drawBananaPeels(c, game.bananaPeels, t, effects);
+      abyss?.drawEffects(c,game,false);
       drawPlatforms(c, game.enemies || [], t, effects);
       for (const p of game.pickups || []) drawPickup(c, p, t, effects);
       for (const crate of game.ammoCrates || []) drawAmmoCrate(c, crate, t, effects);
       drawBossEggs(c, game.bossEggs, t, effects);
       for (const e of game.enemies || []) {
         if (e.phase === 'warning') drawWarning(c, e, t, effects, world);
-        else drawMonster(c, e, t, effects, world, game.viewTop || 0);
+        else if(e.playerShadow){
+          c.save();c.globalAlpha=.7;
+          const shadowGame={...game,progression:{...game.progression,equipped:e.shadowSnapshot?.weapon||'gun'},rollSlash:null,weaponAttack:null};
+          drawHunter(c,{...e,ammo:e.ammo,weaponMode:e.shadowSnapshot?.profile?.kind||'normal'},t,effects,shadowGame);
+          c.globalCompositeOperation='source-atop';ellipse(c,e.x,e.y-e.h*.5,e.w*.7,e.h*.55,'#51347166');c.restore();
+        }else if(!abyss?.drawEnemy(c,game,e,t))drawMonster(c, e, t, effects, world, game.viewTop || 0);
         if ((e.splitTriggered || e.draculaClone) && e.health > 0 && !e.intangible) {
           c.save(); rounded(c, e.x - 10, e.y - e.h - 27, 20, 17, 3, '#202634c9', '#bd98a05e', 1);
           c.font = `600 11px ${font}`; c.fillStyle = '#f6d7bd'; c.textAlign = 'center'; c.fillText(e.draculaClone ? 'II' : 'I', e.x, e.y - e.h - 15); c.restore();
         }
       }
       for (const e of game.enemies || []) drawDraculaDrain(c, e, game.player, t, effects);
-      if (game.player) drawHunter(c, game.player, t, effects,game);
+      if (game.player) {
+        c.save();
+        if(window.MM?.AbyssCombat?.gravityDirection(game)<0){c.translate(0,2*game.player.y-game.player.h);c.scale(1,-1);}
+        drawHunter(c, game.player, t, effects,game);c.restore();
+        abyss?.drawPlayerTorch(c,game);
+      }
       for (const z of game.mythicZones || []) if(z.kind==='bite'&&!z.expired)drawChimeraBite(c,z,t,effects,game.viewTop||0);
       for (const b of game.bullets || []) drawBullet(c, b, effects);
       for (const shot of game.enemyShots || []) drawEnemyShot(c, shot, t, effects);
       for (const shot of game.dragonShots || []) drawRealmShot(c,shot,t,effects);
       for (const shot of game.mythicShots || []) drawRealmShot(c,shot,t,effects);
       if (effects) for (const p of game.particles || []) drawParticle(c, p);
+      abyss?.drawEffects(c,game,true);
+      abyss?.drawLighting(c,game);
       drawFloats(c, game.floats);
       drawBossHUD(c, (game.enemies || []).filter(e => e.boss && e.health > 0), game);
     }
-    if (game.flash > 0 && effects) { c.globalAlpha = Math.min(.19, game.flash); rect(c, 0, 0, W, H, '#d2eeec'); c.globalAlpha = 1; }
+    if (game.flash > 0 && effects && !abyssScene) { c.globalAlpha = Math.min(.19, game.flash); rect(c, 0, 0, W, H, '#d2eeec'); c.globalAlpha = 1; }
     c.restore();
   }
   function drawPortrait(c, type = 'hunter', x = 40, y = 75, scale = 1, world = 0) {
     c.save(); c.translate(x, y); c.scale(scale, scale);
     if (type === 'hunter' || type === 'player') drawHunter(c, { x: 0, y: 0, w: 38, h: 54, dir: 1 }, 0, false);
-    else drawMonster(c, { x: 0, y: 0, w: 40, h: 54, type, dir: 1, boss: type === 'boss', world }, 0, false, world);
+    else if(!window.MM?.AbyssRenderer?.drawEnemy(c,{level:{id:101},settings:{effects:false}},{x:0,y:0,w:40,h:54,type,dir:1,health:1},0))drawMonster(c, { x: 0, y: 0, w: 40, h: 54, type, dir: 1, boss: type === 'boss', world }, 0, false, world);
     c.restore();
   }
   window.MM = window.MM || {};

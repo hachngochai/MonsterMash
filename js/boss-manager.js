@@ -12,7 +12,12 @@
     70:{name:'Trăng Máu Của Sói',skills:['bloodMoon']},
     80:{name:'Chuyển Chế Độ Bắn',skills:['manualAim']},
     90:{name:'Cung Hắc Ám · Giáo Bạch Kim',weapons:['bow','spear']},
-    100:{name:'Song Rìu · Hóa Đá',weapons:['axes'],skills:['petrify']}
+    100:{name:'Song Rìu · Hóa Đá',weapons:['axes'],skills:['petrify']},
+    110:{name:'Mê Cung Minotaur đã khai phá',milestoneOnly:true},
+    120:{name:'Búa Minotaur',weapons:['hammer']},
+    130:{name:'Phát Quang Vũ Khí',skills:['weaponGlow']},
+    140:{name:'Lưỡi Hái Cổ Điểu',weapons:['scythe']},
+    150:{name:'Vực Sâu Cổ Đại đã khai phá',milestoneOnly:true}
   });
 
   function onDefeated(game, enemy) {

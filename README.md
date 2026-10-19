@@ -1,10 +1,10 @@
 # Monster Mash — The Midnight Hunt
 
-Rebuild 08 (v3.2.2) của game Monster Mash của KIO. Native Canvas 2D, không cần Processing.js, CDN hoặc cài package. Bản đồ mở đầu dùng Three.js đóng gói sẵn trong repo. Có thể mở `index.html` trực tiếp hoặc dùng preview local. Mỗi lần mở hoặc tải lại trang bắt đầu một chuyến đi mới, reset tiến độ màn và kỹ năng; kỷ lục cùng thiết lập vẫn được giữ.
+Rebuild 09 (v4.0.0) của Monster Mash của KIO: 150 màn, 3 cốt truyện, Canvas 2D và bản đồ Three.js đóng gói trong repo. Không cần CDN hoặc cài package. Tiến độ màn, kỹ năng, vũ khí, kỷ lục và cài đặt lưu vĩnh viễn bằng localStorage trên trình duyệt hiện tại.
 
-Màn mở đầu là bản đồ hai miền đất: **Miền Nhật Thực** (1–50) và **Lời Nguyền Cổ Thú** (51–100). Mỗi miền có lời dẫn, năm chặng đường và kết thúc mở. Mỗi chặng có 9 chấm màn thường và một X boss; hạ boss đổi X thành O. Hai miền có bố cục riêng và đường vượt biển từ 50 đến 60. Địa hình Three.js có góc nhìn cố định, chỉ nghiêng tối đa 0,6°/0,9° theo chuột; giảm chuyển động hoặc tắt hiệu ứng sẽ dừng chuyển động. Chọn miền để đọc cốt truyện rồi lên đường; vẫn có thể chọn màn trong miền để luyện tập. Xem [cốt truyện và quy tắc chuyến đi](docs/story-campaign.md).
+Bản đồ gồm **Miền Nhật Thực** (1–50), **Lời Nguyền Cổ Thú** (51–100) và **Vực Sâu Cổ Đại** (101–150). Vuốt ngang hoặc dùng mũi tên/tab để chuyển I → II → III. Mỗi vùng giữ bố cục dấu X riêng, có 45 chấm màn thường và 5 X/O boss. Đường tiếp nối 50 → 51 → 60 và 100 → 101 → 110 kết nối hành trình. Camera 3D cố định, chỉ nghiêng nhẹ theo chuột.
 
-V3 thêm phần thưởng sau boss 10–100: Xương Phân Ba, Khiên Bất Tử, Nhảy Cao, Hắc Hóa, Hút Máu, Chùy Golem, chọn tầm bắn, Cung Hắc Ám, Giáo Bạch Kim, Song Rìu và Hóa Đá. Chỉ Song Rìu có Lăn Chém gây sát thương; lướt riêng màn 70 không gây sát thương. Sáu manager và UI dùng chung cho PC/mobile, không thưởng trùng trong chuyến đi. Từ v3.2.0, phần thưởng giữ khi chuyển màn hoặc về bản đồ trong cùng trang, và reset khi mở lại hoặc tải lại trang. Xem [thông số và vị trí tích hợp V3](docs/V3-design.md).
+V3 mở khóa phần thưởng boss 10–100; chương III thêm **Búa Minotaur** sau boss 120, **Phát Quang Vũ Khí** sau boss 130 và **Lưỡi Hái Cổ Điểu** sau boss 140. Chỉ hạ đúng dạng cuối mới nhận thưởng, không cấp trùng. Mở lại trang giữ tiến độ. Mốc 110 và 150 chỉ đánh dấu đã khám phá, không thêm vũ khí/kỹ năng. Xem [cấu hình, kiểm thử và giới hạn chương III](docs/ancient-abyss.md).
 
 Bản 3.0.2 dùng ảnh PNG trong suốt tách từ mẫu nhân vật do tác giả cung cấp: rồng, Người Sư tử, Medusa, Goatman và Chimera. Năm hệ rồng có bảng màu riêng: lửa đỏ, băng xanh lam, gió xanh ngọc, đất nâu và chớp tím vàng. Rồng ngàn tuổi mang vương miện, giữ màu đen trắng cùng vòng Âm Dương. Game tải sẵn sprite từ `assets/sprites/` rồi vẽ lên Canvas; tạo hình bằng code vẫn làm dự phòng nếu ảnh chưa tải được. Chimera được phóng lớn thành 300 × 210 pixel, còn ba bản thể thu về 76 × 108 pixel để cân đối hơn với người chơi. Kỹ năng và cơ chế chiến đấu giữ nguyên.
 
@@ -31,7 +31,7 @@ GitHub Pages của repo xuất bản từ nhánh `master`, thư mục gốc `/`,
 
 ## Gameplay
 
-- 100 màn có tên, mục tiêu và cấu hình riêng, chia thành 10 chương: nghĩa địa, rừng tơ, thành phố ma, lâu đài trăng máu, cổng nhật thực, **Thung lũng nguyền rủa**, **Thung lũng trăng máu**, **Rừng nguyên sinh**, **Thiên không ngũ hành** và **Tàn tích thần thoại**. Các chương 6–8 dùng cùng nền rừng gai với ánh sáng le lói; chương 9 có vách núi trên mây, chương 10 có tàn tích cổ.
+- 150 màn có tên, mục tiêu và cấu hình riêng, chia thành 10 chương: nghĩa địa, rừng tơ, thành phố ma, lâu đài trăng máu, cổng nhật thực, **Thung lũng nguyền rủa**, **Thung lũng trăng máu**, **Rừng nguyên sinh**, **Thiên không ngũ hành** và **Tàn tích thần thoại**. Các chương 6–8 dùng cùng nền rừng gai với ánh sáng le lói; chương 9 có vách núi trên mây, chương 10 có tàn tích cổ.
 - Boss ở màn 10, 20, 30, 40, 50, 60, 70, 80, 90, 100; xuất hiện sau khi hạ đủ địch thường. Hạ boss mới qua màn; riêng KingKong cần sống qua cơn cuồng nộ cuối, Rồng ngàn tuổi phải bị hạ cả dạng Kị sĩ và Chimera phải bị hạ cả ba bản thể.
 - Màn 10: bộ xương gọi cột xương có dấu báo trước. Màn 20: cứ mỗi **15 giây giao chiến**, thây ma xanh bật khiên **miễn đạn 1 giây và hồi 1 máu**, không vượt máu tối đa. Khiên dùng đồng hồ giao chiến, không phụ thuộc số phát đạn trúng; tạm dừng cũng dừng đếm giờ. HUD báo thời gian còn lại tới lần bật khiên tiếp theo. **Tsunami** mỗi 10 giây gọi đúng 20 thây ma xanh con chạy nhanh nối đuôi, cả đàn từ trái sang phải hoặc phải sang trái. Bắn hạ, nhảy qua hoặc bật khiên để tránh; con chạy hết sân rời trận. **Phàm ăn** có dấu báo trước rồi truy đuổi người chơi trong 1 giây, chạy trên đất hoặc nhảy từ trên cao, hồi 5 máu trong giới hạn máu tối đa và gây 2 sát thương khi đánh trúng; hồi chiêu 8 giây. Giữ nguyên hai kỹ năng tấn công này và tuần tra trên bệ đá của boss màn 20.
 - Màn 30: nhện nhả tơ gây choáng 2 giây và phóng trứng mỗi 5 giây. Trứng nở sau **3 giây kể từ khi chạm đất**; bắn **2 phát** trước khi hết đếm ngược để phá và ngăn 5 nhện con xuất hiện. Nhện con quá nhỏ, đạn xuyên qua và không thể bị tiêu diệt; chạm người chơi gây **1 máu và choáng 1,5 giây**, khiên đang bật chặn cả sát thương lẫn choáng. Chúng không cho điểm, tiến độ khiên hoặc vật phẩm. Tối đa 2 trứng, dành sẵn chỗ cho đàn nhện con để không vượt 15 con; đàn nhện con rời sân khi boss bị hạ. Nhện thường và các quái triệu hồi khác giữ cơ chế riêng.
@@ -56,7 +56,7 @@ GitHub Pages của repo xuất bản từ nhánh `master`, thư mục gốc `/`,
 - Sau khi trúng đòn có 1,35 giây bất tử. Qua màn hồi 1 máu, màn hồi phục hồi 2. Mỗi 7 địch rơi vật phẩm máu nếu đang thiếu máu.
 - Địch có cổng báo trước, giới hạn số lượng đồng thời và khoảng nghỉ sau mỗi nhóm. Giữ lại kỹ năng riêng từ source gốc: zombie di chuyển trên bệ lơ lửng rồi nhảy xuống; nhện đu trên sợi tơ, nhấp nhô rồi thả xuống; ma bay theo sóng sin rồi bổ nhào; ma cà rồng hóa dơi, bay lên, tuần tra, lao xuống và trở lại hình người. Boss giữ kỹ năng theo loài. Dấu báo vàng chỉ vị trí đáp trước khi địch tấn công.
 - Nhịp tấn công tăng dần theo thời gian thực trong từng màn, bằng đường cong mượt có giới hạn. Quái bắt đầu tăng sau 12 giây (16 giây ở màn hồi phục); boss có đồng hồ riêng, tăng sau 4 giây giao chiến. Ở chế độ Cân bằng, nhịp quái đạt tối đa ×1,50–1,725 và boss ×1,70–1,925 tùy vùng. Di chuyển, bay, bổ nhào và đạn xương tăng nhẹ hơn nhịp hồi kỹ năng. Dấu báo vẫn có ít nhất 0,9 giây thực để phản ứng (Thư giãn 1,1; Thử thách 0,75). Tạm dừng cũng dừng quá trình tăng tốc; màn mới bắt đầu lại nhịp đầu.
-- Mở hoặc tải lại trang reset các màn đã qua, màn tiếp tục, phần thưởng boss, vũ khí đang cầm và bộ đếm Hút Máu. Trong cùng trang, chuyển màn, thử lại hoặc về bản đồ vẫn giữ phần thưởng của chuyến đi. Kỷ lục và thiết lập được lưu trong localStorage; không gửi dữ liệu ra ngoài. Khi browser chặn lưu trữ, game vẫn chơi được trong phiên hiện tại.
+- Mở hoặc tải lại trang giữ các màn đã hoàn thành, phần thưởng, trang bị và bộ đếm Hút Máu. Khi trình duyệt từ chối lưu trữ, game vẫn chạy trong phiên hiện tại. Dữ liệu không gửi ra ngoài.
 
 Tiếp tế đạn ở chế độ Cân bằng:
 
@@ -105,7 +105,7 @@ Khung game nằm trong kích thước cửa sổ hiện tại, tránh thanh cu�
 
 ## Cấu trúc và cập nhật sau này
 
-- `js/campaign.js`: dữ liệu 100 màn, 10 chương, loại địch và hệ số độ khó. Thêm chương hoặc màn tại đây; `levels.length` điều khiển tiến trình và điều kiện màn cuối.
+- `js/campaign.js`: dữ liệu 150 màn, 15 chương, loại địch và hệ số độ khó. Thêm chương hoặc màn tại đây; `levels.length` điều khiển tiến trình và điều kiện màn cuối.
 - `js/game.js`: mô phỏng theo giây, input, va chạm, kỹ năng riêng của từng loài, đạn và tiếp tế, khiên, save và giao diện.
 - `js/typography.js` và `assets/fonts/`: font Noto Sans / Noto Serif có bộ ký tự tiếng Việt, tải từ file trong game trước khi vẽ Canvas. Font được phân phối theo SIL Open Font License; giấy phép nằm cùng thư mục.
 - `js/mobile.js`: điều khiển toàn màn hình, hướng ngang và xử lý trình duyệt không hỗ trợ.
@@ -116,7 +116,7 @@ Khung game nằm trong kích thước cửa sổ hiện tại, tránh thanh cu�
 - `js/dragons.js`: năm hệ rồng, vùng nguyên tố có dấu báo, Rồng ngàn tuổi và Kị sĩ rồng, Âm Dương luân hồi, thưởng khiên theo phát đạn trúng Kị sĩ.
 - `js/mythic.js`: sư tử dùng giáo, Medusa hóa đá, Goatman bổ rìu; Chimera mặt đất, bay và phân hóa thành ba bản thể với tiến độ khiên dùng chung theo sát thương thực tế.
 - `js/renderer.js`: nhân vật khối vuông lấy cảm hứng source gốc, 8 bối cảnh được cache cho 10 chương, bệ lơ lửng, tơ nhện, dơi biến hình, cánh rồng, vòng Âm Dương, hiệu ứng nguyên tố, hóa đá, lộn, thùng đạn, sương và ánh sáng. Rồng và quái thần thoại dùng PNG trong suốt từ `assets/sprites/`, được tải sẵn và vẽ lên Canvas; các hình vẽ bằng code làm dự phòng khi ảnh chưa sẵn sàng. Bối cảnh, các quái khác và hiệu ứng vẫn vẽ bằng code.
-- `style.css` và `index.html`: giao diện responsive, bản đồ 100 màn, hướng dẫn và cài đặt.
+- `style.css` và `index.html`: giao diện responsive, bản đồ 150 màn, hướng dẫn và cài đặt.
 - `tests/`: kiểm tra chiến dịch, input, đa chạm, khiên, boss, save, pause và kết thúc trận.
 - `tests/boss-preview.html`: bảng xem các trạng thái hiệu ứng và dấu tiếng Việt; mở qua server local để kiểm tra hình ảnh khi cập nhật.
 

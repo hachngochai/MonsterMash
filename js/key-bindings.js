@@ -21,11 +21,12 @@
    const action=Object.keys(defaults).find(key=>map[key]===physical);
    if(action){code=defaults[action];if(action==='aimHigh'&&MM.MapManager?.manualAim(g)!==true&&(map.aimHigh!==defaults.aimHigh||map.jump!==defaults.jump))code='Unbound:'+physical;}
    else if(physical==='Escape'||physical==='Enter'||physical==='Tab')code=physical;
+   else if(physical==='ArrowDown'&&MM.AbyssCombat?.inputDirection(g)<0)code=physical;
    else if(physical==='KeyJ'&&map.shootLeft===defaults.shootLeft)code='KeyJ';
    else if(physical==='KeyL'&&map.shootRight===defaults.shootRight)code='KeyL';
    else code='Unbound:'+physical;
   }
-  return {code,repeat:event.repeat,target:event.target,preventDefault:()=>event.preventDefault?.()};
+  return {code,repeat:event.repeat,timeStamp:event.timeStamp,target:event.target,preventDefault:()=>event.preventDefault?.()};
  }
  function capture(g,event){
   if(!g.keyCapture)return false;event.preventDefault?.();

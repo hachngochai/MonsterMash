@@ -7,7 +7,7 @@ const vm = require('node:vm');
 const test = require('node:test');
 
 const context = vm.createContext({});
-for (const file of ['campaign.js', 'game.js']) {
+for (const file of ['abyss-config.js','campaign.js', 'game.js']) {
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../js', file), 'utf8'), context, { filename: file });
 }
 const { Game } = context.MM;

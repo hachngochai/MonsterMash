@@ -9,6 +9,15 @@
   let context;try{context=canvas.getContext('webgl2',{alpha:true,antialias:true,powerPreference:'low-power'});}catch{return;}
   if(!context)return;
   let renderer,scene,camera,sun,frame=0,last=0,signature='',lost=false;
+  const pages=Object.create(null);
+  const currentPage=()=>/^chapter[123]$/.test(map.dataset.atlasView)?map.dataset.atlasView:'chapter1';
+  function syncCamera(){
+    if(!camera)return;
+    const view=MM.Story?.viewport(Number(currentPage().slice(-1))),fallback=view?[view.x,view.y,view.width,view.height].join(' '):'-50 -20 600 430';
+    const values=(map.getAttribute('data-atlas-camera')||fallback).split(/\s+/).map(Number);
+    if(values.length!==4||values.some(value=>!Number.isFinite(value))||values[2]<=0||values[3]<=0)return;
+    camera.left=values[0]-500;camera.right=values[0]+values[2]-500;camera.top=200-values[1];camera.bottom=200-values[1]-values[3];camera.updateProjectionMatrix();
+  }
   const motion=()=>game.settings.effects!==false&&!game.settings.reducedMotion&&!root.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   const visible=()=>game.screen==='home'&&!root.document.hidden&&!lost;
   function resetTilt(){map.style.setProperty('--atlas-rx','0deg');map.style.setProperty('--atlas-ry','0deg');}
@@ -18,7 +27,9 @@
     if(motion())frame=root.requestAnimationFrame(render);
   }
   function sync(){
-    const key=[game.screen,root.document.hidden,motion(),lost].join(':');if(key===signature)return;signature=key;
+    const page=currentPage(),key=[game.screen,root.document.hidden,motion(),lost,page,Boolean(renderer)].join(':');if(key===signature)return;signature=key;
+    for(const [name,group] of Object.entries(pages))group.visible=name===page;
+    syncCamera();
     map.classList.toggle('atlas-animated',visible()&&motion());resetTilt();
     if(frame)root.cancelAnimationFrame(frame);frame=0;if(visible())render();
   }
@@ -33,14 +44,17 @@
     const rim=new THREE.DirectionalLight(0x7bbfcb,1.1);rim.position.set(450,-220,450);scene.add(rim);
     const land=new THREE.Group(),angle=-.28;land.rotation.x=angle;land.scale.y=1/Math.cos(angle);scene.add(land);
     for(const [i,path] of [...map.querySelectorAll('.atlas-island')].entries()){
+      const page=path.dataset.atlasPage||'chapter1';
+      if(!pages[page]){pages[page]=new THREE.Group();pages[page].name='atlas-'+page;land.add(pages[page]);}
+      const terrain=pages[page];
       const values=path.getAttribute('d').match(/-?\d+(?:\.\d+)?/g).map(Number),shape=new THREE.Shape();
       for(let n=0;n<values.length;n+=2){const x=values[n]-500,y=200-values[n+1];if(n===0)shape.moveTo(x,y);else shape.lineTo(x,y);}shape.closePath();
       const geometry=new THREE.ExtrudeGeometry(shape,{depth:32,steps:1,bevelEnabled:true,bevelThickness:2,bevelSize:2,bevelSegments:2});geometry.translate(0,0,-32);
-      const top=new THREE.MeshStandardMaterial({color:i===0?0x526445:0x3f6550,roughness:.95,flatShading:true});
-      const side=new THREE.MeshStandardMaterial({color:i===0?0x253528:0x213c35,roughness:1,flatShading:true});
-      land.add(new THREE.Mesh(geometry,[top,side]));
+      const top=new THREE.MeshStandardMaterial({color:page==='chapter3'?0x494255:i===0?0x526445:0x3f6550,roughness:.95,flatShading:true});
+      const side=new THREE.MeshStandardMaterial({color:page==='chapter3'?0x282535:i===0?0x253528:0x213c35,roughness:1,flatShading:true});
+      terrain.add(new THREE.Mesh(geometry,[top,side]));
       const shelfGeometry=new THREE.ExtrudeGeometry(shape,{depth:7,steps:1,bevelEnabled:true,bevelThickness:1,bevelSize:4,bevelSegments:1});shelfGeometry.translate(0,0,-34);
-      land.add(new THREE.Mesh(shelfGeometry,new THREE.MeshStandardMaterial({color:0x183333,roughness:1,flatShading:true})));
+      terrain.add(new THREE.Mesh(shelfGeometry,new THREE.MeshStandardMaterial({color:page==='chapter3'?0x1c2030:0x183333,roughness:1,flatShading:true})));
     }
     map.prepend(canvas);map.classList.add('atlas-webgl');resize();sync();
     new root.ResizeObserver(resize).observe(map);

@@ -1781,8 +1781,15 @@ body.home .progression-tools{display:none}
 .stage-controls .shield-control.ready { background:#316554cc;border-color:#9df1ce; }
 .stage-controls.empty .fire-control { background:#673b35bb;color:#e4a79b; }
 .stage-controls button:active,.stage-controls button.held { background:#759979dc;color:#102219;transform:translateY(1px); }
+/* Separate evade buttons remain reachable with either mobile control mode. */
+.dash-controls { display:none;position:absolute;left:12px;bottom:calc(max(12px,env(safe-area-inset-bottom)) + 62px);z-index:4;gap:8px;pointer-events:none; }
+.dash-controls button { display:flex;flex-direction:column;align-items:center;justify-content:center;width:48px;height:44px;padding:3px;border:1px solid #a6d1df99;border-radius:12px;background:#284957de;color:#e2f3ee;box-shadow:0 2px 8px #06100c55;pointer-events:auto;touch-action:none;-webkit-user-select:none;-webkit-touch-callout:none;font:600 25px/1 var(--font-body); }
+.dash-controls button small { font:700 8px/1.6 var(--font-body);letter-spacing:.3px; }
+.dash-controls button.cooling { color:#b4c7cc;background:#243940d9;border-color:#7d9aa569; }
+.dash-controls button.held { background:#8cbfcbdc;color:#102219;transform:translateY(1px); }
+body[data-controls="gestures"] .dash-controls { bottom:max(12px,env(safe-area-inset-bottom)); }
 @media(pointer:coarse),(max-width:600px),(max-height:550px) and (max-width:1000px) {
-  body.playing .mobile-tools,body.playing .stage-controls { display:flex; }
+  body.playing .mobile-tools,body.playing .stage-controls,body.playing .dash-controls { display:flex; }
   body[data-controls="gestures"] .stage-controls { display:none; }
 }
 @media(max-width:360px) {
@@ -2029,3 +2036,55 @@ html[data-landscape="rotated"] .atlas-edition{font-size:7px}
 .app :is(input,textarea,select,option,[contenteditable]:not([contenteditable="false"])),.app [contenteditable]:not([contenteditable="false"]) *,dialog :is(input,textarea,select,option,[contenteditable]:not([contenteditable="false"])),dialog [contenteditable]:not([contenteditable="false"]) *{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
 .key-setup{margin:24px 0 8px;padding-top:20px;border-top:1px solid #b8bd8b33}.key-setup h3{font:600 19px var(--font-display);color:#e2d4ac;margin:0 0 8px}.key-preset-row{display:flex;align-items:center;gap:10px;margin:14px 0}.key-preset-row select{flex:1;min-width:0;padding:10px 12px;background:#152821;color:#e5dec6;border:1px solid #aeb28b55;border-radius:6px;font-size:12px}.key-preset-row button{padding:10px 16px;font-size:12px}.key-binding-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 20px}.key-binding-row{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px;color:#bacab7;font-size:12px}.key-binding-row button{min-width:80px;padding:8px 12px;background:#152821;border:1px solid #aeb28b55;border-radius:7px;color:#f0d49b;font-size:12px}.key-binding-row button.recording{border-color:#f0bf6a;background:#493b22}.key-binding-status{font-size:11px;line-height:1.7;color:#d7bf8f;min-height:2em;margin:12px 0 0}
 @media(max-width:450px){.key-binding-grid{grid-template-columns:1fr}}html[data-landscape="rotated"] .key-binding-grid{grid-template-columns:1fr 1fr}
+/* The third tale has its own atlas page; the two original islands stay in place. */
+.atlas-edition{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.atlas-page-tabs{display:flex;gap:4px;align-items:center}
+.atlas-page-tabs button{background:#172b2bd9;border:1px solid #9bada541;border-radius:5px;color:#aebeb2;font-size:9px;letter-spacing:0;padding:5px 8px;min-height:25px;white-space:nowrap}
+.atlas-page-tabs button[aria-pressed="true"]{border-color:#d4ba84;color:#f0dfba;background:#3b402fe3}
+.atlas-page-tabs button:hover,.atlas-page-tabs button:focus-visible{border-color:#d3bee5;color:#f0e5fb}
+.atlas-map[data-atlas-view="abyss"]{background:radial-gradient(ellipse at 45% 35%,#3a334b,#1d2635 65%,#151d29)}
+.land-abyss{left:30%;top:4%;width:40%;border-color:#b89acf66;background:#252434e8}
+.land-abyss strong{color:#e1c4ef}.land-abyss .atlas-number{color:#c8addb}
+.land-abyss[aria-pressed="true"]{border-color:#d8b8eb;background:#42334ce8}
+.story-atlas[data-story="3"] .atlas-abyss{stroke:#d6b8e7;stroke-width:3}
+.abyss-depth-label{left:14%;top:83%;color:#d0bed278;letter-spacing:1.5px}
+@media(max-height:650px),(max-width:700px){.atlas-page-tabs button{font-size:8px;min-height:23px;padding:4px 6px}.atlas-edition{gap:4px}.land-abyss{min-height:48px;width:42%;left:29%}.abyss-depth-label{font-size:6px}}
+html[data-landscape="rotated"] .atlas-page-tabs button{font-size:8px;padding:4px 6px}
+/* One island per page. SVG, terrain and treasure markers share the same camera. */
+.story-atlas[data-story="1"] .atlas-surface-art{clip-path:url(#atlas-chapter1-clip)}
+.story-atlas[data-story="2"] .atlas-surface-art{clip-path:url(#atlas-chapter2-clip)}
+.atlas-map{touch-action:pan-y}
+.atlas-map .atlas-land{left:29%;right:auto;top:3%;width:42%;min-height:60px}
+.atlas-map[data-atlas-view="chapter3"]{background:radial-gradient(ellipse at 45% 35%,#3a334b,#1d2635 65%,#151d29)}
+.atlas-treasure-trails path,path.atlas-treasure-trails{stroke:#ead3a78c;stroke-width:2;stroke-dasharray:4 5;vector-effect:non-scaling-stroke}
+.atlas-continuation circle{fill:#e1c594;stroke:#28363b;stroke-width:2}
+.atlas-continuation text{fill:#d8d0b2;stroke:none;font:700 8px var(--font-body);letter-spacing:.4px}
+.atlas-continuation .atlas-crossing{stroke:#d5c295aa;stroke-width:1.7;stroke-dasharray:6 5}
+.atlas-continuation .atlas-crossing.open{stroke:#f5d695;stroke-width:2.4}
+.atlas-bridge{position:absolute;z-index:6;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 11px;min-height:42px;border:1px solid #acb5a84d;border-radius:8px;background:#16292de8;color:#e9d7ad;box-shadow:0 6px 17px #06141d66;white-space:nowrap}
+.atlas-bridge small{font-size:6px;letter-spacing:1.2px;color:#9cb0ab}.atlas-bridge span{font-size:9px}.atlas-bridge:hover,.atlas-bridge:focus-visible{border-color:#dbc59c;background:#2d3b35}
+.bridge-next-one{left:73.3%;top:80.2%}.bridge-back-two{left:20%;top:28%}.bridge-next-two{left:83.3%;top:78%}.bridge-back-three{left:12%;top:22%}
+.atlas-map .atlas-sea-name{left:13%;top:79%;letter-spacing:1.2px}.atlas-map .abyss-depth-label{left:34%;top:92%;font-size:6px}
+.atlas-page-arrow{position:absolute;z-index:7;top:50%;transform:translateY(-50%);width:38px;height:54px;padding:0;background:#142c2bd9;border:1px solid #b6c3ae4d;border-radius:9px;color:#e3d1ac;font:500 35px/1 var(--font-display);box-shadow:0 5px 15px #07151a66}
+.atlas-page-previous{left:12px}.atlas-page-next{right:12px}.atlas-page-arrow:disabled{opacity:.22;cursor:default}.atlas-page-arrow:not(:disabled):hover{background:#3a4936;border-color:#d8c098}
+.atlas-carousel-position{position:absolute;z-index:7;left:50%;bottom:7px;transform:translateX(-50%);display:flex;align-items:center;gap:11px;color:#a6b9b0;font-size:7px;white-space:nowrap;pointer-events:none}
+.atlas-page-dots{display:flex;gap:6px;align-items:center;pointer-events:auto}.atlas-page-dots button{width:19px;height:19px;display:grid;place-items:center;padding:0;background:transparent;border-radius:50%}.atlas-page-dots button::before{content:'';width:5px;height:5px;border:1px solid #b8c5b3;border-radius:50%;background:#18312e}.atlas-page-dots button[aria-current="true"]::before{width:7px;height:7px;background:#e6c58c;border-color:#efd7ad;box-shadow:0 0 9px #e6c58c66}
+#atlas-page-count{font-size:7px;letter-spacing:1px;color:#c0c9b5}
+@media(max-height:650px),(max-width:700px){.atlas-map .atlas-land{min-height:44px;top:2%;padding:5px 7px}.atlas-bridge{padding:5px 7px;gap:2px;min-height:32px}.atlas-bridge small{font-size:5px;letter-spacing:.7px}.atlas-bridge span{font-size:7px}.atlas-page-arrow{width:30px;height:42px;font-size:29px}.atlas-page-previous{left:7px}.atlas-page-next{right:7px}.atlas-carousel-position{bottom:3px;gap:7px;font-size:6px}.atlas-page-tabs button{font-size:7px;padding:4px 6px}.atlas-map .atlas-sea-name{font-size:6px}.atlas-map .abyss-depth-label{display:none}}
+html[data-landscape="rotated"] .atlas-map{touch-action:pan-x}
+@media(prefers-reduced-motion:reduce){.atlas-map,.atlas-land,.atlas-boss-mark{transition:none}}
+
+/* The arena always shows its complete 960 × 540 scene, including the sky.
+   Thumb controls can use the spare side space on wide phone screens. */
+#canvas { width:100%;height:100%;object-fit:contain;object-position:50% 50%; }
+body.playing .control-strip,body.playing footer { display:none; }
+body.playing .topbar { height:44px; }
+body.playing .topbar .brand small,body.playing .topbar .edition { display:none; }
+body.playing .hud { min-height:60px;padding:6px 18px; }
+body.playing .game-status { min-height:26px;padding-top:5px;padding-bottom:5px; }
+@media(pointer:coarse),(max-width:600px),(max-height:550px) and (max-width:1000px) {
+  body.playing .topbar,body.playing .game-status { display:none; }
+  body.playing .game-frame { border:0;border-radius:0; }
+  body.playing .hud { min-height:48px;padding:6px 10px; }
+  html[data-landscape="native"] body.playing .app { width:100%;padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right); }
+}

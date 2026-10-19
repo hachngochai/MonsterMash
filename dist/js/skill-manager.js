@@ -38,7 +38,7 @@
     return s;
   }
   function eligible(e) {
-    return !!e && !e.dead && !e.retired && e.health > 0 && !e.boss &&
+    return !!e && !e.dead && !e.retired && e.health > 0 && !e.boss && !e.petrifyImmune &&
       e.phase === 'active' && !e.bulletUntargetable && !e.intangible && !frozen(e);
   }
   function petrify(g) {
@@ -135,9 +135,9 @@
       s.jumpBoosted=true;s.jumpTapAt=-Infinity;
       if (p.grounded && p.jumpBuffer>0) s.highJumpPending=true;
       else if (!p.grounded) {
-        const height=Math.max(0,s.jumpStartY-p.y);
+        const gravity=MM.AbyssCombat?.gravityDirection(g)||1,height=Math.max(0,(s.jumpStartY-p.y)*gravity);
         const target=config.jumpSpeed**2/(2*config.gravity)*config.highJumpHeight;
-        p.vy=-Math.sqrt(Math.max(0,2*config.gravity*(target-height)));
+        p.vy=-gravity*Math.sqrt(Math.max(0,2*config.gravity*(target-height)));
         p.jumpBuffer=0;
       } else return false;
       g.burst?.(p.x,p.y,'#d9edba',10,'ring');

@@ -1,3 +1,5 @@
+> v4.0.0: chính sách reset chuyến đi trong tài liệu lịch sử này đã được thay bằng lưu vĩnh viễn toàn bộ tiến độ, kỹ năng và vũ khí theo lựa chọn mới của người chơi. Xem [chương III](ancient-abyss.md).
+
 # V3: phần thưởng boss 10–100
 
 Từ v3.2.0, quy tắc lưu vĩnh viễn được thay bằng chuyến đi mới mỗi lần mở hoặc tải lại trang theo yêu cầu mới. Các chỉ số và điều kiện nhận thưởng bên dưới giữ nguyên; phần thưởng, trang bị và bộ đếm Hút Máu chỉ được giữ trong chuyến đi hiện tại. Xem [cốt truyện và vòng đời chuyến đi](story-campaign.md).
@@ -23,7 +25,7 @@ Save cũ chỉ chuyển các màn boss đã hoàn thành thành phần thưởng
 | Hút Máu | 10 kẻ địch chết riêng biệt hồi 1 HP, không quá tối đa, đặt về 0; giữ bộ đếm qua màn trong chuyến đi, reset khi tải lại trang. Tính boss và quái triệu hồi có thể tiêu diệt; không tính quái rút lui/nhện bất tử |
 | Chùy Golem | Cận chiến 3 sát thương, tầm 95px từ mép va chạm, hồi .75s, không tốn đạn |
 | F | Nhấn ngắn đổi nhanh từ boss 10; giữ .35s mở bảng chọn từ boss 60. Mũi tên chọn, Enter xác nhận; chạm/giữ nút vũ khí dùng cùng bộ xử lý |
-| Màn 70 | Toàn màn tạm khóa vũ khí thưởng và hiệu ứng kỹ năng; giữ súng gốc/khiên thường. Trăng Máu cấp sẵn súng ngắm 5 đạn/5 sát thương/.5s và lướt không sát thương ngay lần đánh đầu. Rời màn giữ nguyên trang bị/phần thưởng đã lưu |
+| Màn 70 | Toàn màn tạm khóa vũ khí thưởng và hiệu ứng kỹ năng; giữ súng gốc/khiên thường. Trăng Máu cấp sẵn súng ngắm 5 đạn/5 sát thương/.17s (giữ để bắn liên tục, theo bản chỉnh mới) và lướt không sát thương ngay lần đánh đầu. Rời màn giữ nguyên trang bị/phần thưởng đã lưu |
 | W / S sau boss 80 | Tầm cao 35° / mặt đất, không đổi trang bị; chỉ tác động đường bắn của vũ khí tầm xa. Trước mở khóa vẫn giữ tự ngắm boss trên cao để trận đầu hoàn thành được |
 | Cung Hắc Ám | 5 tên × 1 sát thương, tốc độ 900px/s, góc −12/−6/0/+6/+12°, tầm 700px, hồi .9s; cần và tiêu hao 5 đạn |
 | Giáo Bạch Kim | 1 bước = 40px tính khoảng cách mép; trong 1 bước đâm 2 sát thương không tốn đạn; ngoài khoảng đó ném 3 sát thương/tốn 1 đạn; tốc độ 900px/s, tầm 700px, hồi .8s |

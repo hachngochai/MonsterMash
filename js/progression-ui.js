@@ -5,7 +5,8 @@
   const names = {gun:'Súng',bones:'Xương Phân Ba',club:'Chùy Golem',bow:'Cung Hắc Ám',spear:'Giáo Bạch Kim',axes:'Song Rìu'};
   const descriptions = {
     gun:'1 đạn / phát',bones:'3 xương · 3 đạn / lượt',club:'Cận chiến · 3 sát thương',
-    bow:'5 mũi tên · 5 đạn / lượt',spear:'Đâm gần / ném xa',axes:'Cận chiến · nhấn đúp hướng để Lăn Chém'
+    bow:'5 mũi tên · 5 đạn / lượt',spear:'Đâm gần / ném xa',axes:'Cận chiến · nhấn đúp hướng để Lăn Chém',
+    hammer:'Cận chiến · búa chiến Minotaur',scythe:'Cận chiến · lưỡi hái xương chim'
   };
   function node(game,id) { return game.ui?.[id] || root.document?.getElementById(id); }
   function state(game) {
@@ -69,7 +70,7 @@
     const label=W.names?.[weapon]||names[weapon]||weapon;
     const weaponButton=node(game,'weapon-button');
     if(weaponButton) {
-      weaponButton.hidden=![10,60,90,100].some(level=>MM.SaveManager?.unlocked(game,level));
+      weaponButton.hidden=![10,60,90,100,120,140].some(level=>MM.SaveManager?.unlocked(game,level));
       text(weaponButton,label+' ↔');weaponButton.disabled=game.screen!=='playing'||suppressed||available.length<2;
       weaponButton.title=MM.SaveManager?.unlocked(game,60)?'Nhấn để đổi nhanh · giữ để chọn vũ khí':'Nhấn để đổi vũ khí';
       weaponButton.setAttribute('aria-label','Vũ khí: '+label+'. '+weaponButton.title);
@@ -81,7 +82,7 @@
       control.setAttribute('aria-pressed',String(game.aimMode===mode));
     }
     const details=[];
-    if(suppressed)details.push(MM.MapManager?.bloodMoon(game)?'Màn 70 · Súng ngắm 0,5s · lướt nhấn đúp':'Màn 70 · kỹ năng thưởng tạm khóa');
+    if(suppressed)details.push(MM.MapManager?.bloodMoon(game)?'Màn 70 · Giữ để bắn liên tục · nhấn đúp / nút LƯỚT':'Màn 70 · kỹ năng thưởng tạm khóa');
     else {
       if((game.player?.immortalTime||0)>0)details.push('BẤT TỬ '+(Math.ceil(game.player.immortalTime*10)/10).toFixed(1)+'s');
       if(game.skillState?.darkReady)details.push('HẮC HÓA SẴN SÀNG');
@@ -90,6 +91,21 @@
     }
     const status=node(game,'progression-status');
     if(status){text(status,details.join(' · '));status.hidden=!details.length;}
+
+    const dash=node(game,'dash-controls'),p=game.player;
+    if(dash) {
+      const active=game.screen==='playing'&&!game.weaponPicker?.open&&MM.MapManager?.bloodMoon(game)===true
+        && !(game.enemies||[]).some(e=>e.boss&&e.bloodMoon&&!e.dead&&e.health>0&&e.wolfState==='transform');
+      dash.hidden=!active;
+      if(active) {
+        const cooldown=Math.max(p.rollCooldown||0,p.rollTime||0,p.stunTime||0,p.petrifyTime||0);
+        const label=cooldown>1e-8?(Math.ceil(cooldown*10)/10).toFixed(1)+'s':'LƯỚT';
+        for(const control of dash.querySelectorAll('button')) {
+          control.classList.toggle('cooling',cooldown>1e-8);
+          text(control.querySelector('[data-dash-label]'),label);
+        }
+      }
+    }
 
     const picker=node(game,'weapon-picker'),open=!!game.weaponPicker?.open;
     if(picker) {picker.hidden=!open;picker.setAttribute('aria-hidden',String(!open));}
@@ -123,7 +139,7 @@
       s.rewardSignature=rewardSignature;
       const fragment=root.document.createDocumentFragment();
       if(!rewards.length) {
-        const empty=root.document.createElement('p');empty.textContent='Hạ boss mỗi 10 màn để mở vũ khí và kỹ năng trong chuyến đi này.';fragment.append(empty);
+        const empty=root.document.createElement('p');empty.textContent='Hạ boss để mở vũ khí và kỹ năng, lưu cùng hành trình.';fragment.append(empty);
       } else rewards.forEach(level=>{
         const entry=root.document.createElement('span');entry.className='reward-entry';
         entry.textContent=level+' · '+(MM.BossManager?.rewards?.[level]?.name||'Phần thưởng');fragment.append(entry);

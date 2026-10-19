@@ -33,7 +33,7 @@ function fresh(options = {}) {
     matchMedia:query => ({matches:query==='(pointer:coarse)'&&!options.desktop})});
   const context = vm.createContext({document,
     getComputedStyle:canvas => ({objectFit:canvas.style.objectFit || 'fill', objectPosition:canvas.style.objectPosition || '50% 100%'})});
-  for (const file of ['campaign.js','game.js','mobile.js']) {
+  for (const file of ['abyss-config.js','campaign.js','game.js','mobile.js']) {
     vm.runInContext(fs.readFileSync(path.join(__dirname, '../js', file), 'utf8'), context, {filename:file});
   }
   const game = new context.MM.Game({headless:true, random:() => .5, storage:{getItem() { return null; }, setItem() {}}});
@@ -216,3 +216,69 @@ test('rotated world coordinates account for contain letterboxing and bottom-alig
   p = game.point(pointer(f, 1, 480, 200)); near(p.x, 480); near(p.y, 340);
   p = game.point(pointer(f, 1, 0, 400)); near(p.x, 0); near(p.y, 540);
 });
+
+function freshResize({width, height, rotated = false, dpr = 1}) {
+  const transforms = [];
+  const context = vm.createContext({devicePixelRatio:dpr,
+    getComputedStyle:canvas => ({objectFit:canvas.style.objectFit || 'cover',
+      objectPosition:canvas.style.objectPosition || '50% 100%'})});
+  for (const file of ['abyss-config.js', 'campaign.js', 'game.js']) {
+    vm.runInContext(fs.readFileSync(path.join(__dirname, '../js', file), 'utf8'), context, {filename:file});
+  }
+  const game = new context.MM.Game({headless:true, random:() => .5,
+    storage:{getItem() { return null; }, setItem() {}}});
+  const rect = {left:17, top:29, width, height, right:17 + width, bottom:29 + height};
+  game.canvas = {width:1, height:1, style:{objectFit:'cover', objectPosition:'50% 100%'},
+    getBoundingClientRect:() => rect};
+  game.ctx = {setTransform(...values) { transforms.push(values); }};
+  game.mobileRotation = rotated;
+  game.headless = false;
+  return {game, rect, transforms};
+}
+
+for (const viewport of [
+  {name:'wide desktop', width:1422, height:556, dpr:1},
+  {name:'landscape phone', width:844, height:300, dpr:3},
+  {name:'CSS-rotated portrait iPhone', width:390, height:844, rotated:true, dpr:3}
+]) {
+  test(`real resize preserves the complete 960×540 arena on ${viewport.name}`, () => {
+    const {game, rect, transforms} = freshResize(viewport);
+    game.viewTop = 180;
+    const hanging = {homeY:340, baseHomeY:180, h:60};
+    const ledge = {homeY:360, baseHomeY:255, h:90, platform:{y:360}};
+    game.enemies = [hanging, ledge];
+
+    game.resize();
+
+    const dpr = Math.min(viewport.dpr, 2);
+    assert.equal(game.canvas.width, 960 * dpr);
+    assert.equal(game.canvas.height, 540 * dpr);
+    assert.equal(game.dpr, dpr);
+    assert.deepEqual(transforms.at(-1), [dpr, 0, 0, dpr, 0, 0]);
+    assert.equal(game.canvas.style.objectFit, 'contain');
+    assert.equal(game.canvas.style.objectPosition, '50% 50%');
+    assert.equal(game.viewTop, 0, 'resize cannot crop away the sky or flying enemies');
+    assert.equal(hanging.homeY, 180, 'a formerly cropped flying position returns to its base height');
+    assert.equal(ledge.homeY, 255);
+    assert.equal(ledge.platform.y, 255, 'ledge platform follows the restored base height');
+
+    const logicalWidth = viewport.rotated ? rect.height : rect.width;
+    const logicalHeight = viewport.rotated ? rect.width : rect.height;
+    const scale = Math.min(logicalWidth / 960, logicalHeight / 540);
+    const left = (logicalWidth - 960 * scale) / 2;
+    const top = (logicalHeight - 540 * scale) / 2;
+    assert.ok(left >= 0 && top >= 0, 'all letterboxing remains outside the arena');
+    near(left + 960 * scale, logicalWidth - left);
+    near(top + 540 * scale, logicalHeight - top);
+
+    for (const [x, y] of [[0, 0], [960, 0], [0, 540], [960, 540], [480, 270]]) {
+      const u = left + x * scale, v = top + y * scale;
+      const event = viewport.rotated ? {clientX:rect.right - v, clientY:rect.top + u}
+        : {clientX:rect.left + u, clientY:rect.top + v};
+      assert.ok(event.clientX >= rect.left - 1e-7 && event.clientX <= rect.right + 1e-7);
+      assert.ok(event.clientY >= rect.top - 1e-7 && event.clientY <= rect.bottom + 1e-7);
+      const point = game.point(event);
+      near(point.x, x); near(point.y, y);
+    }
+  });
+}

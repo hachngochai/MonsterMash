@@ -1,4 +1,4 @@
-/* Fifty-stage tales share one run; opening the page starts a new expedition. */
+/* Fifty-stage tales share one saved expedition and one boss-defeat ledger. */
 (function(root){
   'use strict';
   const MM=root.MM=root.MM||{};
@@ -12,7 +12,12 @@
       intro:['Ánh sáng đã trở về thị trấn, nhưng những vết nứt vẫn lan rộng. Tấm bản đồ cũ mọc thêm những đường gân như rễ cây, dẫn bạn vào Thung lũng nguyền rủa. Đá biết bước đi, tiếng hú nhuộm đỏ mặt trăng và những dây leo che kín dấu chân của một nền văn minh đã mất.',
         'Các cổ thú không chỉ săn người: chúng đang canh giữ một lời thề bị lãng quên. Hãy đi qua rừng sâu, tìm Rồng ngàn tuổi và lần theo vòng Âm Dương đến Tàn tích thần thoại. Ở đó, Chimera giữ ba mảnh ký ức. Ngọn đèn có thể đóng khe nứt — hoặc mở ra một con đường chưa ai từng trở về.'],
       arcs:['Golem chúa đập vỡ lớp đá che một lối đi đã bị phong kín hàng nghìn năm.','Dưới Trăng Máu, Lang Vương bảo vệ dấu chân dẫn tới trái tim khu rừng.','KingKong giữ một ngôi đền trên tán cây; dây leo ở đó mang cùng dấu ấn với tấm bản đồ.','Rồng ngàn tuổi hóa thành kỵ sĩ, thử thách người mang đèn trước khi trao bí mật Âm Dương.','Ba bản thể của Chimera nắm giữ ba mảnh lời thề. Chỉ khi cả ba gục xuống, khe nứt mới có thể khép lại.'],
-      ending:'Ba vương thú trở về với đá. Bạn đặt ngọn đèn vào tâm vòng Âm Dương và các vết nứt dần khép lại. Rừng sâu im tiếng; bình minh cuối cùng cũng chạm tới những tàn tích. Khi quay đi, bạn thấy tấm bản đồ vẫn còn một khoảng trống. Ngoài đường chân trời, một đốm sáng khác vừa được thắp lên. Hành trình này kết thúc. Câu chuyện của ngọn đèn thì chưa.'}
+      ending:'Ba vương thú trở về với đá. Bạn đặt ngọn đèn vào tâm vòng Âm Dương; những vết nứt trên mặt đất khép lại, nhưng dưới đền cổ một cầu thang vừa lộ ra. Tấm bản đồ hiện thêm nét mực đỏ dẫn xuống lòng núi. Bình minh đã trở lại rừng sâu, còn ngọn đèn của bạn vẫn nghiêng về phía bóng tối bên dưới. Một tiếng gầm vọng lên từ Mê Cung Minotaur. Câu chuyện của ngọn đèn chưa dừng ở đây.'},
+    {id:3,start:101,end:150,name:'Vực Sâu Cổ Đại',tagline:'Ánh sáng cuối cùng xuống miền chưa từng thấy mặt trời.',color:'#c39ae8',
+      intro:['Bên dưới ngôi đền của Chimera, những bậc thang đá dẫn vào một thế giới bị xóa khỏi ký ức. Ngọn đèn cuối cùng hóa thành đuốc, soi những chiếc sừng vỡ trong mê cung. Không có mặt trời dưới này; chỉ có khe dung nham, những bộ xương bị rễ cây điều khiển và một tiếng tim đập từ tận đáy vực.',
+        'Theo con đường thạch anh xuống hồ ngầm, vượt Vách Đá Vọng Âm để tìm Lăng Mộ Luân Hồi. Thiên Thủ Cổ Thần đang canh giữ điều gì đó còn cổ hơn lời nguyền trên mặt đất. Bốn gương mặt của tượng biết cười, nổi giận, yêu thương và căm ghét. Nếu ánh đuốc bị nuốt mất, hãy nhớ: ánh sáng bạn đã giành lại không chỉ nằm trong ngọn lửa.'],
+      arcs:['Minotaur Chúa giữ cửa mê cung. Hãy đọc dấu nấm độc và bụi nhũ đá để tìm lối xuống sâu hơn.','Trong hang ký sinh, Mộc Tâm Hoa Quỷ kéo những bộ xương bằng rễ đen. Phân biệt thực và ảo để lấy lại Búa Minotaur.','Hồ ngầm giữ chiếc mai gương của Xích Kính Quái Sùng. Giữa khúc xạ và phản đòn, thạch anh sẽ trao ánh sáng cho vũ khí.','Tiếng hét của Hóa Thạch Sí Vũ đảo lộn phương hướng. Hạ cả linh hồn chim lẫn Kị Sĩ Xương để mở cửa lăng mộ.','Thiên Thủ Cổ Thần xoay một đầu bốn mặt. Trong Mê Cung Luân Hồi, chỉ cơn Nộ chân thực mới chạm tới trái tim của tượng.'],
+      ending:'Những cánh tay đá lần lượt hạ xuống. Hỉ, Nộ, Ái và Ố tan vào cùng một gương mặt bình yên, còn ánh sáng nhỏ trên vũ khí của bạn xuyên qua lớp bụi ngàn năm. Mê Cung Luân Hồi sụp đổ, để lộ một dòng nước đang chảy về phía bình minh. Bạn mang ngọn đèn trở lên, cùng ký ức về những người đã canh giữ vực sâu. Ở mép bản đồ, một ký hiệu chưa từng thấy vẫn âm thầm phát sáng.'}
   ];
   const get=id=>stories.find(s=>s.id===Number(id))||stories[0];
   const forLevel=id=>stories.find(s=>id>=s.start&&id<=s.end)||stories[0];
@@ -21,8 +26,17 @@
   const milestones=(story,rewards=[])=>Array.from({length:5},(_,i)=>{const level=story.start+9+i*10,cleared=rewards.includes(level);return {level,cleared,mark:cleared?'O':'X'};});
   const routes={
     1:{points:[[110,140],[150,208],[260,180],[360,236],[290,320],[160,308]],controls:[[75,185],[175,145],[338,160],[370,302],[212,355]]},
-    2:{points:[[600,135],[650,185],[850,165],[790,265],[620,280],[880,315]],controls:[[585,175],[730,100],[875,245],[705,225],[735,375]]}
+    2:{points:[[600,135],[650,185],[850,165],[790,265],[620,280],[880,315]],controls:[[585,175],[730,100],[875,245],[705,225],[735,375]]},
+    3:{points:[[160,130],[270,208],[440,150],[650,215],[780,302],[460,315]],controls:[[145,195],[335,105],[570,120],[820,210],[625,370]]}
   };
+  // Surface islands are half as wide as the Abyss: frame each more closely
+  // without moving its terrain, exploration route or boss hit targets.
+  const viewports={1:{x:-50,y:-20,width:600,height:430},2:{x:455,y:-20,width:600,height:430},3:{x:50,y:-20,width:900,height:430}};
+  const viewport=story=>Object.assign({},viewports[typeof story==='object'?story.id:get(story).id]);
+  const crossingRoutes=[
+    {from:50,entrance:51,to:60,outStory:1,inStory:2,outPath:'M160 308C170 375 345 388 460 325',inPath:'M490 125C535 104 562 133 600 135Q585 175 650 185'},
+    {from:100,entrance:101,to:110,outStory:2,inStory:3,outPath:'M880 315C910 379 1000 382 1045 315',inPath:'M75 130C100 105 130 126 160 130Q145 195 270 208'}
+  ];
   function trail(story){
     const route=routes[story.id],dots=[];let path='M'+route.points[0].join(' ');
     route.controls.forEach((control,i)=>{
@@ -32,9 +46,17 @@
     });
     return {path,dots,bosses:route.points.slice(1)};
   }
-  MM.Story={stories,get,forLevel,progress,nextLevel,milestones,trail};
+  MM.Story={stories,get,forLevel,progress,nextLevel,milestones,trail,viewport,crossingRoutes};
   const selected=g=>get(g.selectedStory||1);
   function select(g,id){g.selectedStory=get(id).id;g.buildMap?.();g.updateUI?.();}
+  function navigate(g,id){
+    const destination=Number(id);if(!Number.isInteger(destination)||destination<1||destination>stories.length||destination===selected(g).id)return false;
+    const direction=destination>selected(g).id?1:-1;select(g,destination);
+    const map=document.querySelector('.atlas-map');
+    if(g.settings?.reducedMotion!==true&&!root.matchMedia?.('(prefers-reduced-motion: reduce)').matches)
+      map?.animate?.([{opacity:.45,transform:`translateX(${direction*18}px)`},{opacity:1,transform:'translateX(0)'}],{duration:220,easing:'cubic-bezier(.2,.7,.25,1)'});
+    return true;
+  }
   function sync(g){
     if(g.headless||!g.ui)return;
     const story=selected(g),count=progress(story,g.save.completed);
@@ -44,9 +66,24 @@
     text('save-label',`${String(story.start).padStart(2,'0')}—${story.end} · ${count}/50 MÀN ĐÃ QUA`);
     text('campaign-title',story.name);text('map-story-description',story.tagline+' Chọn một điểm trên hành trình.');
     g.ui['home-overlay']?.setAttribute('data-story',String(story.id));
+    const atlasPage='chapter'+story.id,view=viewport(story);
+    const map=document.querySelector('.atlas-map');map?.setAttribute('data-atlas-view',atlasPage);map?.setAttribute('data-atlas-camera',[view.x,view.y,view.width,view.height].join(' '));
+    map?.setAttribute('aria-label',`Bản đồ ${story.id} trên ${stories.length}: ${story.name}. Vuốt ngang để đổi cốt truyện.`);
+    document.querySelector('.atlas-art')?.setAttribute('viewBox',[view.x,view.y,view.width,view.height].join(' '));
+    for(const page of document.querySelectorAll('[data-atlas-page]')){
+      if(page.dataset.atlasPage===atlasPage)page.removeAttribute('hidden');else page.setAttribute('hidden','');
+    }
+    for(const button of document.querySelectorAll('[data-atlas-switch]'))button.setAttribute('aria-pressed',String(button.dataset.atlasSwitch===atlasPage));
+    for(const region of document.querySelectorAll('[data-atlas-region]')){
+      if((region.dataset.atlasRegion==='surface')===(story.id!==3))region.removeAttribute('hidden');else region.setAttribute('hidden','');
+    }
+    for(const button of document.querySelectorAll('[data-atlas-dot]'))button.setAttribute('aria-current',String(Number(button.dataset.atlasDot)===story.id));
+    if(g.ui['atlas-previous']){g.ui['atlas-previous'].disabled=story.id===1;g.ui['atlas-previous'].setAttribute('aria-label',story.id>1?'Cốt truyện trước: '+get(story.id-1).name:'Đang ở cốt truyện đầu');}
+    if(g.ui['atlas-next']){g.ui['atlas-next'].disabled=story.id===stories.length;g.ui['atlas-next'].setAttribute('aria-label',story.id<stories.length?'Cốt truyện tiếp: '+get(story.id+1).name:'Đang ở cốt truyện cuối');}
+    text('atlas-page-count',`${String(story.id).padStart(2,'0')} / ${String(stories.length).padStart(2,'0')}`);
     for(const button of document.querySelectorAll('[data-story-choice]'))button.setAttribute('aria-pressed',String(Number(button.dataset.storyChoice)===story.id));
-    const rewards=g.progression?.rewards||[];
-    g.ui['atlas-crossing']?.classList.toggle('open',rewards.includes(50));
+    const rewards=Array.from(new Set([...(g.progression?.rewards||[]),...(g.save.completed||[]).filter(id=>id%10===0)]));
+    for(const route of crossingRoutes)for(const suffix of ['out','in'])g.ui[`atlas-crossing-${route.from}-${suffix}`]?.classList.toggle('open',rewards.includes(route.from));
     const signature=g.save.completed.join(',');
     if(g.storyDotSignature!==signature){
       g.storyDotSignature=signature;const completed=new Set(g.save.completed);
@@ -76,21 +113,51 @@
     g.openDialog('story-dialog');
   }
   function bind(g){
-    const dotsGroup=g.ui['atlas-level-dots'];g.storyDots=[];
-    if(dotsGroup)for(const story of stories){
+    g.storyDots=[];
+    for(const story of stories){
+      const dotsGroup=g.ui[story.id===3?'atlas-abyss-dots':'atlas-level-dots'];if(!dotsGroup)continue;
       const route=trail(story),path=g.ui['atlas-trail-'+story.id];path?.setAttribute('d',route.path);
-      route.bosses.forEach(([x,y],i)=>{const button=g.ui['atlas-boss-'+(story.start+9+i*10)];button?.style.setProperty('--mark-x',x/10+'%');button?.style.setProperty('--mark-y',y/4+'%');});
+      const view=viewport(story);
+      route.bosses.forEach(([x,y],i)=>{const button=g.ui['atlas-boss-'+(story.start+9+i*10)];button?.style.setProperty('--mark-x',(x-view.x)/view.width*100+'%');button?.style.setProperty('--mark-y',(y-view.y)/view.height*100+'%');});
       for(const dot of route.dots){
-        const circle=document.createElementNS('http://www.w3.org/2000/svg','circle');circle.setAttribute('cx',dot.x);circle.setAttribute('cy',dot.y);circle.setAttribute('r','3.2');circle.setAttribute('class','atlas-level-dot');circle.setAttribute('data-level-dot',dot.level);
+        const circle=document.createElementNS('http://www.w3.org/2000/svg','circle');circle.setAttribute('cx',dot.x);circle.setAttribute('cy',dot.y);circle.setAttribute('r','3.2');circle.setAttribute('class','atlas-level-dot');circle.setAttribute('data-level-dot',dot.level);circle.setAttribute('data-atlas-page','chapter'+story.id);
         const title=document.createElementNS('http://www.w3.org/2000/svg','title');title.textContent='Màn '+dot.level;circle.append(title);dotsGroup.append(circle);g.storyDots.push({level:dot.level,node:circle});
       }
     }
+    for(const button of document.querySelectorAll('[data-atlas-switch]'))button.addEventListener('click',()=>navigate(g,Number(button.dataset.atlasSwitch.replace('chapter',''))));
+    for(const button of document.querySelectorAll('[data-atlas-dot]'))button.addEventListener('click',()=>navigate(g,Number(button.dataset.atlasDot)));
+    for(const button of document.querySelectorAll('[data-story-jump]'))button.addEventListener('click',()=>navigate(g,Number(button.dataset.storyJump)));
+    g.ui['atlas-previous']?.addEventListener('click',()=>navigate(g,selected(g).id-1));g.ui['atlas-next']?.addEventListener('click',()=>navigate(g,selected(g).id+1));
+    bindSwipe(g,document.querySelector('.atlas-map'));
     for(const button of document.querySelectorAll('[data-story-choice]'))button.addEventListener('click',()=>open(g,Number(button.dataset.storyChoice)));
     for(const button of document.querySelectorAll('[data-boss-marker]'))button.addEventListener('click',()=>{
       const level=Number(button.dataset.bossMarker);select(g,forLevel(level).id);g.openDialog('levels-dialog');
       g.ui['level-map'].querySelector('#world-map-'+Math.floor((level-1)/10))?.scrollIntoView({block:'start'});
     });
     g.ui['story-begin']?.addEventListener('click',()=>{const launch=g.storyLaunch;g.ui['story-dialog'].close();if(launch)g.start(launch.level,launch.options);});
+  }
+  function bindSwipe(g,map){
+    if(!map)return;let drag=null;
+    const point=event=>g.mobileRotation?{x:event.clientY,y:-event.clientX}:{x:event.clientX,y:event.clientY};
+    map.addEventListener('pointerdown',event=>{
+      if(g.screen!=='home'||event.isPrimary===false||(event.pointerType==='mouse'&&event.button!==0)||event.target?.closest?.('button,a,input,select,textarea,[contenteditable="true"]'))return;
+      const p=point(event);drag={id:event.pointerId,x:p.x,y:p.y,dx:0,dy:0,locked:false,cancelled:false};
+    });
+    map.addEventListener('pointermove',event=>{
+      if(!drag||drag.id!==event.pointerId)return;const p=point(event);drag.dx=p.x-drag.x;drag.dy=p.y-drag.y;
+      if(!drag.locked&&Math.abs(drag.dy)>12&&Math.abs(drag.dy)>Math.abs(drag.dx)){drag.cancelled=true;return;}
+      if(drag.cancelled)return;
+      if(!drag.locked&&Math.abs(drag.dx)>12&&Math.abs(drag.dx)>Math.abs(drag.dy)*1.4){drag.locked=true;map.setPointerCapture?.(event.pointerId);}
+      if(drag.locked&&event.cancelable)event.preventDefault();
+    },{passive:false});
+    map.addEventListener('pointerup',event=>{
+      if(!drag||drag.id!==event.pointerId)return;const gesture=drag;drag=null;
+      if(map.hasPointerCapture?.(event.pointerId))map.releasePointerCapture(event.pointerId);
+      if(gesture.cancelled||!gesture.locked||Math.abs(gesture.dx)<44||Math.abs(gesture.dx)<Math.abs(gesture.dy)*1.4)return;
+      navigate(g,selected(g).id+(gesture.dx<0?1:-1));
+    });
+    map.addEventListener('pointercancel',()=>{drag=null;});
+    map.addEventListener('lostpointercapture',()=>{drag=null;});
   }
   function result(g){
     const story=forLevel(g.level.id);
@@ -102,5 +169,5 @@
     g.ui['result-primary'].textContent=following?'Đến '+following.name+' →':'Trở về bản đồ →';
     g.resultAction=following?()=>open(g,following.id,{level:following.start,options:{carry:true}}):()=>g.goHome();
   }
-  MM.StoryUI={selected,select,sync,open,bind,result};
+  MM.StoryUI={selected,select,navigate,sync,open,bind,bindSwipe,result};
 })(typeof window!=='undefined'?window:globalThis);

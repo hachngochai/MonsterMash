@@ -8,7 +8,7 @@ const test = require('node:test');
 
 function fresh({boss = false, difficulty = 'normal', howls = false} = {}) {
   const context = vm.createContext({});
-  for (const file of ['campaign.js', 'bosses.js', 'golem.js', 'wolves.js', 'game.js']) {
+  for (const file of ['abyss-config.js','campaign.js', 'bosses.js', 'golem.js', 'wolves.js', 'game.js']) {
     vm.runInContext(fs.readFileSync(path.join(__dirname, '../js', file), 'utf8'), context, {filename:file});
   }
   const game = new context.MM.Game({headless:true, storage:{getItem() { return null; }, setItem() {}}, random:() => .5});
@@ -225,19 +225,19 @@ test('blood claws hold the target through both strikes and reacquire it for the 
   assert.ok(enemy.comboFirstImpactAt>=game.getPressure(enemy).warningFloor);
 });
 
-test('sniper consumes five ammo, deals five HP, and recharges every half second', () => {
+test('sniper retains five-ammo damage and fires at the normal gun cadence', () => {
   const {game, enemy} = enterBlood(fresh({boss:true}));
   game.player.ammo = 15; enemy.x = game.player.x - 150;
   const health = enemy.health;
   assert.equal(game.shoot(-1), true); assert.equal(game.player.ammo, 10);
-  assert.equal(game.player.shotTimer, .5); assert.equal(game.player.shotCooldown, .5);
+  assert.equal(game.player.shotTimer, .17); assert.equal(game.player.shotCooldown, .17);
   assert.equal(game.bullets[0].damage, 5); assert.equal(game.bullets[0].speed, 1280);
   assert.equal(game.shoot(-1), false); advance(game, .12);
   assert.equal(enemy.health, health - 5);
-  advance(game, .37); assert.equal(game.shoot(-1), false);
+  advance(game, .04); assert.equal(game.shoot(-1), false);
   advance(game, .01); assert.equal(game.shoot(-1), true); assert.equal(game.player.ammo, 5);
-  advance(game, .5); assert.equal(game.shoot(1), true); assert.equal(game.player.ammo, 0);
-  advance(game, .5); assert.equal(game.shoot(1), false);
+  advance(game, .17); assert.equal(game.shoot(1), true); assert.equal(game.player.ammo, 0);
+  advance(game, .17); assert.equal(game.shoot(1), false);
 });
 
 test('sniper cannot fire with fewer than five ammo and falling supplies can restore a shot', () => {

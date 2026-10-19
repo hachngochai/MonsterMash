@@ -97,6 +97,7 @@
     }
     persist() { if(this.progression)this.save.progression=this.progression;try { this.storage?.setItem(SAVE_KEY,JSON.stringify(this.save)); } catch { /* Game remains playable without localStorage. */ } }
     start(id = this.save.resume, options = {}) {
+      MM.AbyssCombat?.reset(this);
       const {carry = false, retry = false} = options;
       const oldHealth = this.player.health, oldAmmo=this.player.ammo;
       if (retry && this.checkpoint) {
@@ -117,6 +118,7 @@
       this.levelKills = 0; this.regularSpawned = 0; this.spawnTimer = 2.2; this.levelTime = 0; this.restTimer = 0;
       this.bossSpawned = false; this.bossDefeated = false; this.shake = 0; this.flash = 0;
       this.screen = 'playing'; this.clearInputs(); this.sound.unlock();
+      MM.AbyssCombat?.reset(this);this.lastGravityDirection=1;
       this.save.resume = this.level.id; this.persist();
       if (!this.headless) {
         document.querySelectorAll('dialog[open]').forEach(dialog => dialog.close());
@@ -129,6 +131,7 @@
       this.updateUI();
     }
     goHome() {
+      MM.AbyssCombat?.reset(this);
       MM.InputManager?.close(this,false);
       this.save.best = Math.max(this.save.best,this.score); this.persist();
       this.screen = 'home'; this.clearInputs(); this.enemies = []; this.bullets = []; this.particles = []; this.pickups = []; this.floats = [];
@@ -159,9 +162,10 @@
       if (['Escape','KeyP'].includes(code)) { event.preventDefault?.(); if (!event.repeat) this.togglePause(); return; }
       if (this.screen !== 'playing') return;
       if (['ArrowLeft','ArrowRight','ArrowUp','KeyW','KeyA','KeyD','KeyJ','KeyL','Space'].includes(code)) event.preventDefault?.();
-      if(!event.repeat&&!this.keys.has(code)&&['ArrowLeft','ArrowRight'].includes(code))this.moveTap(code==='ArrowLeft'?-1:1);
+      if(!event.repeat&&!this.keys.has(code)&&['ArrowLeft','ArrowRight'].includes(code))this.moveTap(code==='ArrowLeft'?-1:1,{source:'keyboard',timeStamp:event.timeStamp});
       this.keys.add(code); this.sound.unlock();
-      if (!event.repeat && ['ArrowUp','KeyW'].includes(code)) this.jumpAction();
+      if (!event.repeat && ['ArrowUp','KeyW'].includes(code)) this.verticalAction('up');
+      if (!event.repeat && code==='ArrowDown' && MM.AbyssCombat?.inputDirection(this)<0) this.verticalAction('down');
       if (!event.repeat && code === 'Space') this.shieldAction();
       if (!event.repeat && ['KeyA','KeyJ','KeyD','KeyL'].includes(code)) this.shoot(['KeyA','KeyJ'].includes(code) ? -1 : 1);
     }
@@ -204,8 +208,8 @@
       const dx = pointer.x-pointer.startX, dy = pointer.y-pointer.startY;
       // Pixel thresholds work on both narrow mobile screens and large desktops.
       if (pointer.mode === 'pending' && Math.max(Math.abs(dx),Math.abs(dy)) >= 22) {
-        if (Math.abs(dx) > Math.abs(dy)*1.15) { pointer.mode = 'move'; pointer.move = Math.sign(dx); this.moveTap(pointer.move); }
-        else if (Math.abs(dy) > Math.abs(dx)*1.15) { pointer.mode = 'vertical'; if (dy < 0) this.jumpAction(); else this.shieldAction(); }
+        if (Math.abs(dx) > Math.abs(dy)*1.15) { pointer.mode = 'move'; pointer.move = Math.sign(dx); this.moveTap(pointer.move,{source:pointer.mouse?'mouse':'touch',timeStamp:event.timeStamp}); }
+        else if (Math.abs(dy) > Math.abs(dx)*1.15) { pointer.mode = 'vertical'; this.verticalAction(dy<0?'up':'down'); }
       } else if (pointer.mode === 'move') { pointer.move = Math.abs(dx) > 12 ? Math.sign(dx) : 0; }
     }
     pointerUp(event, cancelled = false) {
@@ -220,12 +224,13 @@
       this.sound.unlock();
       this.canvas?.focus({preventScroll:true});
       const action = button.dataset.control;
-      if(action==='left'||action==='right')this.moveTap(action==='left'?-1:1);
+      if(action==='left'||action==='right')this.moveTap(action==='left'?-1:1,{source:'touch',timeStamp:event.timeStamp});
+      if(action==='dash-left'||action==='dash-right')MM.InputManager?.requestDash(this,action==='dash-left'?-1:1);
       this.padInputs.set(event.pointerId, action);
       button.classList?.add('held');
       try { button.setPointerCapture(event.pointerId); } catch { /* Optional capture. */ }
-      if (action === 'jump') this.jumpAction();
-      if (action === 'shield') this.shieldAction();
+      if (action === 'jump') this.verticalAction('up');
+      if (action === 'shield') this.verticalAction('down');
       if (action === 'fire-left' || action === 'fire-right') this.shoot(action === 'fire-left' ? -1 : 1);
     }
     padUp(event, button) {
@@ -236,8 +241,13 @@
     jump() { if (this.screen === 'playing' && this.player.stunTime <= 0 && this.player.petrifyTime <= 0 && this.player.rollTime <= 0) this.player.jumpBuffer = .14; }
     jumpAction(){return MM.SkillManager?MM.SkillManager.jumpTap(this):this.jump();}
     shieldAction(){return MM.SkillManager?MM.SkillManager.shieldTap(this):this.activateShield();}
-    moveTap(dir) {
-      if(MM.InputManager)return MM.InputManager.directionTap(this,dir);
+    verticalAction(action){
+      const mapped=MM.AbyssCombat?.invertAction(this,action)||action;
+      return mapped==='up'?this.jumpAction():this.shieldAction();
+    }
+    moveTap(dir, options) {
+      dir*=MM.AbyssCombat?.inputDirection(this)||1;
+      if(MM.InputManager)return MM.InputManager.directionTap(this,dir,options);
       if(this.moveTapDir===dir&&this.time-this.moveTapTime<=.28){this.tryRoll(dir);this.moveTapDir=0;this.moveTapTime=-Infinity;}
       else{this.moveTapDir=dir;this.moveTapTime=this.time;}
     }
@@ -252,14 +262,21 @@
       if (this.shieldCount <= 0) { this.toast(`Còn ${10 - this.totalKills % 10} địch để có khiên`); return false; }
       this.shieldCount--; this.player.shieldTime = 5; this.player.shieldHits = 3;
       this.player.petrifyTime=0;this.player.petrifyGrace=.6;this.player.burnTime=0;this.player.burnTick=1;
+      MM.AbyssCombat?.cleanse?.(this);
       this.player.invulnerable = Math.max(this.player.invulnerable,.25);
       this.burst(this.player.x,this.player.y-28,'#91e3d1',22,'ring'); this.sound.play('shield'); this.toast('Khiên bật · 5 giây / 3 lần chặn'); this.updateUI(); return true;
     }
     getWeaponProfile(dir=this.player.dir) {
+      if(this.level.id>=101){
+        const inverted=MM.AbyssCombat?.gravityDirection(this)<0;
+        const targets=this.enemies.filter(e=>!e.dead&&e.health>0&&e.phase==='active'&&!e.intangible&&!e.bulletUntargetable&&(inverted||e.airborne));
+        const target=targets.filter(e=>(e.x-this.player.x)*dir>=0).sort((a,b)=>Math.abs(a.x-this.player.x)-Math.abs(b.x-this.player.x))[0];
+        if(target)return {kind:'highAim',cost:1,damage:1,cooldown:.17,speed:780,locked:false,target};
+      }
       const aerialBoss=this.enemies.find(e=>e.boss&&e.archetype==='kong'&&e.vinePhase&&!e.kongFinalTriggered&&!e.dead&&e.health>0);
       if(aerialBoss)return {kind:'highAim',cost:1,damage:2,cooldown:.22,speed:1050,locked:aerialBoss.kongState==='vine-rise',target:aerialBoss};
       const bloodBoss=this.enemies.find(e=>e.boss&&e.archetype==='werewolf'&&e.bloodMoon&&!e.dead&&e.health>0);
-      if(bloodBoss&&this.level.id===70)return {kind:'sniper',cost:5,damage:5,cooldown:.5,speed:1280,locked:bloodBoss.wolfState==='transform'};
+      if(bloodBoss&&this.level.id===70)return {kind:'sniper',cost:5,damage:5,cooldown:.17,speed:1280,locked:bloodBoss.wolfState==='transform'};
       const air=this.enemies.filter(e=>!e.dead&&e.health>0&&e.phase==='active'&&((e.archetype==='dragon'&&e.dragonForm!=='knight')||(e.archetype==='chimera'&&e.mythicAir)));
       if(air.length){
         const side=air.filter(e=>(e.x-this.player.x)*dir>=0),pool=side.length?side:air;
@@ -344,7 +361,7 @@
       if(enemy.archetype==='kong')MM.KongCombat?.setup(this,enemy);
       if(enemy.archetype==='dragon')MM.DragonCombat?.setup(this,enemy);
       if(['lion','medusa','goatman','chimera'].includes(enemy.archetype))MM.MythicCombat?.setup(this,enemy);
-      this.enemies.push(enemy); return enemy;
+      this.enemies.push(enemy);MM.AbyssCombat?.init(this,enemy);return enemy;
     }
     configureAbility(enemy, state) {
       if(state==='bat'){this.morphToBat(enemy);return enemy;}
@@ -416,6 +433,7 @@
       const p=this.player,archetype=e.archetype||e.type,state=e.abilityState||'ground';
       e.combatTime=(e.combatTime||0)+dt;
       const pressure=e.pressure=this.getPressure(e);
+      if(MM.AbyssCombat?.owns(this,e)){MM.AbyssCombat.updateEnemy(this,e,dt);return;}
       if(e.gluttonState)return;
       if(['golem','werewolf','kong','dragon','lion','medusa','goatman','chimera'].includes(archetype))return; // Announced weapon attacks own movement and collisions.
       if(e.phantomState)return; // The ghost's announced attack owns its position and collisions.
@@ -475,7 +493,9 @@
       return enemy;
     }
     killEnemy(enemy) {
-      if (this.screen !== 'playing' || enemy.dead || enemy.spiderling) return; enemy.dead = true; enemy.health = 0;
+      if (this.screen !== 'playing' || enemy.dead || enemy.spiderling) return;
+      if(MM.AbyssCombat?.beforeKill?.(this,enemy)===false)return;
+      enemy.dead = true; enemy.health = 0;MM.AbyssCombat?.onKill(this,enemy);
       this.totalKills++; this.score += enemy.score || 100;
       if(enemy.archetype==='golem')MM.GolemCombat?.cleanup(this,enemy);
       if(enemy.archetype==='werewolf')MM.WolfCombat?.cleanup(this,enemy);
@@ -525,7 +545,8 @@
       const p=this.player;
       if(this.screen!=='playing'||p.rollTime>0||(p.invulnerable>0&&!spec.forceHit))return false;
       const immortal=p.immortalTime>0;
-      const damage=immortal?0:clamp(Number.isFinite(spec.damage)?Math.trunc(spec.damage):0,0,3);
+      const rawDamage=Number.isFinite(spec.damage)?spec.damage:0;
+      const damage=immortal?0:spec.exactDamage?Math.max(0,rawDamage):clamp(Math.trunc(rawDamage),0,3);
       if(p.shieldTime>0&&p.shieldHits>0){
         p.shieldHits--;if(p.shieldHits===0)p.shieldTime=0;p.invulnerable=.45;
         this.burst(p.x,p.y-28,'#91e3d1',10,'ring');this.sound.play('shield');
@@ -572,6 +593,7 @@
       this.updateUI();
     }
     checkCompletion() {
+      if(this.abyssCorpses?.length)return;
       if (this.screen !== 'playing' || this.levelKills < this.level.target) return;
       if (this.level.boss && !this.bossDefeated) {
         if (!this.bossSpawned) {
@@ -601,6 +623,7 @@
       if(wasStunned&&p.stunTime===0)p.stunGrace=.6;
       this.updatePlayerEffects(dt);if(this.screen!=='playing')return;
       MM.SkillManager?.update(this,dt);
+      MM.AbyssCombat?.update(this,dt);if(this.screen!=='playing')return;
       let move = (this.keys.has('ArrowRight')?1:0)-(this.keys.has('ArrowLeft')?1:0);
       let fire = this.keys.has('KeyA')||this.keys.has('KeyJ') ? -1 : this.keys.has('KeyD')||this.keys.has('KeyL') ? 1 : 0;
       this.pointers.forEach(pointer => {
@@ -614,6 +637,7 @@
         if(action==='fire-left'||action==='fire-right')fire=action==='fire-left'?-1:1;
       });
       if(movingWithPad)move=clamp(padMove,-1,1);
+      move*=MM.AbyssCombat?.inputDirection(this)||1;
       if(p.stunTime>0||p.petrifyTime>0){move=0;fire=0;p.vx=0;p.jumpBuffer=0;}
       const speed=285, acceleration=2100;
       const desired=move*speed; p.vx += clamp(desired-p.vx,-acceleration*dt,acceleration*dt); if (move) p.dir=move;
@@ -621,9 +645,13 @@
       if(this.rollSlash?.time>0){p.vx=this.rollSlash.dir*850;p.dir=this.rollSlash.dir;fire=0;p.jumpBuffer=0;}
       p.x=clamp(p.x+p.vx*dt,26,W-26);
       p.coyote = p.grounded ? .1 : Math.max(0,p.coyote-dt);
-      if (p.jumpBuffer > 0 && p.coyote > 0) { p.vy=MM.SkillManager?.jumpVelocity(this,-610)??-610; p.grounded=false; p.jumpBuffer=0; p.coyote=0; this.burst(p.x,GROUND,'#9aad94',6); }
-      p.jumpBuffer = Math.max(0,p.jumpBuffer-dt); p.vy += 1420*dt; p.y += p.vy*dt;
-      if (p.y>=GROUND) { p.y=GROUND; p.vy=0; p.grounded=true; }
+      const gravity=MM.AbyssCombat?.gravityDirection(this)||1,ceiling=MM.AbyssCombat?.ceilingY(this)??p.h+18;
+      if(this.lastGravityDirection!==gravity){this.lastGravityDirection=gravity;p.grounded=false;p.coyote=0;p.jumpBuffer=0;p.vy=0;}
+      if (p.jumpBuffer > 0 && p.coyote > 0) { p.vy=(MM.SkillManager?.jumpVelocity(this,-610)??-610)*gravity; p.grounded=false; p.jumpBuffer=0; p.coyote=0; this.burst(p.x,gravity>0?GROUND:ceiling-p.h,'#9aad94',6); }
+      p.jumpBuffer = Math.max(0,p.jumpBuffer-dt); p.vy += 1420*gravity*dt; p.y += p.vy*dt;
+      if(gravity>0&&p.y>=GROUND){p.y=GROUND;p.vy=0;p.grounded=true;}
+      else if(gravity<0&&p.y<=ceiling){p.y=ceiling;p.vy=0;p.grounded=true;}
+      if(this.level.id>=101)p.y=clamp(p.y,ceiling,GROUND);
       if (fire) this.shoot(fire);
       MM.WeaponManager?.update(this,dt);
       this.updateAmmo(dt);
@@ -677,6 +705,7 @@
         if(this.screen!=='playing')break;
         const prev=bullet.x,prevY=bullet.y;bullet.previousX=prev;bullet.previousY=prevY;
         bullet.x+=(bullet.vx??bullet.dir*(bullet.speed||780))*dt;bullet.y+=(bullet.vy||0)*dt;bullet.life-=dt;
+        if(MM.AbyssCombat?.hitHazards(this,bullet,prev,prevY)){spent.add(bullet);continue;}
         const candidates=this.enemies.filter(e=>!e.dead&&!e.intangible&&!e.bulletUntargetable&&e.phase==='active').map(e=>({e,t:bulletEntry(prev,prevY,bullet.x,bullet.y,e)})).filter(v=>v.t!==null).sort((a,b)=>a.t-b.t).map(v=>v.e);
         if(!bullet.vy&&MM.BossCombat?.hitEgg(this,bullet,prev,candidates.length?Math.abs(candidates[0].x-prev):Infinity)){spent.add(bullet);continue;}
         const e=candidates[0];
@@ -701,6 +730,7 @@
       this.screen=won?'won':'lost';this.clearInputs();this.save.best=Math.max(this.save.best,this.score);
       if(won){if(!this.save.completed.includes(this.level.id))this.save.completed.push(this.level.id);this.save.resume=this.level.id<Campaign.levels.length?this.level.id+1:this.level.id;this.sound.play('win');}
       this.persist();
+      MM.AbyssCombat?.reset(this);
       if(!this.headless){this.ui['stage-banner'].hidden=true;this.ui['toast'].hidden=true;this.showResult();this.buildMap();}
       this.updateUI();
     }
@@ -710,7 +740,7 @@
       const damage=Math.max(1,Number.isFinite(amount)?amount:1);
       if(MM.BossCombat?.hit(this,e)===false){this.burst(e.x,e.y-e.h*.5,'#a7edab',4);return false;}
       let handled=false;
-      for(const combat of [MM.WolfCombat,MM.KongCombat,MM.DragonCombat,MM.MythicCombat]){
+      for(const combat of [MM.AbyssCombat,MM.WolfCombat,MM.KongCombat,MM.DragonCombat,MM.MythicCombat]){
         const result=combat?.hit(this,e,damage,attack);
         if(result===false){this.burst(e.x,e.y-e.h*.55,'#d6c7ed',5);return false;}
         if(result===true)handled=true;
@@ -751,6 +781,18 @@
     updateUI() {
       if(this.headless)return;
       MM.ProgressionUI?.sync(this);
+      // Combat still updates every frame. Rebuild the stable DOM HUD only
+      // when its visible values change, rather than recreating heart SVGs
+      // and atlas labels sixty times per second on phones.
+      const hudPlayer=this.player;
+      const hudSignature=[this.screen,this.level.id,this.levelKills,this.bossSpawned,this.bossDefeated,
+        hudPlayer.health,hudPlayer.maxHealth,hudPlayer.ammo,hudPlayer.maxAmmo,hudPlayer.weaponMode,
+        Math.ceil((hudPlayer.shotTimer||0)*10),this.aimMode,this.shieldCount,this.totalKills%10,this.score,
+        this.save.best,this.save.resume,this.save.completed.join(','),this.settings.controls,
+        this.settings.effects,this.settings.reducedMotion,this.settings.sound,this.progression?.equipped,
+        this.progression?.rewards?.join(','),this.weaponPicker?.open,this.selectedStory].join('|');
+      if(this.hudSignature===hudSignature)return;
+      this.hudSignature=hudSignature;
       const campaignLabels={'campaign-total':Campaign.levels.length,'hero-level-total':Campaign.levels.length,'hero-world-total':Campaign.worlds.length,'campaign-range':`001—${String(Campaign.levels.length).padStart(3,'0')}`,'campaign-title':`${Campaign.levels.length} đêm trong bóng tối.`};
       Object.entries(campaignLabels).forEach(([id,text])=>{if(this.ui[id])this.ui[id].textContent=text;});
       const home=this.screen==='home',p=this.player;document.body.className=home?'home':'playing';
@@ -782,14 +824,9 @@
     }
     resize() {
       if(this.headless)return;const dpr=Math.min(root.devicePixelRatio||1,2);this.canvas.width=W*dpr;this.canvas.height=H*dpr;this.dpr=dpr;this.ctx.setTransform(dpr,0,0,dpr,0,0);
-      const rect=this.canvas.getBoundingClientRect();
-      const boxWidth=this.mobileRotation?rect.height:rect.width,boxHeight=this.mobileRotation?rect.width:rect.height;
-      // Cover may trim distant sky, but must never crop the arena's left/right edges.
-      this.canvas.style.objectFit='';
-      const requestedFit=root.getComputedStyle?.(this.canvas).objectFit||'fill';
-      const fit=requestedFit==='cover'&&boxWidth/Math.max(1,boxHeight)<W/H?'contain':requestedFit;
-      this.canvas.style.objectFit=fit;
-      this.viewTop=fit==='cover'?Math.max(0,H-W*boxHeight/Math.max(1,boxWidth)):0;
+      // Keep sky warnings and airborne enemies visible at every viewport shape.
+      this.canvas.style.objectFit='contain';this.canvas.style.objectPosition='50% 50%';
+      this.viewTop=0;
       for(const enemy of this.enemies){
         if(enemy.homeY){enemy.homeY=Math.min(GROUND-45,Math.max(enemy.baseHomeY||enemy.homeY,this.viewTop+enemy.h+25));if(enemy.platform)enemy.platform.y=enemy.homeY;}
       }
@@ -841,5 +878,5 @@
     }
   }
   MM.Game = Game; MM.readSave = readSave; MM.overlaps = overlaps;
-  if(typeof document!=='undefined'&&document.getElementById('canvas'))MM.game=new Game({newRun:true});
+  if(typeof document!=='undefined'&&document.getElementById('canvas'))MM.game=new Game();
 })(typeof window!=='undefined'?window:globalThis);

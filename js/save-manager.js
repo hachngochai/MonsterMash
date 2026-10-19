@@ -1,9 +1,9 @@
-/* Boss rewards share the save record for the current expedition. */
+/* Boss milestones and equipment persist with the existing campaign save. */
 (function (root) {
   'use strict';
   const MM = root.MM = root.MM || {};
-  const milestones = Object.freeze([10,20,30,40,50,60,70,80,90,100]);
-  const weaponLevels = Object.freeze({gun:0,bones:10,club:60,bow:90,spear:90,axes:100});
+  const milestones = Object.freeze([10,20,30,40,50,60,70,80,90,100,110,120,130,140,150]);
+  const weaponLevels = Object.freeze({gun:0,bones:10,club:60,bow:90,spear:90,axes:100,hammer:120,scythe:140});
   const record = value => value && typeof value === 'object' && !Array.isArray(value);
   const milestone = value => Number.isInteger(value) && milestones.includes(value);
 
@@ -13,7 +13,7 @@
     const historical = Array.isArray(completed) ? completed : Array.isArray(outer.completed) ? outer.completed : [];
     // Completed boss maps are the only proof imported from pre-V3 saves.
     // A selected/resume map never implies that its boss has been defeated.
-    const imported=source.version===1&&Array.isArray(source.rewards)?[]:historical;
+    const imported=source.version===1&&Array.isArray(source.rewards)?historical.filter(level=>level>=110):historical;
     const rewards = [...new Set([...(Array.isArray(source.rewards) ? source.rewards : []), ...imported].filter(milestone))].sort((a,b) => a-b);
     const proposed = typeof source.equipped === 'string' ? source.equipped : 'gun';
     const required = Object.prototype.hasOwnProperty.call(weaponLevels, proposed) ? weaponLevels[proposed] : Infinity;

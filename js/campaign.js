@@ -12,7 +12,12 @@
     { id: 6, name: 'Thung lũng trăng máu', subtitle: 'Tiếng hú dưới tán gai', color: '#d6ac91', enemy: 'werewolf', scenery: 5 },
     { id: 7, name: 'Rừng nguyên sinh', subtitle: 'Vua rừng thức giấc', color: '#e9c96e', enemy: 'miniKingKong', scenery: 5 },
     { id: 8, name: 'Thiên không ngũ hành', subtitle: 'Dưới cánh rồng ngàn tuổi', color: '#9cdbec', enemy: 'fireDragon', scenery: 8 },
-    { id: 9, name: 'Tàn tích thần thoại', subtitle: 'Ba bản thể của Chimera', color: '#e2c58e', enemy: 'lionMan', scenery: 9 }
+    { id: 9, name: 'Tàn tích thần thoại', subtitle: 'Ba bản thể của Chimera', color: '#e2c58e', enemy: 'lionMan', scenery: 9 },
+    { id: 10, name: 'Mê Cung Minotaur', subtitle: 'Mang ánh đuốc qua cửa đá', color: '#ed795e', enemy: 'minotaurCalf', scenery: 10 },
+    { id: 11, name: 'Hang Ký Sinh Cổ Đại', subtitle: 'Phân biệt thực và ảo', color: '#d68cf5', enemy: 'parasite', scenery: 11 },
+    { id: 12, name: 'Hồ Nước Ngầm và Hang Thạch Anh', subtitle: 'Ánh sáng sau chiếc mai gương', color: '#86e6f8', enemy: 'littleTurtle', scenery: 12 },
+    { id: 13, name: 'Vách Đá Vọng Âm và Sân Nghi Lễ', subtitle: 'Lần theo tiếng vọng của cổ điểu', color: '#bd96ec', enemy: 'abyssCrow', scenery: 13 },
+    { id: 14, name: 'Lăng Mộ Luân Hồi', subtitle: 'Một đầu xoay, bốn cõi lòng', color: '#e0bb73', enemy: 'clayGuard', scenery: 14 }
   ];
 
   const enemyTypes = {
@@ -39,6 +44,11 @@
     goatman: {w:57,h:81,speed:40,health:5,score:320,damage:1,ability:'axe'},
     chimera: {w:300,h:210,speed:48,health:120,score:3200,damage:2,ability:'chimera-hunt'}
   };
+  // The new expedition reads its provisional balance from one editable module.
+  // Original levels and their enemy records remain unchanged.
+  const abyssConfig = root.MM && root.MM.AbyssConfig;
+  if (!abyssConfig) throw new Error('Load js/abyss-config.js before js/campaign.js.');
+  Object.assign(enemyTypes, abyssConfig.enemies, abyssConfig.bosses);
 
   const chapters = [
     {
@@ -342,6 +352,68 @@
     });
   });
 
+  const abyssChapters = [
+    {
+      boss: 'minotaurLord', bossName: 'Minotaur Chúa',
+      skills: ['rage-axe', 'bull-charge', 'cave-quake', 'dominion-roar'],
+      names: ['Ngọn đuốc dưới lòng đất', 'Sừng trong bóng tối', 'Dấu chân truy đuổi', 'Nấm đỏ thức giấc', 'Qua vườn nấm độc', 'Bụi đá trên đầu', 'Mưa nhũ đá', 'Ngã rẽ dưới cầu đá', 'Cửa mê cung cuối cùng', 'Minotaur Chúa'],
+      stories: ['Đuốc soi một nửa miền tối. Ánh sáng đi cùng bạn; khi dùng vũ khí cận chiến, hai ngọn lửa xoay quanh để giữ đường nhìn.', 'Minotaur Con tuần tra giữa các cột đá. Nó báo đòn trước khi vung tay: giữ khoảng trống để né.', 'Minotaur nhìn thấy ánh đuốc và chạy tới. Dẫn nó qua khoảng sân rộng rồi phản công trong nhịp nghỉ.', 'Nấm độc phồng lên khi bạn đến gần hoặc bắn trúng. Rời vòng báo trước khi nó nổ.', 'Dấu sừng và những cụm nấm đỏ cùng che lối đi. Đừng lùi vào vùng nổ khi né Minotaur.', 'Bụi đá rơi là lời báo trước. Di chuyển khỏi đường thẳng của nhũ đá đang nứt.', 'Nhiều nhũ đá rơi theo đợt. Giữ một khoảng sân trống và quan sát nền trước khi đổi hướng.', 'Nấm, nhũ đá và Minotaur phối hợp ở ngã rẽ. Dùng đường trống giữa các dấu báo để vượt qua.', 'Cửa cuối đã hiện sau các cột đá. Nhặt thùng đạn và chuẩn bị khiên trước tiếng gầm.', 'Minotaur Chúa vung rìu, lao khóa hướng, giậm nhũ đá và gọi đàn con. Khi nó lao vào tường, tận dụng khoảng choáng để phản công.'],
+      pools: Array.from({length:10},()=>['minotaurCalf']),
+      hazards: stage => stage >= 5 ? ['mushroom','stalactite'] : stage >= 3 ? ['mushroom'] : []
+    },
+    {
+      boss: 'flowerDemon', bossName: 'Mộc Tâm Hoa Quỷ',
+      skills: ['bewildering-spores', 'spirit-mirrors', 'animated-remains', 'parasite-nest'],
+      names: ['Rễ đen trên xương trắng', 'Dấu móng trong hang hoa', 'Ký sinh thức tỉnh', 'Một giây hóa điên', 'Xương và gai rễ', 'Sương bào tử', 'Hoa mọc trên hóa thạch', 'Những bộ xương chuyển động', 'Trước trái tim hoa', 'Mộc Tâm Hoa Quỷ'],
+      stories: ['Rễ đen bám lên những bộ xương tiền sử. Minotaur vẫn còn ở đây, cùng nấm độc và đá rơi từ tầng trên.', 'Những dấu móng chạy qua sương tím. Giữ đuốc sáng và tránh các cụm nấm đỏ.', 'Ký Sinh Trùng Cổ Đại bò ra từ lõi hoa. Một đòn hợp lệ có thể khiến nó tự tấn công.', 'Ký sinh hóa điên đúng một giây sau khi bị đánh, tự gây tổn thương. Chọn vị trí để giữ đường né.', 'Minotaur che chắn cho đàn ký sinh. Đừng để hai nhịp truy đuổi ép bạn vào nấm.', 'Bào tử tụ trên nền đá. Tránh phấn hoa tím; khiên giúp giải những trạng thái bất lợi.', 'Hoa mọc dày hơn trên xương cổ. Nhìn dấu báo thay vì đứng lại trong vùng phấn.', 'Các đợt quái hỗn hợp len giữa rễ cây. Chờ lúc chúng ra đòn rồi đổi phía để phản công.', 'Một bộ xương khổng lồ chuyển động sâu trong hang. Chuẩn bị đạn, khiên và nhìn kỹ lõi hoa thật.', 'Mộc Tâm Hoa Quỷ rải bào tử ảo giác, tạo ba phân thân giả và kéo bộ xương tấn công. Đánh phân thân gây nổ choáng; chỉ boss thật trực tiếp đánh bạn. Hạ nó để nhận Búa Minotaur.'],
+      pools: Array.from({length:10},(_,i)=>i<2?['minotaurCalf']:i<4?['parasite']:['minotaurCalf','parasite']),
+      hazards: stage => stage >= 5 ? ['mushroom','stalactite','spore'] : ['mushroom','stalactite']
+    },
+    {
+      boss: 'mirrorTurtle', bossName: 'Xích Kính Quái Sùng',
+      skills: ['refractive-invisibility', 'mirror-shield', 'five-water-columns', 'super-hard'],
+      names: ['Mặt hồ không có trời', 'Tiểu Quy bên bờ đá', 'Qua thềm nước lạnh', 'Tinh linh pha lê', 'Gợn sóng nguy hiểm', 'Mưa băng trong hang', 'Dưới trần thạch anh', 'Băng và dòng nước', 'Mặt gương dưới hồ', 'Xích Kính Quái Sùng'],
+      stories: ['Rời sương ký sinh để tới hồ ngầm. Ánh thạch anh phản lên mặt nước; nền đá ẩm mở ra những đường chiến đấu mới.', 'Tiểu Quy phun nước về một hướng trong tầm bốn bước chân. Lùi khỏi tầm hoặc nhảy qua đường nước.', 'Những thềm đá chia mặt hồ. Theo dấu chuẩn bị phun nước để đổi vị trí an toàn.', 'Tinh linh pha lê nhấp nháy khi bạn đến gần rồi phát nổ. Rời vòng cyan trước khi lõi vỡ.', 'Tiểu Quy và tinh linh chia nhau bờ đá. Chừa chỗ lùi khi né đợt phun nước.', 'Băng rơi từ trần thay nhũ đá cũ. Rời vệt cảnh báo trước khi mảnh băng chạm đất.', 'Các đợt băng rơi nhanh hơn nhưng luôn có đường né. Nhìn nền và giữ nhịp di chuyển.', 'Tinh linh nổ giữa những đường phun nước. Đừng nhảy vào cột băng đang được đánh dấu.', 'Gợn nước cho thấy một chiếc mai gương đang tiến tới. Cung Hắc và Giáo Bạch có thể giúp định vị.', 'Xích Kính Quái Sùng tàng hình mỗi 15 giây và chỉ nhận nửa sát thương. Mai gương phản toàn bộ sát thương projectile; cận chiến không bị phản. Né đúng năm cột thủy độn, hạ boss để mở phát quang vũ khí.'],
+      pools: Array.from({length:10},()=>['littleTurtle']),
+      hazards: stage => stage >= 5 ? ['crystalSpirit','icicle'] : stage >= 3 ? ['crystalSpirit'] : []
+    },
+    {
+      boss: 'fossilRoc', bossName: 'Hóa Thạch Sí Vũ',
+      skills: ['echo-scream', 'spatial-illusion', 'fossil-knight'],
+      names: ['Bậc đá bên vực sâu', 'Cánh quạ tím', 'Đá rơi từ bóng cánh', 'Tiếng lăn hai phía', 'Quạ qua cầu xích', 'Đèn lồng của người đã khuất', 'Đổi chỗ trong sương', 'Phương hướng đảo ngược', 'Sân nghi lễ vọng âm', 'Hóa Thạch Sí Vũ'],
+      stories: ['Tiếng nước lùi lại sau những vách đá cao. Dây xích và hóa thạch cổ điểu dẫn tới sân nghi lễ.', 'Ô Thước bay tuần tra trên cao. Nó thả đá theo chu kỳ năm giây; quan sát bóng dưới nền.', 'Đá rơi từ cánh quạ theo trọng lực. Di chuyển sau dấu báo và canh bắn vào mục tiêu trên cao.', 'Một tảng đá lăn qua nền mỗi mười giây, từ một trong hai phía. Nhảy qua hoặc dùng địa hình để né.', 'Quạ trên cao và đá lăn dưới đất chia đường né. Giữ vị trí trước khi chọn thời điểm nhảy.', 'Xương Cầm Đèn Lồng xuất hiện với lửa linh hồn tím. Mỗi sáu giây nó dùng một kỹ năng.', 'Đèn lồng có thể đổi vị trí với bạn. Quan sát vòng tím rồi tìm lại khoảng sân an toàn.', 'Hướng di chuyển có thể bị đảo tạm thời. Biểu tượng debuff báo lúc điều khiển trở lại bình thường.', 'Vách đá mở ra đôi cánh hóa thạch. Nhặt đạn và chuẩn bị cho một trận chiến có hai thanh máu.', 'Hóa Thạch Sí Vũ hét sóng âm, đảo hướng và dịch chuyển bạn tới vị trí hợp lệ. Hết máu dạng chim, nó hóa Kị Sĩ Xương Đầu Chim cầm lưỡi hái. Hạ cả dạng thứ hai để nhận Lưỡi Hái Cổ Điểu.'],
+      pools: Array.from({length:10},(_,i)=>i<5?['abyssCrow']:['abyssCrow','lanternSkeleton']),
+      hazards: stage => stage >= 3 ? ['rollingStone'] : []
+    },
+    {
+      boss: 'thousandHands', bossName: 'Thiên Thủ Cổ Thần',
+      skills: ['joy-gravity', 'wrath-hands', 'love-clones', 'hate-darkness', 'reincarnation-maze'],
+      names: ['Cửa Lăng Mộ Luân Hồi', 'Vệ binh đất sét', 'Những bước chân nghi lễ', 'Ngón đá thức giấc', 'Bàn tay giữa hàng cột', 'Linh hồn dưới phù điêu', 'Hành lang chôn cất', 'Bánh xe và bẫy cổ', 'Trước tượng thiên thủ', 'Thiên Thủ Cổ Thần'],
+      stories: ['Ánh vàng mờ trôi qua hàng cột đất sét. Tượng cổ và quan tài đá giữ im lặng dưới lăng mộ.', 'Vệ Binh Đất Sét Nhỏ thức tỉnh khi bạn đến gần. Nó nâng tay báo trước đòn cận chiến.', 'Những vệ binh canh nền đá cổ. Đợi nhịp nghỉ sau đòn để vượt qua hàng cột.', 'Bàn Tay Cổ Đại di chuyển bằng các ngón. Rời dấu báo trước khi nó đập hoặc tóm.', 'Bàn tay và vệ binh chia lối hành lang. Chừa khoảng trống để né cả đòn trên cao lẫn dưới đất.', 'Linh Hồn Mộ Cổ trôi qua phù điêu. Tránh các đốm năng lượng và canh bắn trên cao.', 'Ba loại kẻ canh mộ cùng thức giấc. Đừng để năng lượng linh hồn ép bạn vào tầm bàn tay.', 'Vòng nghi lễ và bánh xe đá bắt đầu chuyển động. Theo dấu sáng trên nền để tránh nhịp bẫy cổ.', 'Một đầu tượng khẽ xoay giữa hàng chục cánh tay. Ánh sáng vũ khí sẽ giúp bạn trong bóng tối sắp tới.', 'Thiên Thủ Cổ Thần đổi Hỉ–Nộ–Ái–Ố mỗi 20 giây. Ở nửa máu, boss hồi đầy đúng một lần và mở Mê Cung Luân Hồi; chỉ hình chiếu Nộ nhận sát thương thật. Chu kỳ đổi mặt còn 15 giây. Hạ HP thật của pha hai để kết thúc.'],
+      pools: Array.from({length:10},(_,i)=>i<3?['clayGuard']:i<5?['clayGuard','ancientHand']:['clayGuard','ancientHand','tombSpirit']),
+      hazards: stage => stage >= 7 ? ['tombPulse'] : []
+    }
+  ];
+  const abyssBalance = abyssConfig.campaign;
+  if (!abyssBalance) throw new Error('AbyssConfig.campaign balance is required.');
+  abyssChapters.forEach((chapter, region) => chapter.names.forEach((name, stage) => {
+    const world = region + 10, boss = stage === 9, recovery = stage === 0 || stage === 4;
+    const config = Object.assign({}, abyssBalance, {
+      id: 101 + region * 10 + stage, world, name, abyss: true,
+      target: [12,14,16,14,18,16,18,20,22,24][stage] + region * 2,
+      spawnInterval: [2.1,2,1.95,2.05,2.12,1.9,1.85,1.8,1.75,1.95][stage],
+      maxAlive: [3,3,4,3,3,4,4,5,5,4][stage],
+      types: chapter.pools[stage].slice(), hazardTypes: chapter.hazards(stage),
+      layout: ['arrival','columns','pursuit','crossing','sanctuary','ledge','cascade','junction','threshold','arena'][stage],
+      abilitySpawnEvery: 0, boss, bossArchetype: boss ? chapter.boss : null,
+      bossHealth: boss ? abyssConfig.bosses[chapter.boss].health : 0,
+      bossAbilities: boss ? chapter.skills.slice() : [], bossSkills: boss ? chapter.skills.slice() : [],
+      story: chapter.stories[stage], tutorial: chapter.stories[stage], recovery
+    });
+    if (boss) config.bossName = chapter.bossName;
+    levels.push(config);
+  }));
+
   const difficultySettings = {
     story: { health: 7, spawnMultiplier: 1.2, speedMultiplier: 0.86, enemyHealthMultiplier: 0.9, warningTime: 1.35, damageMultiplier: 1, ammoMultiplier: 1.35, pressureMultiplier: 0.75 },
     normal: { health: 5, spawnMultiplier: 1, speedMultiplier: 1, enemyHealthMultiplier: 1, warningTime: 1.1, damageMultiplier: 1, ammoMultiplier: 1, pressureMultiplier: 1 },
@@ -373,8 +445,8 @@
     return {
       x: side === -1 ? -50 : 1010,
       y: 438,
-      w: boss ? (archetype === 'golem' ? 156 : archetype === 'werewolf' ? 80 : archetype === 'kong' ? 126 : archetype === 'dragon' ? 252 : archetype === 'chimera' ? 300 : Math.max(96, stats.w * 1.85)) : stats.w,
-      h: boss ? (archetype === 'golem' ? 172 : archetype === 'werewolf' ? 108 : archetype === 'kong' ? 138 : archetype === 'dragon' ? 190 : archetype === 'chimera' ? 210 : Math.max(94, stats.h * 1.5)) : stats.h,
+      w: config.abyss ? stats.w : boss ? (archetype === 'golem' ? 156 : archetype === 'werewolf' ? 80 : archetype === 'kong' ? 126 : archetype === 'dragon' ? 252 : archetype === 'chimera' ? 300 : Math.max(96, stats.w * 1.85)) : stats.w,
+      h: config.abyss ? stats.h : boss ? (archetype === 'golem' ? 172 : archetype === 'werewolf' ? 108 : archetype === 'kong' ? 138 : archetype === 'dragon' ? 190 : archetype === 'chimera' ? 210 : Math.max(94, stats.h * 1.5)) : stats.h,
       dir: side === -1 ? 1 : -1,
       type: boss ? 'boss' : enemyType,
       archetype: archetype,
@@ -388,7 +460,7 @@
       maxHealth: health,
       speed: stats.speed * config.speedMultiplier * settings.speedMultiplier * (0.95 + random * 0.1) * (boss ? 0.74 : 1),
       score: boss ? 750 + config.world * 250 : stats.score,
-      damage: 1,
+      damage: config.abyss ? stats.damage : 1,
       phase: 'warning',
       warning: settings.warningTime + (boss ? 0.45 : 0),
       age: 0,

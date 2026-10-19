@@ -8,7 +8,7 @@ const test = require('node:test');
 
 function loadGame(globals = {}, afterLoad = () => {}) {
   const context = vm.createContext(globals);
-  for (const file of ['campaign.js', 'golem.js', 'wolves.js', 'kong.js', 'dragons.js', 'mythic.js', 'game.js']) {
+  for (const file of ['abyss-config.js','campaign.js', 'golem.js', 'wolves.js', 'kong.js', 'dragons.js', 'mythic.js', 'game.js']) {
     vm.runInContext(fs.readFileSync(path.join(__dirname, '../js', file), 'utf8'), context, { filename: file });
   }
   afterLoad(context);
@@ -350,7 +350,7 @@ test('completed old campaign saves continue into the new chapter while explicit 
   const MM=loadGame();
   const old=MM.readSave(storage({version:2,resume:50,completed:Array.from({length:50},(_,i)=>i+1),best:12345,settings:{controls:'buttons',difficulty:'hard'}}));
   assert.equal(old.resume,51);
-  assert.equal(old.campaignSize,100);
+  assert.equal(old.campaignSize,150);
   assert.equal(old.completed.length,50);
   assert.equal(old.best,12345);
   assert.equal(old.settings.controls,'buttons');
@@ -367,7 +367,7 @@ test('completed old campaign saves continue into the new chapter while explicit 
   assert.equal(replay60.resume,60);
   const completed70=MM.readSave(storage({campaignSize:70,resume:70,completed:Array.from({length:70},(_,i)=>i+1),best:34567,settings:{controls:'gestures',difficulty:'story'}}));
   assert.equal(completed70.resume,71);
-  assert.equal(completed70.campaignSize,100);
+  assert.equal(completed70.campaignSize,150);
   assert.equal(completed70.completed.length,70);
   assert.equal(completed70.best,34567);
   assert.equal(completed70.settings.controls,'gestures');
@@ -376,7 +376,7 @@ test('completed old campaign saves continue into the new chapter while explicit 
   assert.equal(replay70.resume,70);
   const completed80=MM.readSave(storage({campaignSize:80,resume:80,completed:Array.from({length:80},(_,i)=>i+1),best:45678,settings:{controls:'buttons',difficulty:'hard',sound:true}}));
   assert.equal(completed80.resume,81);
-  assert.equal(completed80.campaignSize,100);
+  assert.equal(completed80.campaignSize,150);
   assert.equal(completed80.completed.length,80);
   assert.equal(completed80.best,45678);
   assert.equal(completed80.settings.controls,'buttons');
@@ -387,10 +387,12 @@ test('completed old campaign saves continue into the new chapter while explicit 
   const unfinished80=MM.readSave(storage({campaignSize:80,resume:80,completed:[79]}));
   assert.equal(unfinished80.resume,80);
   const current100=MM.readSave(storage({campaignSize:100,resume:100,completed:Array.from({length:100},(_,i)=>i+1)}));
-  assert.equal(current100.resume,100,'finishing the current campaign stays at its final stage');
+  assert.equal(current100.resume,101,'finishing the previous campaign opens the appended chapter');
+  const current150=MM.readSave(storage({campaignSize:150,resume:150,completed:[150]}));
+  assert.equal(current150.resume,150,'current final stage stays replayable');
 });
 
-test('keyboard and mobile sniper fire every half second, costing five ammo per successful shot', () => {
+test('keyboard and mobile sniper repeat at normal gun speed, costing five ammo per successful shot', () => {
   for(const input of ['keyboard','mobile']) {
     const {game,MM}=fresh(70);
     game.ammoTimer=10000;
@@ -407,17 +409,17 @@ test('keyboard and mobile sniper fire every half second, costing five ammo per s
     const button={dataset:{control:'fire-right'},classList:{add(){},remove(){}},setPointerCapture(){},releasePointerCapture(){}};
     if(input==='keyboard')game.keyDown(key('KeyD'));
     else game.padDown(pointer(1,0,0),button);
-    tick(game,3.05);
+    tick(game,.7);
     if(input==='keyboard')game.keyUp(key('KeyD'));
     else game.padUp(pointer(1,0,0),button);
-    assert.equal(shots.length,7,`${input} fires immediately and six more times over three seconds`);
-    assert.equal(game.player.ammo,5);
+    assert.equal(shots.length,4,`${input} fires immediately and repeats while held`);
+    assert.equal(game.player.ammo,20);
     for(let i=0;i<shots.length;i++) {
       assert.equal(shots[i].kind,'sniper');assert.equal(shots[i].damage,5);
-      if(i>0)assert.ok(Math.abs(shots[i].time-shots[i-1].time-.5)<=1/60+1e-8,`${input} maintains the 0.5-second cooldown`);
+      if(i>0)assert.ok(Math.abs(shots[i].time-shots[i-1].time-.17)<=1/60+1e-8,`${input} maintains the ordinary 0.17-second gun cooldown`);
     }
     tick(game,1.1);
-    assert.equal(shots.length,7,`${input} release stops fire with a full shot still available`);
+    assert.equal(shots.length,4,`${input} release stops fire with ammunition still available`);
   }
 });
 
@@ -629,9 +631,9 @@ test('malformed and denied saves fall back safely; progress and options survive 
   const game = new MM.Game({ headless: true, storage: denied });
   assert.doesNotThrow(() => { game.start(); game.finish(true); });
   const unsafe = MM.readSave(storage({ resume: 900, best: -1, completed: [1, 1, 50, 51, 61, 71, 80, 81, 90, 100, 101, '2', null], settings: { difficulty: 'bogus', sound: 'true', effects: false } }));
-  assert.equal(unsafe.resume, 100);
+  assert.equal(unsafe.resume, 150);
   assert.equal(unsafe.best, 0);
-  assert.equal(JSON.stringify(unsafe.completed), '[1,50,51,61,71,80,81,90,100]');
+  assert.equal(JSON.stringify(unsafe.completed), '[1,50,51,61,71,80,81,90,100,101]');
   assert.equal(unsafe.settings.difficulty, 'normal');
   assert.equal(unsafe.settings.sound, false);
   assert.equal(unsafe.settings.effects, false);

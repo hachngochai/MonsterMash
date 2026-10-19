@@ -8,7 +8,7 @@ const test = require('node:test');
 
 function fresh(level = 1) {
   const context = vm.createContext({});
-  for (const file of ['campaign', 'bosses', 'golem', 'wolves', 'kong', 'dragons', 'mythic', 'game']) {
+  for (const file of ['abyss-config','campaign', 'bosses', 'golem', 'wolves', 'kong', 'dragons', 'mythic', 'game']) {
     vm.runInContext(fs.readFileSync(path.join(__dirname, `../js/${file}.js`), 'utf8'), context, {filename:file});
   }
   const MM = context.MM;

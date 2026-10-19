@@ -2,9 +2,9 @@
 (function (root) {
   'use strict';
   const MM = root.MM = root.MM || {};
-  const ORDER = ['gun', 'bones', 'club', 'bow', 'spear', 'axes'];
-  const UNLOCK = {gun:0, bones:10, club:60, bow:90, spear:90, axes:100};
-  const NAMES = {gun:'Súng', bones:'Xương Phân Ba', club:'Chùy Golem', bow:'Cung Hắc Ám', spear:'Giáo Bạch Kim', axes:'Song Rìu'};
+  const ORDER = ['gun', 'bones', 'club', 'bow', 'spear', 'axes', 'hammer', 'scythe'];
+  const UNLOCK = {gun:0, bones:10, club:60, bow:90, spear:90, axes:100,hammer:120,scythe:140};
+  const NAMES = {gun:'Súng', bones:'Xương Phân Ba', club:'Chùy Golem', bow:'Cung Hắc Ám', spear:'Giáo Bạch Kim', axes:'Song Rìu',hammer:'Búa Minotaur',scythe:'Lưỡi Hái Cổ Điểu'};
   const RAD = Math.PI / 180;
   const suppressed = g => MM.MapManager?.suppressed ? MM.MapManager.suppressed(g) : g.level?.id === 70;
   const enabled = g => MM.MapManager?.skillsEnabled ? MM.MapManager.skillsEnabled(g) : !suppressed(g);
@@ -61,7 +61,7 @@
       const id = this.current(g), p = g.player;
       if (id === 'gun') {
         // The first encounter with aerial bosses retains its existing automatic aim.
-        if (!manualAim(g)) return {...g.getWeaponProfile(dir), equipped:id, name:NAMES[id]};
+        if (!manualAim(g)||MM.AbyssCombat?.gravityDirection(g)<0) return {...g.getWeaponProfile(dir), equipped:id, name:NAMES[id]};
         return {kind:g.aimMode === 'high' ? 'highAim' : 'normal', equipped:id, name:NAMES[id],
           cost:1, damage:1, cooldown:.17, speed:780, locked:false, manual:true, target:null};
       }
@@ -69,6 +69,7 @@
       if (id === 'bow') return {kind:id, equipped:id, name:NAMES[id], count:5, cost:5, damage:1, cooldown:.9, speed:900, range:700, spread:[-12, -6, 0, 6, 12]};
       if (id === 'club') return {kind:id, equipped:id, name:NAMES[id], cost:0, damage:3, cooldown:.75, range:95, melee:true};
       if (id === 'axes') return {kind:id, equipped:id, name:NAMES[id], cost:0, damage:2, cooldown:.55, range:80, melee:true};
+      if(id==='hammer'||id==='scythe')return {kind:id,equipped:id,name:NAMES[id],cost:0,melee:true,...MM.AbyssConfig.weapons[id]};
       const target = meleeTargets(g, dir, Infinity)[0];
       const stab = !!target && edgeGap(p, target) <= 40;
       return {kind:id, equipped:id, name:NAMES[id], cost:stab ? 0 : 1, damage:stab ? 2 : 3,
@@ -99,6 +100,7 @@
           g.dealEnemyDamage?.(e, damage, {kind:weapon.kind, weaponId:weapon.equipped, dir, melee:true, form:weapon.form || 'swing'});
         }
         g.weaponAttack = {kind:weapon.kind, dir, time:.24, duration:.24, range:weapon.range, form:weapon.form || 'swing'};
+        MM.AbyssCombat?.meleeHazards(g,g.weaponAttack);
         p.aimAngle = null;
         g.sound?.play('shot'); g.updateAmmoUI?.();
         return true;
@@ -110,7 +112,8 @@
         p.dir = Math.sign(Math.cos(angle)) || dir;
         if (weapon.target.archetype === 'kong') MM.KongCombat?.recordShot(g, weapon.target);
       } else if (manualAim(g) && g.aimMode === 'high') {
-        angle = dir > 0 ? -35 * RAD : Math.PI + 35 * RAD;
+        const gravity=MM.AbyssCombat?.gravityDirection(g)||1;
+        angle = dir > 0 ? -35 * RAD*gravity : Math.PI + 35 * RAD*gravity;
         // Manual aim keeps KingKong's existing one-shield-per-five-shots rule.
         const kong=(g.enemies||[]).find(e=>e.boss&&e.archetype==='kong'&&e.vinePhase&&!e.dead&&e.health>0);
         if(kong)MM.KongCombat?.recordShot(g,kong);
@@ -127,7 +130,7 @@
         bullet.vy = Math.abs(Math.sin(shotAngle)) < 1e-8 ? 0 : Math.sin(shotAngle) * weapon.speed;
         g.bullets.push(bullet);
       }
-      p.aimAngle = Math.abs(Math.sin(angle)) < 1e-8 ? null : angle;
+      p.aimAngle = Math.abs(Math.sin(angle)) < 1e-8 ? null : angle*(MM.AbyssCombat?.gravityDirection(g)||1);
       if (weapon.kind === 'spear') g.weaponAttack = {kind:'spear', dir, time:.24, duration:.24, range:700, form:'throw'};
       g.burst?.(x, y, '#ffdc93', weapon.kind === 'sniper' ? 9 : 4, 'spark');
       g.sound?.play(weapon.kind === 'sniper' ? 'sniper' : 'shot'); g.updateAmmoUI?.();

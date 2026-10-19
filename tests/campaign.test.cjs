@@ -7,13 +7,14 @@ const vm = require('node:vm');
 const test = require('node:test');
 
 const context = vm.createContext({});
+vm.runInContext(fs.readFileSync(path.join(__dirname, '../js/abyss-config.js'), 'utf8'), context);
 vm.runInContext(fs.readFileSync(path.join(__dirname, '../js/campaign.js'), 'utf8'), context);
 const campaign = context.MM.Campaign;
 
-test('campaign has 100 sequential levels and ten boss milestones', () => {
-  assert.equal(campaign.worlds.length, 10);
-  assert.equal(campaign.levels.length, 100);
-  assert.equal(campaign.levels.filter(level => level.boss).length, 10);
+test('campaign has 150 sequential levels and fifteen boss milestones', () => {
+  assert.equal(campaign.worlds.length, 15);
+  assert.equal(campaign.levels.length, 150);
+  assert.equal(campaign.levels.filter(level => level.boss).length, 15);
   campaign.levels.forEach((level, index) => {
     assert.equal(level.id, index + 1);
     assert.equal(level.world, Math.floor(index / 10));
@@ -32,12 +33,13 @@ test('campaign has 100 sequential levels and ten boss milestones', () => {
   assert.equal(campaign.getLevel(80).bossHealth, 72);
   assert.equal(campaign.getLevel(90).bossHealth, 100);
   assert.equal(campaign.getLevel(100).bossHealth, 120);
+  for(const id of [110,120,130,140,150])assert.equal(campaign.getLevel(id).bossHealth,context.MM.AbyssConfig.bosses[campaign.getLevel(id).bossArchetype].health);
 });
 
 test('saved level ids clamp safely, including invalid or obsolete saves', () => {
   assert.equal(campaign.getLevel(-50).id, 1);
-  assert.equal(campaign.getLevel(500).id, 100);
-  assert.equal(campaign.getLevel(Infinity).id, 100);
+  assert.equal(campaign.getLevel(500).id, 150);
+  assert.equal(campaign.getLevel(Infinity).id, 150);
   assert.equal(campaign.getLevel(-Infinity).id, 1);
   assert.equal(campaign.getLevel(undefined).id, 1);
   assert.equal(campaign.getLevel('broken').id, 1);
@@ -46,11 +48,11 @@ test('saved level ids clamp safely, including invalid or obsolete saves', () => 
 });
 
 test('new enemies arrive gradually and recovery levels reduce pressure', () => {
-  const firstAppearances = { skeleton: 1, zombie: 3, spider: 12, ghost: 22, greenZombie: 30, vampire: 42, golem: 51, miniGolem: 61, werewolf: 62, miniKingKong: 71, wolfPup: 74, fireDragon:81, windDragon:81, iceDragon:84, earthDragon:84, lightningDragon:87, lionMan:91, medusa:91, goatman:91 };
+  const firstAppearances = { skeleton: 1, zombie: 3, spider: 12, ghost: 22, greenZombie: 30, vampire: 42, golem: 51, miniGolem: 61, werewolf: 62, miniKingKong: 71, wolfPup: 74, fireDragon:81, windDragon:81, iceDragon:84, earthDragon:84, lightningDragon:87, lionMan:91, medusa:91, goatman:91, minotaurCalf:101,parasite:113,littleTurtle:121,abyssCrow:131,lanternSkeleton:136,clayGuard:141,ancientHand:144,tombSpirit:146 };
   Object.entries(firstAppearances).forEach(([type, id]) => {
     assert.equal(campaign.levels.find(level => level.types.includes(type)).id, id);
   });
-  campaign.levels.filter(level => level.recovery).forEach(level => {
+  campaign.levels.filter(level => !level.abyss && level.recovery).forEach(level => {
     const previous = campaign.getLevel(level.id - 1);
     assert.ok(level.spawnInterval > previous.spawnInterval, `level ${level.id} spawn recovery`);
     assert.ok(level.maxAlive <= previous.maxAlive, `level ${level.id} concurrent recovery`);
@@ -117,7 +119,8 @@ test('finite ammunition grows with enemy durability and remains collectible', ()
     assert.ok(Number.isInteger(level.ammoCapacity) && level.ammoCapacity >= level.initialAmmo);
     assert.ok(Number.isInteger(level.ammoPerCrate) && level.ammoPerCrate >= 5 && level.ammoPerCrate < level.ammoCapacity);
     assert.ok(level.ammoInterval >= 4.3 && level.ammoInterval <= 5.8);
-    assert.ok(level.initialAmmo < level.target, `level ${level.id} requires collecting supplies`);
+    const basicDemand=Array.from({length:level.target},(_,i)=>campaign.createEnemy(level.types[i%level.types.length],level,'normal',-1,()=>.5).health).reduce((sum,hp)=>sum+hp,0);
+    assert.ok(level.initialAmmo < basicDemand, `level ${level.id} requires collecting supplies`);
     ['story', 'normal', 'hard'].forEach(difficulty => {
       const settings = campaign.tuning(difficulty);
       const crate = Math.max(1, Math.round(level.ammoPerCrate * settings.ammoMultiplier));
@@ -132,7 +135,10 @@ test('finite ammunition grows with enemy durability and remains collectible', ()
       // Include phase refills and real weapon damage: aerial rounds deal two
       // HP; Lang Vương's sniper exchanges five rounds for five HP. Chimera's
       // three final bodies contribute another 30 + 20 + 40 ground HP.
-      const bossDemand = level.id === 80 ? Math.ceil(bossHealth / 2) * 2
+      const bossDemand = level.id === 130 ? bossHealth * 2
+        : level.id === 140 ? bossHealth + context.MM.AbyssConfig.combat.roc.knightHealth
+        : level.id === 150 ? Math.ceil(bossHealth * 1.5)
+        : level.id === 80 ? Math.ceil(bossHealth / 2) * 2
         : level.id === 90 ? Math.ceil(bossHealth / 2) + bossHealth
         : level.id === 100 ? Math.ceil(bossHealth / 2) + Math.ceil((bossHealth - 10) / 2) + 90
         : bossHealth + (level.id === 70 ? Math.ceil(bossHealth / 2) : 0);
@@ -153,7 +159,7 @@ test('original enemy skills progress with the campaign and Dracula combines skil
   assert.equal(campaign.enemyTypes.vampire.ability, 'bat-morph');
   assert.equal(campaign.getLevel(1).abilitySpawnEvery, 0);
   assert.equal(campaign.getLevel(3).abilitySpawnEvery, 4);
-  campaign.levels.forEach(level => {
+  campaign.levels.filter(level=>!level.abyss).forEach(level => {
     assert.ok([0, 3, 4].includes(level.abilitySpawnEvery));
     assert.ok(level.abilityWarning >= 1.5);
     assert.ok(level.abilityInterval >= 6.5);
@@ -340,7 +346,8 @@ test('elapsed attack pressure has gradual world transitions and conservative cap
       const bossCap = 1 + (level.bossPressureCap - 1) * settings.pressureMultiplier;
       assert.ok(enemyCap < 1.8 && bossCap < 2.02);
       assert.ok(1 + 0.35 * (bossCap - 1) < 1.36, 'bounded pressure movement growth');
-      assert.ok(level.abilityInterval / bossCap >= 3.25, 'skills retain time for reactions');
+      if(level.abyss)assert.equal(level.abilityInterval,context.MM.AbyssConfig.campaign.abilityInterval,'new fixed skill cadence lives in the shared Abyss configuration');
+      else assert.ok(level.abilityInterval / bossCap >= 3.25, 'original skills retain time for reactions');
     });
   });
   assert.equal(campaign.tuning('story').pressureMultiplier, 0.75);

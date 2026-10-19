@@ -134,7 +134,7 @@ test('Two jump taps before the next frame upgrade its impulse without granting a
 
 function specializedFixture() {
   const context=vm.createContext({});
-  for(const file of ['campaign.js','bosses.js','golem.js','wolves.js','kong.js','dragons.js','mythic.js','game.js'])
+  for(const file of ['abyss-config.js','campaign.js','bosses.js','golem.js','wolves.js','kong.js','dragons.js','mythic.js','game.js'])
     vm.runInContext(fs.readFileSync(path.join(__dirname,'../js',file),'utf8'),context,{filename:file});
   const g=new context.MM.Game({headless:true,storage:{getItem(){return null;},setItem(){}},random:()=>.5});
   g.start(95);g.spawnTimer=g.ammoTimer=10000;g.player.health=g.player.maxHealth=100;

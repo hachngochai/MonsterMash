@@ -8,8 +8,8 @@ const MILESTONES=[10,20,30,40,50,60,70,80,90,100];
 const plain=value=>JSON.parse(JSON.stringify(value));
 function fresh({level=1,rewards=MILESTONES.filter(id=>id!==40),equipped='gun',data}={}) {
   const context=vm.createContext({});
-  for(const name of ['campaign','bosses','golem','wolves','kong','dragons','mythic',
-    'save-manager','boss-manager','map-manager','skill-manager','weapon-manager','input-manager','game']) {
+  for(const name of ['abyss-config','campaign','bosses','golem','wolves','kong','dragons','mythic',
+    'key-bindings','save-manager','boss-manager','map-manager','skill-manager','weapon-manager','input-manager','game']) {
     vm.runInContext(fs.readFileSync(path.join(__dirname,'../js',name+'.js'),'utf8'),context,{filename:name+'.js'});
   }
   const records=new Map(),writes=[];
@@ -87,12 +87,12 @@ test('V3 real Game: map 70 suppresses saved axes but retains the independent non
   assert.equal(MM.WeaponManager.current(g),'axes');assert.ok(g.progression.rewards.includes(100));
 });
 
-test('V3 real Game: first map 70 attempt grants its sniper exception at exactly 0.5 seconds without permanent rewards',()=>{
+test('V3 real Game: first map 70 attempt grants its automatic sniper at normal cadence without permanent rewards',()=>{
   const {g,MM}=fresh({level:70,rewards:[]}),wolf=stationary(g,{type:'boss',x:780});
   Object.assign(wolf,{archetype:'werewolf',bloodMoon:true,wolfState:'approach'});
   g.player.ammo=20;assert.equal(g.shoot(1),true);assert.equal(g.player.ammo,15);
   assert.equal(g.bullets[0].damage,5);assert.equal(g.bullets[0].kind,'sniper');
-  advance(g,.49);assert.equal(g.shoot(1),false);advance(g,.01);assert.equal(g.shoot(1),true);
+  advance(g,.16);assert.equal(g.shoot(1),false);advance(g,.01);assert.equal(g.shoot(1),true);
   assert.equal(g.player.ammo,10);assert.deepEqual(plain(g.progression.rewards),[]);
   g.start(71);assert.equal(MM.WeaponManager.profile(g).kind,'normal');
 });
@@ -102,6 +102,53 @@ test('V3 real Game: a stray Blood Moon wolf outside map 70 cannot grant sniper o
   Object.assign(wolf,{boss:true,archetype:'werewolf',bloodMoon:true,wolfState:'approach'});
   assert.equal(MM.WeaponManager.profile(g).kind,'normal');pair(g);
   assert.equal(g.player.rollTime,0);assert.equal(g.rollSlash,null);
+});
+
+test('map70 mobile dash buttons work in either direction and never grant axes damage',()=>{
+  for(const dir of [-1,1])for(const controls of ['both','buttons','gestures']) {
+    const {g}=fresh({level:70,equipped:'axes'}),wolf=stationary(g,{type:'boss',x:780});
+    Object.assign(wolf,{archetype:'werewolf',bloodMoon:true,wolfState:'approach'});g.settings.controls=controls;
+    const x=g.player.x,hp=wolf.health;pad(g,dir<0?'dash-left':'dash-right');
+    assert.equal(g.player.rollDir,dir);assert.ok(g.player.rollTime>0);assert.equal(g.rollSlash,null);
+    advance(g,.34);assert.ok((g.player.x-x)*dir>200);assert.equal(wolf.health,hp);
+  }
+});
+
+test('mobile dash does not interrupt a held firing pointer: auto fire resumes when the evade ends',()=>{
+  const {g}=fresh({level:70}),wolf=stationary(g,{type:'boss',x:850});
+  Object.assign(wolf,{archetype:'werewolf',bloodMoon:true,wolfState:'approach'});
+  g.player.ammo=g.player.maxAmmo=100;
+  const fire={dataset:{control:'fire-right'},classList:{add(){},remove(){}}};
+  const event={pointerId:7,preventDefault(){}};g.padDown(event,fire);
+  pad(g,'dash-left',8);advance(g,.25);assert.equal(g.player.ammo,95);
+  advance(g,.3);assert.ok(g.player.ammo<=85,'held fire automatically restarts after rolling');
+  g.padUp(event,fire);const remaining=g.player.ammo;advance(g,.4);assert.equal(g.player.ammo,remaining);
+});
+
+test('real keyboard uses physical event timing after remapping, without OS repeats manufacturing a double tap',()=>{
+  const {g,MM}=fresh({level:70}),wolf=stationary(g,{type:'boss',x:850});
+  Object.assign(wolf,{archetype:'werewolf',bloodMoon:true,wolfState:'approach'});
+  MM.KeyBindings.set(g,'right','KeyE');
+  const event=(timeStamp,repeat=false)=>({code:'KeyE',timeStamp,repeat,preventDefault(){}});
+  g.keyDown(event(1000));g.keyDown(event(1200,true));assert.equal(g.player.rollTime,0);
+  g.keyUp(event(1250));g.keyDown(event(1340));assert.ok(g.player.rollTime>0);
+  assert.equal(g.player.rollDir,1);assert.equal(g.rollSlash,null);
+  g.clearInputs();g.player.rollTime=g.player.rollCooldown=0;
+  g.keyDown(event(2000));g.keyUp(event(2010));g.update(.05);
+  g.keyDown(event(2420));assert.equal(g.player.rollTime,0,'slow frames cannot make an old press look recent');
+});
+
+test('map70 accepts a near-ready dash once and clears its buffer on pause or phase exit',()=>{
+  for(const cancel of [false,'pause','phase']) {
+    const {g}=fresh({level:70}),wolf=stationary(g,{type:'boss',x:850});
+    Object.assign(wolf,{archetype:'werewolf',bloodMoon:true,wolfState:'approach'});
+    g.player.rollCooldown=.1;pad(g,'dash-left');assert.ok(g.inputState.pendingDash);
+    if(cancel==='pause')g.togglePause();else if(cancel==='phase')wolf.bloodMoon=false;
+    advance(g,.16);
+    assert.equal(g.inputState.pendingDash,null);
+    assert.equal(g.player.rollTime>0,!cancel);
+    if(!cancel){advance(g,1);assert.equal(g.player.rollTime,0,'one buffered press cannot repeat a dash');}
+  }
 });
 
 test('V3 real Game: Darken enhances only one of three independent bone hits and five independent arrows',()=>{

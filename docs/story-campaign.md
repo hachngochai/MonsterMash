@@ -1,3 +1,5 @@
+> v4.0.0: chính sách reset chuyến đi trong tài liệu lịch sử này đã được thay bằng lưu vĩnh viễn toàn bộ tiến độ, kỹ năng và vũ khí theo lựa chọn mới của người chơi. Xem [chương III](ancient-abyss.md).
+
 # Bản đồ cốt truyện — v3.2.0
 
 ## Hai miền đất

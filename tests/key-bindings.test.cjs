@@ -1,6 +1,6 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
-function fresh(saved){const c=vm.createContext({});for(const file of ['campaign','key-bindings','save-manager','boss-manager','map-manager','skill-manager','weapon-manager','input-manager','game'])vm.runInContext(fs.readFileSync(path.join(__dirname,'../js',file+'.js'),'utf8'),c);let value=JSON.stringify(saved||{});const storage={getItem:()=>value,setItem(_k,v){value=v;}};const g=new c.MM.Game({headless:true,storage,newRun:true});g.start(1);g.spawnTimer=g.ammoTimer=10000;return {g,MM:c.MM,storage};}
+function fresh(saved){const c=vm.createContext({});for(const file of ['abyss-config','campaign','key-bindings','save-manager','boss-manager','map-manager','skill-manager','weapon-manager','input-manager','game'])vm.runInContext(fs.readFileSync(path.join(__dirname,'../js',file+'.js'),'utf8'),c);let value=JSON.stringify(saved||{});const storage={getItem:()=>value,setItem(_k,v){value=v;}};const g=new c.MM.Game({headless:true,storage,newRun:true});g.start(1);g.spawnTimer=g.ammoTimer=10000;return {g,MM:c.MM,storage};}
 const key=(code,extra={})=>({code,repeat:false,preventDefault(){},...extra});
 test('WASD-style mappings drive real movement, jump, shooting and key release without old arrow bindings',()=>{
  const {g,MM}=fresh(),K=MM.KeyBindings;g.settings.keyBindings={...K.defaults,left:'KeyA',right:'KeyD',jump:'KeyW',shootLeft:'KeyJ',shootRight:'KeyL',aimHigh:'KeyI',aimGround:'KeyK'};
