@@ -31,6 +31,7 @@
     const newChapter=Campaign.levels.length>previousSize&&resume===previousSize&&completed.includes(previousSize);
     return {
       version: 2, campaignSize:Campaign.levels.length, completed, progression:raw.progression,
+      guidesSeen:MM.Tutorial?.normalizeSeen(raw.guidesSeen)||[],
       resume: newChapter?previousSize+1:resume,
       best: valid(raw.best) ? Math.floor(raw.best) : 0,
       settings: { difficulty: ['story','normal','hard'].includes(settings.difficulty) ? settings.difficulty : 'normal', controls: ['both','gestures','buttons'].includes(settings.controls) ? settings.controls : 'both', sound: settings.sound === true, effects: settings.effects !== false, reducedMotion: settings.reducedMotion === true, keyBindings:MM.KeyBindings?.normalize(settings.keyBindings)||settings.keyBindings }
@@ -60,8 +61,18 @@
       try { this.storage = options.storage || root.localStorage; } catch { this.storage = null; }
       this.save = readSave(this.storage);
       // A page entry is a fresh expedition. Settings and the personal best remain.
-      if(options.newRun===true){this.save.completed=[];this.save.resume=1;this.save.progression={version:1,rewards:[],equipped:'gun',lifeKills:0};}
+      if(options.newRun===true){this.save.completed=[];this.save.resume=1;this.save.guidesSeen=[];this.save.progression={version:1,rewards:[],equipped:'gun',lifeKills:0};}
       this.progression = MM.SaveManager?.normalize(this.save.progression,this.save.completed);
+      // Local play builds are a sandbox: all milestone rewards are available
+      // for testing, but this temporary inventory must never enter the save.
+      const localHost=['localhost','127.0.0.1','[::1]'].includes(root.location?.hostname);
+      const testOverride=options.testMode===true || (!this.headless && localHost && root.location?.search!=='?test=off');
+      this.testMode=testOverride;
+      if(testOverride&&this.progression){
+        this.progression.rewards=[...(MM.SaveManager?.milestones||[])];
+        this.progression.equipped='gun';
+        this.progression.lifeKills=0;
+      }
       if(this.progression)this.save.progression=this.progression;
       this.settings = this.save.settings;
       if (!this.headless && root.matchMedia?.('(prefers-reduced-motion: reduce)').matches) this.settings.reducedMotion = true;
@@ -85,6 +96,10 @@
         this.ui = {}; document.querySelectorAll('[id]').forEach(node => this.ui[node.id] = node);
         this.mobileView = MM.MobileView ? new MM.MobileView(this, root) : null;
         this.bind(); this.buildMap(); this.syncSettings(); this.updateUI(); this.resize();
+        if(this.testMode){
+          const badge=document.createElement('div');badge.className='test-mode-badge';badge.textContent='CHẾ ĐỘ THỬ · ĐÃ MỞ KHÓA TOÀN BỘ';badge.setAttribute('role','status');
+          document.querySelector('.app')?.append(badge);
+        }
         this.frame = this.frame.bind(this);
         (MM.Typography?.ready || Promise.resolve()).then(() => {
           this.resize(); this.raf = root.requestAnimationFrame(this.frame);
@@ -95,8 +110,9 @@
       const ammo=Math.max(1,Math.round((this.level.initialAmmo||3)*(this.tuning.ammoMultiplier||1)));
       return {x:W/2,y:GROUND,w:38,h:54,dir:1,vx:0,vy:0,grounded:true,health,maxHealth:this.tuning.health,ammo,maxAmmo:this.level.ammoCapacity||18,shieldTime:0,shieldHits:0,invulnerable:1.5,shotTimer:0,shotCooldown:.17,weaponMode:'normal',dryCooldown:0,jumpBuffer:0,coyote:.1,stunTime:0,stunGrace:0,stunStyle:'web',knockdownTime:0,rollTime:0,rollCooldown:0,rollDuration:.32,rollProgress:0,rollDir:1,petrifyTime:0,petrifyGrace:0,burnTime:0,burnTick:1};
     }
-    persist() { if(this.progression)this.save.progression=this.progression;try { this.storage?.setItem(SAVE_KEY,JSON.stringify(this.save)); } catch { /* Game remains playable without localStorage. */ } }
+    persist() { if(this.progression)this.save.progression=this.progression;if(this.testMode)return;try { this.storage?.setItem(SAVE_KEY,JSON.stringify(this.save)); } catch { /* Game remains playable without localStorage. */ } }
     start(id = this.save.resume, options = {}) {
+      MM.Tutorial?.cancel(this);
       MM.AbyssCombat?.reset(this);
       const {carry = false, retry = false} = options;
       const oldHealth = this.player.health, oldAmmo=this.player.ammo;
@@ -129,8 +145,10 @@
         this.canvas.focus({preventScroll:true});
       }
       this.updateUI();
+      MM.Tutorial?.onStart(this,options);
     }
     goHome() {
+      MM.Tutorial?.cancel(this);
       MM.AbyssCombat?.reset(this);
       MM.InputManager?.close(this,false);
       this.save.best = Math.max(this.save.best,this.score); this.persist();
@@ -859,7 +877,7 @@
       this.canvas.addEventListener('pointerdown',event=>this.pointerDown(event));this.canvas.addEventListener('pointermove',event=>this.pointerMove(event));this.canvas.addEventListener('pointerup',event=>this.pointerUp(event));this.canvas.addEventListener('pointercancel',event=>this.pointerUp(event,true));this.canvas.addEventListener('lostpointercapture',event=>this.pointerUp(event,true));this.canvas.addEventListener('contextmenu',event=>event.preventDefault());
       this.ui['start-button'].addEventListener('click',()=>MM.StoryUI?MM.StoryUI.open(this):this.start());this.ui['pause-button'].addEventListener('click',()=>this.togglePause());this.ui['shield-button'].addEventListener('click',()=>{this.shieldAction();this.canvas.focus({preventScroll:true});});
       this.ui['result-primary'].addEventListener('click',()=>this.resultAction?.());this.ui['result-home'].addEventListener('click',()=>this.goHome());this.ui.brand.addEventListener('click',event=>{event.preventDefault();this.goHome();});
-      ['open-levels','home-levels'].forEach(id=>this.ui[id].addEventListener('click',()=>{this.buildMap();this.openDialog('levels-dialog');}));this.ui['open-help'].addEventListener('click',()=>this.openDialog('help-dialog'));this.ui['open-settings'].addEventListener('click',()=>this.openDialog('settings-dialog'));
+      ['open-levels','home-levels'].forEach(id=>this.ui[id].addEventListener('click',()=>{this.buildMap();this.openDialog('levels-dialog');}));this.ui['open-help'].addEventListener('click',()=>{MM.Tutorial?.focusHelp(this);this.openDialog('help-dialog');});this.ui['open-settings'].addEventListener('click',()=>this.openDialog('settings-dialog'));
       document.querySelectorAll('[data-close]').forEach(button=>button.addEventListener('click',()=>button.closest('dialog').close()));this.ui['help-done'].addEventListener('click',()=>this.ui['help-dialog'].close());
       document.querySelectorAll('dialog').forEach(dialog=>dialog.addEventListener('close',()=>{this.clearInputs();if(this.screen==='paused')this.showResult();}));
       this.ui.difficulty.addEventListener('change',event=>{this.settings.difficulty=event.target.value;this.persist();});
@@ -874,6 +892,7 @@
       MM.ProgressionUI?.bind(this);
       MM.StoryUI?.bind(this);
       MM.KeyBindings?.bind(this);
+      MM.Tutorial?.bind(this);
       this.ui['open-install-help']?.addEventListener('click',()=>{this.ui['settings-dialog'].close();this.openDialog('ios-install-dialog');});
     }
   }

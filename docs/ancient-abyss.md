@@ -7,7 +7,7 @@ Chương III thêm màn 101–150, giữ nguyên dữ liệu của 100 màn đ�
 - `js/abyss-config.js`: số cố định và toàn bộ thông số cân bằng thử nghiệm.
 - `js/abyss-combat.js`: 8 quái thường, 5 boss, chuyển dạng, bẫy, ảo giác, đảo điều khiển, trọng lực ngược, mê cung và phân thân. Chi tiết ở [abyss-combat.md](abyss-combat.md).
 - `js/abyss-renderer.js`: 5 bối cảnh, sprite theo ảnh mẫu, đuốc, phát quang, cảnh báo và hiệu ứng.
-- `assets/sprites/abyss/`: 6 PNG nền trong suốt gồm Minotaur, Hoa Quỷ, Rùa Kính, Cổ Điểu, kỵ sĩ và 4 cảm xúc trong một sheet.
+- `assets/sprites/abyss/`: 7 PNG nền trong suốt gồm Minotaur, Hoa Quỷ, Rùa Kính, Cổ Điểu, kỵ sĩ, quái xương chim cầm đèn lồng và 4 cảm xúc trong một sheet. Xem [model đèn lồng và prompt tạo hình](lantern-sentinel.md).
 - `assets/backgrounds/abyss/`: 5 ảnh nền chi tiết từ concept, đã bỏ nhân vật/chữ. Đo riêng mép nền từng ảnh để mặt sàn trùng y=438; lớp xa chuyển động nhẹ, mặt đất đứng yên. Có tàn lửa, bào tử, phản chiếu nước, bụi và sương phù hợp từng vùng.
 - `js/campaign.js`, `js/story.js`, `js/atlas-3d.js`, `index.html`, `style.css`: 150 màn, cốt truyện III, bản đồ và thao tác vuốt.
 - `js/game.js`, `js/skill-manager.js`, `js/weapon-manager.js`, `js/input-manager.js`, `js/key-bindings.js`: tích hợp vòng lặp combat, vật lý, vũ khí mới, điều khiển ngược và miễn chọn nhầm hình chiếu boss khi Hóa Đá.

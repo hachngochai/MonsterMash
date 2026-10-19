@@ -13,7 +13,7 @@
   let visualSeed = 0;
   // Each image is decoded once. Native drawings stay visible until its artwork
   // has loaded, and remain the fallback if an image cannot be decoded.
-  const spriteFiles={minotaur:'minotaur.png',flower:'flower.png',turtle:'turtle.png',deity:'thousand-hands.png',roc:'fossil-roc.png',knight:'roc-knight.png'};
+  const spriteFiles={minotaur:'minotaur.png',flower:'flower.png',turtle:'turtle.png',deity:'thousand-hands.png',roc:'fossil-roc.png',knight:'roc-knight.png',lantern:'lantern-sentinel.png'};
   const spriteEntries=Object.fromEntries(Object.keys(spriteFiles).map(key=>[key,{image:null,ready:false}]));
   const scriptURL=typeof document!=='undefined'?document.currentScript?.src:null;
   const spriteBase=scriptURL&&typeof URL==='function'?new URL('../assets/sprites/abyss/',scriptURL).href:'assets/sprites/abyss/';
@@ -53,7 +53,8 @@
     flower:{size:[1671,941],rect:[14,46,1655,865],pivot:.5},
     turtle:{size:[1774,887],rect:[2,27,1772,848],pivot:.5},
     roc:{size:[1529,1029],rect:[11,11,1487,1008],pivot:.52},
-    knight:{size:[1315,1196],rect:[42,6,1260,1175],pivot:.5}
+    knight:{size:[1315,1196],rect:[42,6,1260,1175],pivot:.5},
+    lantern:{size:[1315,1197],rect:[0,76,1287,1121],pivot:.48}
   };
   const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
   const chapter = g => {
@@ -428,6 +429,22 @@
       if(kind==='lantern'){rect(c,-3,-80,6,6,'#352c3c',null);for(let i=0;i<4;i++)rect(c,-10+i*6,-72,3,6,'#423447',null);}
     }
   }
+  function lanternSentinel(c,e,t){
+    const stone='#352c43',bone='#cfb69a',violet='#b956ff',stride=Math.sin(t*9.2)*(Math.abs(e.vx||0)>5?4:0);
+    for(let i=0;i<4;i++)poly(c,[[-17,-90+i*12],[-42-i*2,-78+i*12],[-51,-45+i*9],[-24,-57+i*10]],i%2?stone:'#5a3b78',INK,2);
+    for(const side of [-1,1]){const x=side<0?-17:5;block(c,x,-33+side*stride,15,28,stone,bone,'#251d32');poly(c,[[x-4,-8+side*stride],[x+12,-10+side*stride],[x+24,side*stride],[x-6,side*stride]],bone,INK,2);}
+    poly(c,[[-24,-76],[-10,-85],[13,-79],[24,-60],[17,-31],[-18,-31]],stone,INK,2.5);
+    for(let i=0;i<3;i++)line(c,[[-16,-69+i*9],[-1,-62+i*8],[14,-66+i*8]],bone,4);
+    gem(c,0,-60,8,violet,'#f1c8ff');
+    block(c,-31,-73,17,17,stone,bone,'#2b2038');line(c,[[-25,-57],[-23,-32]],stone,11);rect(c,-31,-36,17,12,bone);
+    line(c,[[17,-67],[31,-52],[46,-65]],stone,12);line(c,[[18,-69],[31,-56],[46,-68]],bone,5);rect(c,40,-72,15,13,bone);
+    c.save();c.translate(48,-61);c.rotate(Math.sin(t*3)*.06);line(c,[[0,0],[0,17]],'#a58aa9',2.5);
+    glow(c,0,33,25,violet,.3);poly(c,[[0,12],[16,24],[13,47],[0,53],[-14,47],[-17,24]],stone,INK,2);
+    gem(c,0,32,13,violet,'#f5d6ff');for(const x of [-12,12])line(c,[[x,22],[x,46]],bone,3);rect(c,-17,20,34,5,bone);rect(c,-16,45,32,5,bone);c.restore();
+    poly(c,[[-22,-96],[-5,-110],[14,-104],[28,-89],[38,-81],[21,-77],[13,-65],[-11,-72]],bone,INK,2.5);
+    poly(c,[[23,-92],[40,-86],[35,-72],[28,-80],[18,-82]],bone,INK,2);poly(c,[[-20,-95],[-35,-110],[-9,-103]],stone,INK,2);
+    eyes(c,8,-91,1,violet,6,true);
+  }
   function flowerBeast(c,e,t){
     const shade=e.flowerIllusion||e.abyssClone?'#bb9dcb':'#bbaa93',roots='#554036';
     const boneTell=e.abyssState==='tell'&&e.abyssSkill==='roots';
@@ -520,6 +537,7 @@
     if(type==='thousandHands')return 'deity';
     if(type==='fossilRoc')return e.abyssForm==='knight'||e.rocForm==='knight'||e.form==='knight'?'knight':'roc';
     if(type==='abyssCrow')return 'roc';
+    if(type==='lanternSkeleton')return 'lantern';
     return null;
   }
   function visualPose(e,t,air){
@@ -545,6 +563,11 @@
   }
   function spriteParts(key,pose){
     const stride=Math.sin(pose.phase)*pose.move;
+    if(key==='lantern')return [
+      {points:[[.19,.77],[.42,.77],[.44,1],[.18,1]],pivot:[.34,.78],angle:stride*.12,offset:[stride*.014,-Math.max(0,stride)*.028]},
+      {points:[[.51,.75],[.68,.75],[.70,.88],[.82,.94],[.82,1],[.50,1]],pivot:[.57,.76],angle:-stride*.12,offset:[-stride*.014,-Math.max(0,-stride)*.028]},
+      {points:[[.76,.43],[1,.43],[1,.88],[.76,.88]],pivot:[.85,.35],angle:Math.sin(pose.phase*.5)*.035}
+    ];
     if(key==='roc')return [
       {points:[[0,0],[.44,0],[.49,.45],[.33,.71],[0,.66]],pivot:[.44,.44],angle:Math.sin(pose.phase)*.075},
       {points:[[.64,.22],[1,.23],[1,.79],[.62,.72],[.55,.47]],pivot:[.61,.48],angle:-Math.sin(pose.phase)*.075}
@@ -641,7 +664,8 @@
     // The knight's tall scythe extends above its head; size the full sprite so
     // its actual body remains comparable to the original knight hitbox.
     let height=h*(key==='knight'?1.65:boss?1.13:1.08),width=height*aspect;
-    if(!boss){width=Math.min(width,w*(type==='abyssCrow'?1.75:1.45));height=width/aspect;}
+    if(key==='lantern'){height=h*1.16;width=height*aspect;}
+    if(!boss){width=Math.min(width,w*(type==='abyssCrow'?1.75:key==='lantern'?1.85:1.45));height=width/aspect;}
     const effects=motion(g)&&!(e.petrifiedTime>0);
     const air=type==='abyssCrow'||type==='fossilRoc'&&key==='roc';
     const pose=effects?visualPose(e,t,air):{phase:0,move:0,tilt:0,bob:0};
@@ -653,6 +677,11 @@
     if(e.emotionProjection)c.globalAlpha*=e.emotion==='rage'?.82:.38;
     if(e.hit>0&&effects)c.globalAlpha*=.9+.1*Math.cos(t*24);
     if(e.petrifiedTime>0)c.filter='grayscale(1)';
+    if(key==='lantern'&&effects){
+      const pulse=.17+Math.sin(t*4)*.035,casting=e.abyssState==='tell';
+      glow(c,width*(.86-pivot),-height*.34,height*(casting?.4:.23),'#b958ff',casting?.42:pulse);
+      if(casting)ring(c,width*(.86-pivot),-height*.34,height*(.22+(e.abyssProgress||0)*.22),height*.17,'#d4a5ff88',1);
+    }
     if(key==='minotaur'&&e.minotaurRage&&e.abyssState==='charge'&&effects){
       for(let i=0;i<5;i++){
         const yy=-height*(.28+i*.12),reach=15+i%3*12;
@@ -695,7 +724,7 @@
       else if(type==='flowerDemon')flowerBeast(c,e,walkTime);
       else if(type==='fossilRoc')roc(c,e,walkTime);
       else if(type==='thousandHands')thousand(c,e,walkTime);
-      else if(type==='lanternSkeleton')humanoid(c,e,walkTime,'#665a6c','#c5b69e','#c087f5','lantern');
+      else if(type==='lanternSkeleton')lanternSentinel(c,e,walkTime);
       else if(type==='clayGuard')humanoid(c,e,walkTime,'#8a715a','#bd9e74','#eac17d','guard');
       else if(type==='ancientHand')hand(c,e,walkTime);
       else spirit(c,e,walkTime);

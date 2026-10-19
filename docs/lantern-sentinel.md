@@ -1,0 +1,11 @@
+# Quái đèn lồng · concept Hóa Thạch Sí Vũ
+
+Asset: `assets/sprites/abyss/lantern-sentinel.png`, PNG RGBA 1315 × 1197, alpha thật. Tạo bằng công cụ imagegen tích hợp, dựa trên `roc-knight.png` và `fossil-roc.png` trong repo. Ảnh gốc được giữ nguyên; renderer cắt vùng trong suốt theo tọa độ nguồn.
+
+Đầu xương chim màu ngà, giáp hóa thạch tím than, lông cánh gập và đèn pha lê tím. Vẫn dùng actor `lanternSkeleton`, kích thước va chạm 40 × 57, hai kỹ năng hoán đổi/đảo hướng mỗi 6 giây. Renderer thêm nhịp bước chân, đèn đung đưa và ánh sáng lúc chuẩn bị chiêu; không sửa HP, sát thương hoặc nhịp kỹ năng. Nét vẽ Canvas cùng concept là dự phòng khi ảnh chưa tải được.
+
+## Prompt cuối cùng
+
+```text
+Use case: stylized-concept. Asset type: finished transparent 2D side-scrolling game enemy sprite. The two input images are STYLE AND FACTION REFERENCES ONLY: the Hóa Thạch Sí Vũ fossil bird boss and its bird-headed knight. Create ONE new regular lantern-bearing skeletal fossil-bird sentinel in exactly this angular, hand-painted, low-poly outlined fantasy game concept. Full body, standing biped three-quarter side view FACING RIGHT, feet grounded, head and torso silhouette clear at tiny gameplay sizes. Avian ivory-beige hooked beak skull, one glowing violet eye, dark charcoal-purple cracked fossil stone armor, recognizable ribcage, a few small folded jagged fossil wing feathers on back, skeletal claw feet. One extended hand in front holds a hanging antique stone-and-bone LANTERN on a short chain with a large bright purple crystal flame inside. Lantern is the main readable identity, do not give it any axe, sword, scythe or staff. This is a smaller normal enemy, not a boss: simple compact silhouette and restrained decorations, no enormous wings, no crown. Neutral walk-ready pose, legs distinct and separated, lantern visibly separate from body. Match the beige bone, dark violet stone and luminous magenta crystal palette and chunky black contours of references. No scene, text, platform, ground, border, watermark or extra figures. Center entire character with generous clear transparent padding. Actual alpha transparent background; preserve translucent violet glow tightly around lantern, do not use a checkerboard illustration or opaque colored rectangle.
+```

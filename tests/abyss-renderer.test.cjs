@@ -126,13 +126,13 @@ test('Flower Demon stomp, root lash, bone sweep and flower bite match distinct h
  }
  assert.equal(new Set(hashes).size,4);
 });
-test('all six reference art assets are shipped and preload safely without a document',async()=>{
+test('all seven reference art assets are shipped and preload safely without a document',async()=>{
  const requested=[];
  class ImageStub{
   set src(value){this.width=1536;this.height=1024;requested.push(value);this.onload();}
  }
  const {A}=fixture({Image:ImageStub});await A.spriteReady;
- assert.equal(A.spriteManifest.length,6);assert.equal(requested.length,A.spriteManifest.length+A.backgroundManifest.length);
+ assert.equal(A.spriteManifest.length,7);assert.equal(requested.length,A.spriteManifest.length+A.backgroundManifest.length);
  for(const file of A.spriteManifest){assert.ok(fs.statSync(file).size>1000);assert.ok(requested.some(url=>url.startsWith(file+'?')));}
  assert.equal(Object.values(A.spriteEntries).every(entry=>entry.ready),true);
  const fallback=fixture();await fallback.A.spriteReady;
@@ -140,7 +140,7 @@ test('all six reference art assets are shipped and preload safely without a docu
 });
 test('ready transparent reference sprites replace native bodies and retain their full aspect ratio',()=>{
  const {A,ctx,logs,game,depth}=fixture();game.settings.effects=false;
- const pairs=[['minotaurLord','minotaur'],['flowerDemon','flower'],['mirrorTurtle','turtle'],['fossilRoc','roc'],['thousandHands','deity'],['minotaurCalf','minotaur'],['littleTurtle','turtle'],['abyssCrow','roc']];
+ const pairs=[['minotaurLord','minotaur'],['flowerDemon','flower'],['mirrorTurtle','turtle'],['fossilRoc','roc'],['thousandHands','deity'],['minotaurCalf','minotaur'],['littleTurtle','turtle'],['abyssCrow','roc'],['lanternSkeleton','lantern']];
  for(const [type,key] of pairs){
   const source={width:key==='deity'?2172:1536,height:key==='deity'?724:1024};A.setSprite(key,source);logs.length=0;
   A.drawEnemy(ctx,game,{type,x:400,y:438,w:150,h:180,health:10,maxHealth:10,boss:type.endsWith('Lord')||type==='flowerDemon'||type==='mirrorTurtle'||type==='fossilRoc'||type==='thousandHands',dir:1});

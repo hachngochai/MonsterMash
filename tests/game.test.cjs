@@ -104,6 +104,20 @@ test('typing in UI controls does not move or shoot the player', () => {
   assert.equal(game.keys.size, 0);
 });
 
+test('local test mode unlocks every milestone without changing the saved expedition',()=>{
+  const records=new Map([['monster-mash-v2',JSON.stringify({resume:8,completed:[1,2],progression:{version:1,rewards:[10],equipped:'bones',lifeKills:4}})]]);
+  let writes=0;
+  const store={getItem:key=>records.get(key)||null,setItem:(key,value)=>{writes++;records.set(key,value);}};
+  const MM=loadGame({},context=>vm.runInContext(fs.readFileSync(path.join(__dirname,'../js/save-manager.js'),'utf8'),context,{filename:'save-manager.js'}));
+  const game=new MM.Game({headless:true,testMode:true,storage:store});
+  assert.deepEqual(Array.from(game.progression.rewards),Array.from(MM.SaveManager.milestones));
+  for(const weapon of ['gun','bones','club','bow','spear','axes','hammer','scythe'])assert.equal(MM.SaveManager.weaponUnlocked(game,weapon),true);
+  game.start(150);game.persist();
+  assert.equal(writes,0,'test-mode writes never reach local storage');
+  assert.deepEqual(JSON.parse(records.get('monster-mash-v2')).progression.rewards,[10]);
+  assert.deepEqual(JSON.parse(records.get('monster-mash-v2')).completed,[1,2]);
+});
+
 test('touch taps shoot by canvas half after coordinate scaling', () => {
   const { game } = fresh();
   game.canvas = { focus() {}, getBoundingClientRect: () => ({ left: 100, top: 50, width: 480, height: 270 }) };
