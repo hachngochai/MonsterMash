@@ -114,7 +114,7 @@
       'Ở nửa máu, boss hồi đầy đúng một lần và mở Mê Cung Luân Hồi. Cảm xúc đổi mỗi 15 giây; chỉ hình chiếu Nộ chuyển sát thương vào thanh máu thật.',
       'Quan sát gương mặt và hiệu ứng màu, tìm đúng hình chiếu Nộ. Hạ thanh máu chung để kết thúc cốt truyện III.'
     ],reward:'Mốc 150 hoàn thành Vực Sâu Cổ Đại. Tiến độ và những phần thưởng đã mở được lưu trên thiết bị; mốc này không cấp thêm vũ khí hoặc kỹ năng.'}
-  ].map((g,index)=>({...g,index:index+1,end:g.start+9}));
+  ].map((g,index)=>({...g,index:index+1,end:g.start+9,learn:g.start>=101?['Trong màn 101–150, hạ mỗi 5 quái thường nhận 1 khiên, giữ tối đa 3. Bộ đếm tiếp tục qua màn kế tiếp trong chặng hành trình; boss và ảo ảnh không tính vào mốc này.',...g.learn]:g.learn}));
   const forLevel=id=>guides.find(g=>id>=g.start&&id<=g.end)||guides[0];
   const normalizeSeen=value=>Array.isArray(value)?[...new Set(value.filter(id=>guides.some(g=>g.start===id)))].sort((a,b)=>a-b):[];
   function element(tag,text,className){const e=root.document.createElement(tag);if(text)e.textContent=text;if(className)e.className=className;return e;}

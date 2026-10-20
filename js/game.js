@@ -84,7 +84,7 @@
       this.kongZones=[];this.bananaPeels=[];
       this.dragonZones=[];this.dragonShots=[];this.mythicZones=[];this.mythicShots=[];
       this.keys = new Set(); this.pointers = new Map(); this.padInputs = new Map();
-      this.score = 0; this.totalKills = 0; this.levelKills = 0; this.shieldCount = 0;
+      this.score = 0; this.totalKills = 0; this.levelKills = 0; this.shieldCount = 0; this.abyssShieldKills = 0;
       this.regularSpawned = 0; this.spawnTimer = 1; this.bossSpawned = false; this.bossDefeated = false;
       this.shake = 0; this.flash = 0; this.toastTime = 0; this.bannerTime = 0;
       this.tuning = Campaign.tuning(this.settings.difficulty); this.player = this.makePlayer();
@@ -115,17 +115,19 @@
       MM.Tutorial?.cancel(this);
       MM.AbyssCombat?.reset(this);
       const {carry = false, retry = false} = options;
-      const oldHealth = this.player.health, oldAmmo=this.player.ammo;
+      const oldHealth = this.player.health, oldAmmo=this.player.ammo, wasAbyss=this.level.id>=101&&this.level.id<=150;
       if (retry && this.checkpoint) {
         this.score = this.checkpoint.score; this.totalKills = this.checkpoint.totalKills; this.shieldCount = this.checkpoint.shieldCount;
       } else if (!carry) { this.score = 0; this.totalKills = 0; this.shieldCount = 0; }
       this.level = Campaign.getLevel(id); this.activeDifficulty = this.settings.difficulty; this.tuning = Campaign.tuning(this.activeDifficulty);
+      if(retry&&this.checkpoint)this.abyssShieldKills=this.checkpoint.abyssShieldKills||0;
+      else if(!carry||!wasAbyss||this.level.id<101||this.level.id>150)this.abyssShieldKills=0;
       if(MM.Story)this.selectedStory=MM.Story.forLevel(this.level.id).id;
       this.player = this.makePlayer(carry ? clamp(oldHealth + (this.level.recovery ? 2 : 1),1,this.tuning.health) : this.tuning.health);
       MM.WeaponManager?.init(this);MM.SkillManager?.reset(this);MM.InputManager?.init(this);this.aimMode='ground';
       if(carry)this.player.ammo=Math.min(this.player.maxAmmo,oldAmmo+this.player.ammo);
       else if(retry&&this.checkpoint)this.player.ammo=clamp(this.checkpoint.ammo??this.player.ammo,0,this.player.maxAmmo);
-      this.checkpoint = {score:this.score,totalKills:this.totalKills,shieldCount:this.shieldCount,ammo:this.player.ammo};
+      this.checkpoint = {score:this.score,totalKills:this.totalKills,shieldCount:this.shieldCount,ammo:this.player.ammo,abyssShieldKills:this.abyssShieldKills};
       this.enemies = []; this.bullets = []; this.particles = []; this.floats = []; this.pickups = [];
       this.ammoCrates=[];this.enemyShots=[];this.ammoTimer=2.4;
       this.bossHazards=[];this.bossEggs=[];this.golemZones=[];this.groundCracks=[];this.wolfZones=[];
@@ -158,7 +160,7 @@
       this.kongZones=[];this.bananaPeels=[];
       this.dragonZones=[];this.dragonShots=[];this.mythicZones=[];this.mythicShots=[];
       this.level=Campaign.getLevel(this.save.resume);this.tuning=Campaign.tuning(this.settings.difficulty);this.player=this.makePlayer();
-      this.levelKills=0;this.totalKills=0;this.shieldCount=0;this.score=0;this.bossSpawned=false;this.bossDefeated=false;
+      this.levelKills=0;this.totalKills=0;this.abyssShieldKills=0;this.shieldCount=0;this.score=0;this.bossSpawned=false;this.bossDefeated=false;
       if (!this.headless) { this.mobileView?.leave(); this.ui['home-overlay'].hidden = false; this.ui['result-overlay'].hidden = true; this.ui['stage-banner'].hidden = true; this.ui['toast'].hidden = true; }
       this.updateUI();
     }
@@ -275,9 +277,13 @@
       p.rollTime=p.rollDuration=.32;p.rollCooldown=.9;p.rollProgress=0;p.rollDir=dir<0?-1:1;p.dir=p.rollDir;p.vx=p.rollDir*850;p.jumpBuffer=0;
       this.burst(p.x,p.y-22,'#e5c39c',12);return true;
     }
+    shieldProgress() {
+      const abyss=this.level.id>=101&&this.level.id<=150,goal=abyss?5:10;
+      return {abyss,goal,count:(abyss?this.abyssShieldKills||0:this.totalKills)%goal};
+    }
     activateShield() {
       if (this.screen !== 'playing' || this.player.shieldTime > 0) return false;
-      if (this.shieldCount <= 0) { this.toast(`Còn ${10 - this.totalKills % 10} địch để có khiên`); return false; }
+      if (this.shieldCount <= 0) { const progress=this.shieldProgress();this.toast(`Còn ${progress.goal-progress.count} ${progress.abyss?'quái thường':'địch'} để có khiên`); return false; }
       this.shieldCount--; this.player.shieldTime = 5; this.player.shieldHits = 3;
       this.player.petrifyTime=0;this.player.petrifyGrace=.6;this.player.burnTime=0;this.player.burnTick=1;
       MM.AbyssCombat?.cleanse?.(this);
@@ -527,7 +533,12 @@
       MM.SkillManager?.onKill(this,enemy);MM.BossManager?.onDefeated(this,enemy);
       this.burst(enemy.x,enemy.y-enemy.h/2,enemy.boss?'#ffd391':'#bbc4a5',enemy.boss?36:14);
       this.floating(enemy.x,enemy.y-enemy.h-10,'+'+(enemy.score||100)); this.sound.play('kill');
-      if (this.totalKills % 10 === 0) {
+      const shieldProgress=this.shieldProgress();
+      const regularKill=!enemy.boss&&!enemy.playerShadow&&!enemy.flowerIllusion&&!enemy.emotionProjection&&!enemy.abyssClone;
+      if(shieldProgress.abyss&&regularKill)this.abyssShieldKills++;
+      // The Abyss has its own ordinary-enemy counter. Boss kills and phase
+      // changes cannot complete a five-kill reward or double-award at ten.
+      if (shieldProgress.abyss?regularKill&&this.abyssShieldKills%5===0:this.totalKills%10===0) {
         if (this.shieldCount < 3) { this.shieldCount++; this.toast('✦ +1 khiên · Space hoặc vuốt xuống'); this.sound.play('shield'); }
         else this.toast('Kho khiên đã đầy · dùng Space hoặc vuốt xuống');
       }
@@ -805,7 +816,7 @@
       const hudPlayer=this.player;
       const hudSignature=[this.screen,this.level.id,this.levelKills,this.bossSpawned,this.bossDefeated,
         hudPlayer.health,hudPlayer.maxHealth,hudPlayer.ammo,hudPlayer.maxAmmo,hudPlayer.weaponMode,
-        Math.ceil((hudPlayer.shotTimer||0)*10),this.aimMode,this.shieldCount,this.totalKills%10,this.score,
+        Math.ceil((hudPlayer.shotTimer||0)*10),this.aimMode,this.shieldCount,this.shieldProgress().count,this.score,
         this.save.best,this.save.resume,this.save.completed.join(','),this.settings.controls,
         this.settings.effects,this.settings.reducedMotion,this.settings.sound,this.progression?.equipped,
         this.progression?.rewards?.join(','),this.weaponPicker?.open,this.selectedStory].join('|');
@@ -822,7 +833,8 @@
       this.ui['kill-count'].textContent=`${this.levelKills} / ${this.level.target}`;this.ui['kill-progress'].style.width=clamp(this.levelKills/this.level.target*100,0,100)+'%';this.ui['mission-label'].textContent=this.bossSpawned&&!this.bossDefeated?'HẠ BOSS ĐỂ QUA MÀN':'ĐỊCH ĐÃ HẠ';
       this.ui.health.innerHTML=Array.from({length:p.maxHealth},(_,i)=>`<span class="${i<p.health?'':'empty'}" aria-hidden="true"><svg viewBox="0 0 24 24" style="width:.85em;height:1em;fill:currentColor;stroke:none"><path d="M12 21C9 18 2 13 2 7A5 5 0 0 1 12 5A5 5 0 0 1 22 7C22 13 15 18 12 21Z"/></svg></span>`).join('');this.ui.health.setAttribute('aria-label',`Sinh lực ${p.health} / ${p.maxHealth}`);
       this.updateAmmoUI();
-      this.ui['shield-count'].textContent=this.shieldCount;this.ui['shield-button'].classList.toggle('ready',this.shieldCount>0);this.ui['charge-label'].textContent=this.shieldCount>0?`${this.shieldCount} khiên sẵn sàng · ${this.totalKills%10}/10 địch tích khiên`:`${this.totalKills%10}/10 địch · Hạ 10 địch để nhận khiên`;
+      const shieldCharge=this.shieldProgress(),shieldEnemy=shieldCharge.abyss?'quái thường':'địch';
+      this.ui['shield-count'].textContent=this.shieldCount;this.ui['shield-button'].classList.toggle('ready',this.shieldCount>0);this.ui['charge-label'].textContent=this.shieldCount>0?`${this.shieldCount} khiên sẵn sàng · ${shieldCharge.count}/${shieldCharge.goal} ${shieldEnemy} tích khiên`:`${shieldCharge.count}/${shieldCharge.goal} ${shieldEnemy} · Hạ ${shieldCharge.goal} ${shieldEnemy} để nhận khiên`;
       this.ui['pad-shield-count'].textContent=this.shieldCount;
       document.querySelector('[data-control="shield"]').classList.toggle('ready',this.shieldCount>0);
       this.ui['fullscreen-button'].disabled=!['home','playing'].includes(this.screen)&&!document.fullscreenElement;

@@ -1,6 +1,6 @@
 # Monster Mash — The Midnight Hunt
 
-Rebuild 09 (v4.0.1) của Monster Mash của KIO: 150 màn, 3 cốt truyện, Canvas 2D và bản đồ Three.js đóng gói trong repo. Không cần CDN hoặc cài package. Tiến độ màn, kỹ năng, vũ khí, kỷ lục và cài đặt lưu vĩnh viễn bằng localStorage trên trình duyệt hiện tại.
+Rebuild 09 (v4.0.2) của Monster Mash của KIO: 150 màn, 3 cốt truyện, Canvas 2D và bản đồ Three.js đóng gói trong repo. Không cần CDN hoặc cài package. Tiến độ màn, kỹ năng, vũ khí, kỷ lục và cài đặt lưu vĩnh viễn bằng localStorage trên trình duyệt hiện tại.
 
 Bản đồ gồm **Miền Nhật Thực** (1–50), **Lời Nguyền Cổ Thú** (51–100) và **Vực Sâu Cổ Đại** (101–150). Vuốt ngang hoặc dùng mũi tên/tab để chuyển I → II → III. Mỗi vùng giữ bố cục dấu X riêng, có 45 chấm màn thường và 5 X/O boss. Đường tiếp nối 50 → 51 → 60 và 100 → 101 → 110 kết nối hành trình. Camera 3D cố định, chỉ nghiêng nhẹ theo chuột.
 
@@ -129,3 +129,7 @@ Kiểm tra tự động bảo vệ cơ chế và tiến trình; cân bằng cu�
 ## Hướng dẫn theo chặng
 
 Mục 05 trong Cách chơi gồm 15 chặng (1–10 đến 141–150). Lần đầu bắt đầu màn 1, 11, 21…141 sẽ mở hướng dẫn chặng đó, tạm dừng giao chiến đến khi đóng hướng dẫn hoặc nhấn Sẵn sàng. Các chặng đã đọc được lưu cùng tiến độ; thử lại không mở lặp. Có thể xem lại từng mục trong Cách chơi. Bản localhost mở toàn bộ phần thưởng để test, không ghi vào save thật; dùng `?test=off` để kiểm tra tiến trình bình thường.
+
+## Tiếp tế khiên tại Vực Sâu Cổ Đại · v4.0.2
+
+Màn 101–150 cấp 1 khiên sau mỗi 5 quái thường hạ được (kể cả quái thường do boss triệu hồi), tối đa 3 khiên. Boss, bản sao người chơi và ảo ảnh không cộng bộ đếm. Bộ đếm riêng tiếp tục khi qua các màn của chương III; thử lại khôi phục mốc đầu màn, chơi lại từ bản đồ bắt đầu bộ đếm mới. HUD và thông báo thiếu khiên hiển thị mốc 5. Các màn 1–100 vẫn dùng nhịp 10 địch cũ.
