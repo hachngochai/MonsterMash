@@ -104,7 +104,7 @@
       'Né sóng âm và vùng bổ của Phượng điểu hóa thạch. Sóng âm có thể đảo hướng điều khiển.',
       'Hết thanh máu đầu, boss thành Kỵ Sĩ đầu chim với thanh máu mới. Né lưỡi hái, cú lao, liên kích và sóng tầm xa.',
       'Sau dịch chuyển có dấu báo mới trước đòn đánh. Di chuyển theo dấu báo thay vì bắn vào vị trí cũ.'
-    ],reward:'Hạ dạng Kỵ Sĩ mở Lưỡi Hái Cổ Điểu: cận chiến tầm rộng, không tốn đạn. Chỉ khi dạng cuối bị hạ mới nhận thưởng.'},
+    ],reward:'Hạ dạng Kỵ Sĩ mở Lưỡi Hái Cổ Điểu: chém rộng và phóng sóng xung kích tầm xa, không tốn đạn. G hoặc nút Hoán đổi để đổi chỗ với quái thường gần nhất, hồi 6 giây; boss miễn nhiễm. Chỉ khi dạng cuối bị hạ mới nhận thưởng.'},
     {start:141,title:'Bốn gương mặt dưới lăng mộ',boss:'Thiên Thủ Cổ Thần · Màn 150',learn:[
       'Tránh bàn tay cổ đại, vệ binh đất sét và bẫy lăng mộ. Giữ khiên cho những lần bị vây hoặc đổi trọng lực.',
       'Trong bóng tối dạng Ố ở pha đầu, vũ khí soi vùng tròn ba bước quanh nhân vật; HUD và nút điều khiển vẫn nhìn được.'

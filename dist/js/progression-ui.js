@@ -6,7 +6,7 @@
   const descriptions = {
     gun:'1 đạn / phát',bones:'3 xương · 3 đạn / lượt',club:'Cận chiến · 3 sát thương',
     bow:'5 mũi tên · 5 đạn / lượt',spear:'Đâm gần / ném xa',axes:'Cận chiến · nhấn đúp hướng để Lăn Chém',
-    hammer:'Cận chiến · búa chiến Minotaur',scythe:'Cận chiến · lưỡi hái xương chim'
+    hammer:'Cận chiến · búa chiến Minotaur',scythe:'Chém + sóng xa · G hoán đổi với quái thường'
   };
   function node(game,id) { return game.ui?.[id] || root.document?.getElementById(id); }
   function state(game) {
@@ -50,6 +50,9 @@
     for(const [id,mode] of [['aim-high','high'],['aim-ground','ground']])node(game,id)?.addEventListener('click',event=>{
       event.preventDefault();event.stopPropagation();MM.WeaponManager?.setAim(game,mode);sync(game);game.canvas?.focus({preventScroll:true});
     });
+    node(game,'scythe-swap')?.addEventListener('click',event=>{
+      event.preventDefault();event.stopPropagation();MM.WeaponManager?.tryScytheSwap(game);sync(game);game.canvas?.focus({preventScroll:true});
+    });
     node(game,'weapon-confirm')?.addEventListener('click',()=>{MM.InputManager?.select(game);sync(game);});
     node(game,'weapon-cancel')?.addEventListener('click',()=>{MM.InputManager?.close(game);sync(game);});
     node(game,'weapon-picker')?.addEventListener('keydown',event=>{
@@ -76,6 +79,16 @@
       weaponButton.setAttribute('aria-label','Vũ khí: '+label+'. '+weaponButton.title);
     }
     const manual=MM.MapManager?.manualAim(game)===true;
+    const swap=node(game,'scythe-swap');
+    if(swap) {
+      swap.hidden=weapon!=='scythe'||suppressed;
+      const remaining=game.scytheSwapCooldown||0;
+      const key=MM.KeyBindings?.label(MM.KeyBindings.normalize(game.settings.keyBindings).scytheSwap)||'G';
+      text(swap,remaining>1e-8?'Hoán đổi · '+(Math.ceil(remaining*10)/10).toFixed(1)+'s':'⇄ Hoán đổi · '+key);
+      swap.disabled=game.screen!=='playing'||!!game.weaponPicker?.open||remaining>1e-8
+        ||petrified(game.player)||!W.swapTarget(game);
+      swap.title='Đổi chỗ với quái thường gần nhất · Boss miễn nhiễm · Hồi 6 giây';
+    }
     for(const [id,mode] of [['aim-high','high'],['aim-ground','ground']]) {
       const control=node(game,id);if(!control)continue;
       control.hidden=!manual;control.disabled=game.screen!=='playing';
@@ -148,4 +161,5 @@
     }
   }
   MM.ProgressionUI={bind,sync};
+  function petrified(p){return p.stunTime>0||p.petrifyTime>0||p.rollTime>0;}
 })(typeof window!=='undefined'?window:globalThis);

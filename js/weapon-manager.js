@@ -30,6 +30,7 @@
       g.rollSlash = null;
       g.rollSlashCooldown = 0;
       g.weaponAttack = null;
+      g.scytheSwapCooldown = 0;
     },
     available(g) { return suppressed(g) ? ['gun'] : ORDER.filter(id => unlocked(g, UNLOCK[id])); },
     current(g) {
@@ -94,10 +95,21 @@
         const targets = meleeTargets(g, dir, weapon.range);
         const selected = weapon.kind === 'spear' ? targets.slice(0, 1) : targets;
         let first = true;
+        const hit = new Set();
         for (const e of selected) {
           const damage = first ? amplify(g, weapon.damage) : weapon.damage;
           first = false;
           g.dealEnemyDamage?.(e, damage, {kind:weapon.kind, weaponId:weapon.equipped, dir, melee:true, form:weapon.form || 'swing'});
+          hit.add(e);
+        }
+        if (weapon.kind === 'scythe') {
+          // The near slash and travelling crescent are one attack: no double hit
+          // on a nearby enemy and only one unit can consume the Darken charge.
+          const x=p.x+dir*(p.w/2+10),y=p.y-p.h*.5;
+          g.bullets.push({kind:'scytheWave',weaponId:'scythe',x,y,previousX:x,previousY:y,dir,
+            vx:dir*weapon.waveSpeed,vy:0,speed:weapon.waveSpeed,life:weapon.waveRange/weapon.waveSpeed,
+            damage:first?amplify(g,weapon.damage):weapon.damage,baseDamage:weapon.damage,hit,radiusX:8,radiusY:28});
+          g.burst?.(x,y,'#c49aff',8,'spark');
         }
         g.weaponAttack = {kind:weapon.kind, dir, time:.24, duration:.24, range:weapon.range, form:weapon.form || 'swing'};
         MM.AbyssCombat?.meleeHazards(g,g.weaponAttack);
@@ -136,6 +148,36 @@
       g.sound?.play(weapon.kind === 'sniper' ? 'sniper' : 'shot'); g.updateAmmoUI?.();
       return true;
     },
+    swapTarget(g) {
+      const p=g.player;
+      return (g.enemies||[]).filter(e=>!e.dead&&!e.retired&&e.health>0&&e.phase==='active'&&!e.boss&&!e.emotionProjection&&!e.projectionOwner
+        &&!e.flowerIllusion&&!e.abyssClone&&!e.playerShadow)
+        .sort((a,b)=>Math.hypot(a.x-p.x,a.y-a.h*.5-(p.y-p.h*.5))
+          -Math.hypot(b.x-p.x,b.y-b.h*.5-(p.y-p.h*.5)))[0]||null;
+    },
+    tryScytheSwap(g) {
+      const p=g.player;
+      if(g.screen!=='playing'||g.weaponPicker?.open||!enabled(g)||this.current(g)!=='scythe'
+        ||g.scytheSwapCooldown>1e-8||p.stunTime>0||p.petrifyTime>0||p.rollTime>0||g.rollSlash?.time>0)return false;
+      const e=this.swapTarget(g);
+      if(!e){g.toast?.('Không có quái thường để hoán đổi · Boss miễn nhiễm');return false;}
+      const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
+      const old={x:p.x,y:p.y},dest={x:e.x,y:e.y};
+      p.x=clamp(dest.x,p.w/2+8,960-p.w/2-8);
+      p.y=clamp(dest.y,p.h+18,438);
+      e.x=clamp(old.x,e.w/2+8,960-e.w/2-8);e.y=clamp(old.y,e.h+18,438);
+      p.vx=p.vy=e.vx=e.vy=0;p.jumpBuffer=p.coyote=0;p.grounded=false;
+      // Keep anchored enemies at their new horizontal position as their own
+      // movement resumes; never alter health, rewards or the target's skill state.
+      if(e.platform)e.platform.x=e.x;
+      if(Number.isFinite(e.landX))e.landX=e.x;
+      if(Number.isFinite(e.abyssHomeX))e.abyssHomeX=e.x;
+      g.scytheSwapCooldown=MM.AbyssConfig.weapons.scythe.swapCooldown;
+      g.burst?.(p.x,p.y-p.h*.5,'#c49aff',18,'ring');
+      g.burst?.(e.x,e.y-e.h*.5,'#c49aff',18,'ring');
+      g.floating?.(p.x,p.y-p.h-12,'HOÁN ĐỔI','#d9baff');
+      g.sound?.play('shield');g.updateUI?.();return true;
+    },
     tryRollSlash(g, direction) {
       const p = g.player, dir = direction < 0 ? -1 : 1;
       if (g.screen !== 'playing' || g.weaponPicker?.open || !enabled(g) || this.current(g) !== 'axes'
@@ -149,6 +191,7 @@
     },
     update(g, dt) {
       if (g.screen !== 'playing' || g.weaponPicker?.open) return;
+      g.scytheSwapCooldown=Math.max(0,(g.scytheSwapCooldown||0)-dt);
       g.rollSlashCooldown = Math.max(0, (g.rollSlashCooldown || 0) - dt);
       if (g.weaponAttack) {
         g.weaponAttack.time = Math.max(0, g.weaponAttack.time - dt);

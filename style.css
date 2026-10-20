@@ -1735,6 +1735,8 @@ dialog::backdrop {
 .progression-tools{position:absolute;z-index:8;top:10px;left:12px;right:140px;display:flex;align-items:center;gap:6px;pointer-events:none;flex-wrap:wrap}
 .progression-tools button{pointer-events:auto;touch-action:none;user-select:none;color:#f0ead5;background:#14221eea;border:1px solid #9aab7866;border-radius:7px;padding:7px 10px;font:600 11px/1.3 var(--font-body,'Noto Sans',sans-serif)}
 .progression-tools button[aria-pressed="true"]{background:#8f6c3a;color:#fff4d3;border-color:#d6b365}
+.progression-tools #scythe-swap{border-color:#b68ae8;color:#e5cbff;min-height:40px;min-width:125px}
+.progression-tools #scythe-swap:disabled{opacity:.55}
 #progression-status{font-size:10px;line-height:1.4;color:#e6d7ac;background:#14221ebd;border-radius:4px;padding:3px 7px;max-width:100%;white-space:normal}
 #progression-status:empty{display:none}
 body.home .progression-tools{display:none}

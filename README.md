@@ -1,6 +1,13 @@
 # Monster Mash — The Midnight Hunt
 
-Rebuild 09 (v4.0.3) của Monster Mash của KIO: 150 màn, 3 cốt truyện, Canvas 2D và bản đồ Three.js đóng gói trong repo. Không cần CDN hoặc cài package. Tiến độ màn, kỹ năng, vũ khí, kỷ lục và cài đặt lưu vĩnh viễn bằng localStorage trên trình duyệt hiện tại.
+Rebuild 09 (v4.0.4) của Monster Mash của KIO: 150 màn, 3 cốt truyện, Canvas 2D và bản đồ Three.js đóng gói trong repo. Không cần CDN hoặc cài package. Tiến độ màn, kỹ năng, vũ khí, kỷ lục và cài đặt lưu vĩnh viễn bằng localStorage trên trình duyệt hiện tại.
+
+## Lưỡi Hái Cổ Điểu · v4.0.4
+
+- Vẫn mở sau boss 140. Mỗi lượt chém phóng thêm một sóng xung kích tím, 3 sát thương, tầm 560 px, tốc độ 700 px/s; hồi chém 0,7 giây, không tốn đạn.
+- Sóng dừng ở mục tiêu xa đầu tiên; mục tiêu đã dính chém gần không bị trúng sóng lần hai. Hắc Hóa chỉ cường hóa một đơn vị của lượt đánh. Miễn nhiễm và phản đạn của boss vẫn áp dụng.
+- Đang cầm Lưỡi Hái: nhấn G hoặc nút **Hoán đổi** để đổi vị trí với quái thường gần nhất (có dấu ⇄). Hồi 6 giây trong thời gian chơi; không gây sát thương. Boss, phân thân boss và bóng người chơi không thể bị chọn. Không có mục tiêu thì không tiêu hồi chiêu.
+- Nút hiện trên cả PC và điện thoại; đổi phím G trong Setup. Khóa khi choáng, hóa đá, lướt, tạm dừng hoặc mở bảng vũ khí. Chuyển vũ khí không làm mới hồi chiêu.
 
 Bản đồ gồm **Miền Nhật Thực** (1–50), **Lời Nguyền Cổ Thú** (51–100) và **Vực Sâu Cổ Đại** (101–150). Vuốt ngang hoặc dùng mũi tên/tab để chuyển I → II → III. Mỗi vùng giữ bố cục dấu X riêng, có 45 chấm màn thường và 5 X/O boss. Đường tiếp nối 50 → 51 → 60 và 100 → 101 → 110 kết nối hành trình. Camera 3D cố định, chỉ nghiêng nhẹ theo chuột.
 

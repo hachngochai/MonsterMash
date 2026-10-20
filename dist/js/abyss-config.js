@@ -9,7 +9,8 @@
       waterColumns:5,turtleDamageRatio:.5,turtleRangeSteps:4,crowInterval:5,lanternInterval:6,
       rollingRockInterval:10,emotionInterval:20,mazeEmotionInterval:15,mazeThreshold:.5,mazeRefills:1,minotaurRageInterval:10},
     lighting:{torchViewportRatio:.5,orbitFlames:2,torchRadius:305,weaponRadius:95,darkWeaponRadius:24,deityDarkWeaponSteps:3,transitionSpeed:5},
-    weapons:{hammer:{damage:4,cooldown:.95,range:105,cost:0,melee:true},scythe:{damage:3,cooldown:.7,range:125,cost:0,melee:true}},
+    weapons:{hammer:{damage:4,cooldown:.95,range:105,cost:0,melee:true},scythe:{damage:3,cooldown:.7,range:125,cost:0,melee:true,
+      waveRange:560,waveSpeed:700,swapCooldown:6}},
     campaign:{initialAmmo:20,ammoCapacity:70,ammoPerCrate:40,ammoInterval:4.5,healthMultiplier:1,speedMultiplier:1,abilityInterval:5,abilityWarning:1.2,
       enemyPressureCap:1.7,bossPressureCap:1.85,pressureRampSeconds:90,bossRampSeconds:75,pressureWarmup:14,bossWarmup:4},
     enemies:{

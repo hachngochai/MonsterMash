@@ -10,9 +10,9 @@
   const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
   const overlaps = (a, b) => Math.abs(a.x - b.x) < (a.w + b.w) / 2 && a.y > b.y - b.h && a.y - a.h < b.y;
   // Return the first point of a swept bullet against a rectangle, including diagonal shots.
-  function bulletEntry(x0,y0,x1,y1,e) {
+  function bulletEntry(x0,y0,x1,y1,e,rx=3,ry=3) {
     let near=0,far=1;
-    for(const [start,delta,low,high] of [[x0,x1-x0,e.x-e.w/2-3,e.x+e.w/2+3],[y0,y1-y0,e.y-e.h-3,e.y+3]]){
+    for(const [start,delta,low,high] of [[x0,x1-x0,e.x-e.w/2-rx,e.x+e.w/2+rx],[y0,y1-y0,e.y-e.h-ry,e.y+ry]]){
       if(Math.abs(delta)<1e-9){if(start<low||start>high)return null;continue;}
       const a=(low-start)/delta,b=(high-start)/delta;
       near=Math.max(near,Math.min(a,b));far=Math.min(far,Math.max(a,b));
@@ -748,7 +748,7 @@
         const prev=bullet.x,prevY=bullet.y;bullet.previousX=prev;bullet.previousY=prevY;
         bullet.x+=(bullet.vx??bullet.dir*(bullet.speed||780))*dt;bullet.y+=(bullet.vy||0)*dt;bullet.life-=dt;
         if(MM.AbyssCombat?.hitHazards(this,bullet,prev,prevY)){spent.add(bullet);continue;}
-        const candidates=this.enemies.filter(e=>!e.dead&&!e.intangible&&!e.bulletUntargetable&&e.phase==='active').map(e=>({e,t:bulletEntry(prev,prevY,bullet.x,bullet.y,e)})).filter(v=>v.t!==null).sort((a,b)=>a.t-b.t).map(v=>v.e);
+        const candidates=this.enemies.filter(e=>!e.dead&&!e.intangible&&!e.bulletUntargetable&&e.phase==='active'&&!bullet.hit?.has(e)).map(e=>({e,t:bulletEntry(prev,prevY,bullet.x,bullet.y,e,bullet.radiusX??3,bullet.radiusY??3)})).filter(v=>v.t!==null).sort((a,b)=>a.t-b.t).map(v=>v.e);
         if(!bullet.vy&&MM.BossCombat?.hitEgg(this,bullet,prev,candidates.length?Math.abs(candidates[0].x-prev):Infinity)){spent.add(bullet);continue;}
         const e=candidates[0];
         if(e) {

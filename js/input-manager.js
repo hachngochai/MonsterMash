@@ -131,6 +131,9 @@
         return true;
       }
       if (g.screen !== 'playing') return false;
+      if(code==='KeyG'&&MM.WeaponManager.current(g)==='scythe') {
+        event.preventDefault?.();if(!event.repeat)MM.WeaponManager.tryScytheSwap(g);return true;
+      }
       if (code === 'KeyF' && MM.WeaponManager.available(g).length > 1) {
         event.preventDefault?.(); if (!event.repeat) this.weaponDown(g);
         return true;

@@ -1714,6 +1714,24 @@
     c.save(); c.lineCap = 'round';
     const dark=Number.isFinite(b.baseDamage)&&b.damage>b.baseDamage;
     if(dark)halo(c,b.x,b.y,18,'#ba84ee',.3);
+    if(b.kind==='scytheWave') {
+      c.translate(b.x,b.y);c.scale(direction,1);
+      const color=dark?'#f0cfff':'#be91ff';
+      if(effects) {
+        const trail=c.createLinearGradient(-85,0,16,0);
+        trail.addColorStop(0,'#9562db00');trail.addColorStop(.75,'#9562db35');trail.addColorStop(1,'#d9b9ff99');
+        c.fillStyle=trail;c.beginPath();c.moveTo(-85,-4);c.quadraticCurveTo(-22,-7,-5,-35);
+        c.quadraticCurveTo(32,0,-5,35);c.quadraticCurveTo(-22,7,-85,4);c.fill();
+        c.shadowColor=color;c.shadowBlur=16;
+      }
+      c.strokeStyle=color;c.lineWidth=5;c.beginPath();c.moveTo(-6,-32);c.quadraticCurveTo(28,0,-6,32);c.stroke();
+      c.shadowBlur=0;c.strokeStyle='#faf0ff';c.lineWidth=1.8;c.beginPath();c.moveTo(-4,-28);c.quadraticCurveTo(22,0,-4,28);c.stroke();
+      if(effects)for(let i=0;i<3;i++){
+        const offset=(b.life*95+i*23)%62;
+        line(c,-offset-12,(i-1)*12,-offset,(i-1)*10,'#d9bcff88',1.5);
+      }
+      c.restore();return;
+    }
     if(['bones','bow','spear'].includes(b.kind)) {
       const angle=Math.atan2(b.vy||0,b.vx||direction);
       if(effects)line(c,b.x-Math.cos(angle)*30,b.y-Math.sin(angle)*30,b.x,b.y,dark?'#cf9cff66':'#dcd2b855',3);
@@ -2408,6 +2426,15 @@
         if ((e.splitTriggered || e.draculaClone) && e.health > 0 && !e.intangible) {
           c.save(); rounded(c, e.x - 10, e.y - e.h - 27, 20, 17, 3, '#202634c9', '#bd98a05e', 1);
           c.font = `600 11px ${font}`; c.fillStyle = '#f6d7bd'; c.textAlign = 'center'; c.fillText(e.draculaClone ? 'II' : 'I', e.x, e.y - e.h - 15); c.restore();
+        }
+      }
+      if(game.screen==='playing'&&window.MM?.WeaponManager?.current(game)==='scythe'&&!(game.scytheSwapCooldown>0)) {
+        const target=window.MM.WeaponManager.swapTarget(game);
+        if(target) {
+          c.save();c.strokeStyle='#d6b3ff';c.lineWidth=1.5;
+          c.setLineDash([4,4]);c.beginPath();c.ellipse(target.x,target.y+2,target.w*.65+6,7,0,0,Math.PI*2);c.stroke();
+          c.setLineDash([]);c.font=`600 10px ${font}`;c.fillStyle='#e5cbff';c.textAlign='center';
+          c.fillText('⇄',target.x,target.y-target.h-10);c.restore();
         }
       }
       for (const e of game.enemies || []) drawDraculaDrain(c, e, game.player, t, effects);

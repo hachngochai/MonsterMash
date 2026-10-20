@@ -18,9 +18,9 @@ test('remapped double direction, shield and weapon hold use the existing skill r
 });
 test('conflicts swap keys and bindings survive a fresh expedition while rewards reset',()=>{
  const {g,MM,storage}=fresh(),K=MM.KeyBindings;assert.equal(K.set(g,'left','KeyD'),true);assert.equal(g.settings.keyBindings.shootRight,'ArrowLeft');
- assert.equal(new Set(Object.values(g.settings.keyBindings)).size,10);assert.equal(K.set(g,'right','Escape'),false);
+ assert.equal(new Set(Object.values(g.settings.keyBindings)).size,Object.keys(K.defaults).length);assert.equal(K.set(g,'right','Escape'),false);
  g.progression.rewards=[10];g.persist();const reopened=new MM.Game({headless:true,storage,newRun:true});assert.equal(reopened.settings.keyBindings.left,'KeyD');assert.equal(reopened.settings.keyBindings.shootRight,'ArrowLeft');assert.equal(reopened.progression.rewards.length,0);
- const malformed=K.normalize({left:'Escape',right:'KeyA',jump:'KeyA'});assert.equal(new Set(Object.values(malformed)).size,10);assert.ok(Object.values(malformed).every(code=>code!=='Escape'));
+ const malformed=K.normalize({left:'Escape',right:'KeyA',jump:'KeyA'});assert.equal(new Set(Object.values(malformed)).size,Object.keys(K.defaults).length);assert.ok(Object.values(malformed).every(code=>code!=='Escape'));
 });
 test('capture cancels safely and remapped pause remains independent of browser shortcuts',()=>{
  const {g,MM}=fresh();g.keyCapture='left';assert.equal(MM.KeyBindings.capture(g,key('Escape')),true);assert.equal(g.keyCapture,null);
