@@ -85,6 +85,7 @@
       this.dragonZones=[];this.dragonShots=[];this.mythicZones=[];this.mythicShots=[];
       this.keys = new Set(); this.pointers = new Map(); this.padInputs = new Map();
       this.score = 0; this.totalKills = 0; this.levelKills = 0; this.shieldCount = 0; this.abyssShieldKills = 0;
+      this.abyssBossHits=0;this.abyssBossProjectiles=new WeakSet();
       this.regularSpawned = 0; this.spawnTimer = 1; this.bossSpawned = false; this.bossDefeated = false;
       this.shake = 0; this.flash = 0; this.toastTime = 0; this.bannerTime = 0;
       this.tuning = Campaign.tuning(this.settings.difficulty); this.player = this.makePlayer();
@@ -120,6 +121,7 @@
         this.score = this.checkpoint.score; this.totalKills = this.checkpoint.totalKills; this.shieldCount = this.checkpoint.shieldCount;
       } else if (!carry) { this.score = 0; this.totalKills = 0; this.shieldCount = 0; }
       this.level = Campaign.getLevel(id); this.activeDifficulty = this.settings.difficulty; this.tuning = Campaign.tuning(this.activeDifficulty);
+      this.abyssBossHits=0;this.abyssBossProjectiles=new WeakSet();
       if(retry&&this.checkpoint)this.abyssShieldKills=this.checkpoint.abyssShieldKills||0;
       else if(!carry||!wasAbyss||this.level.id<101||this.level.id>150)this.abyssShieldKills=0;
       if(MM.Story)this.selectedStory=MM.Story.forLevel(this.level.id).id;
@@ -161,6 +163,7 @@
       this.dragonZones=[];this.dragonShots=[];this.mythicZones=[];this.mythicShots=[];
       this.level=Campaign.getLevel(this.save.resume);this.tuning=Campaign.tuning(this.settings.difficulty);this.player=this.makePlayer();
       this.levelKills=0;this.totalKills=0;this.abyssShieldKills=0;this.shieldCount=0;this.score=0;this.bossSpawned=false;this.bossDefeated=false;
+      this.abyssBossHits=0;this.abyssBossProjectiles=new WeakSet();
       if (!this.headless) { this.mobileView?.leave(); this.ui['home-overlay'].hidden = false; this.ui['result-overlay'].hidden = true; this.ui['stage-banner'].hidden = true; this.ui['toast'].hidden = true; }
       this.updateUI();
     }
@@ -280,6 +283,16 @@
     shieldProgress() {
       const abyss=this.level.id>=101&&this.level.id<=150,goal=abyss?5:10;
       return {abyss,goal,count:(abyss?this.abyssShieldKills||0:this.totalKills)%goal};
+    }
+    recordAbyssBossHit(boss,attack) {
+      if(this.level.id<101||this.level.id>150||!boss?.boss||attack.melee||attack.rollSlash||attack.reflected||attack.reflection)return false;
+      if(!['normal','highAim','sniper','gun','bones','bow','spear'].includes(attack.kind||attack.weaponId)||this.abyssBossProjectiles.has(attack))return false;
+      this.abyssBossProjectiles.add(attack);this.abyssBossHits++;
+      if(this.abyssBossHits%10===0){
+        if(this.shieldCount<3){this.shieldCount++;this.toast('✦ +1 khiên · 10 phát bắn trúng boss');this.sound.play('shield');this.floating(this.player.x,this.player.y-this.player.h-12,'+1 KHIÊN','#b7e7d4');}
+        else this.toast('Kho khiên đã đầy · dùng Space hoặc vuốt xuống');
+      }
+      this.updateUI();return true;
     }
     activateShield() {
       if (this.screen !== 'playing' || this.player.shieldTime > 0) return false;
@@ -766,6 +779,7 @@
     // Every player weapon shares boss immunity, phase transitions and death accounting.
     dealEnemyDamage(e,amount,attack={}) {
       if(this.screen!=='playing'||!e||e.dead||e.health<=0||e.intangible||e.bulletUntargetable||e.phase!=='active')return false;
+      const bossTarget=e.emotionProjection?e.projectionOwner:e.boss?e:null;
       const damage=Math.max(1,Number.isFinite(amount)?amount:1);
       if(MM.BossCombat?.hit(this,e)===false){this.burst(e.x,e.y-e.h*.5,'#a7edab',4);return false;}
       let handled=false;
@@ -776,6 +790,9 @@
       }
       if(!handled)e.health-=damage;
       MM.BossCombat?.afterDamage?.(this,e);
+      // Accepted projectiles count once, including the hit that triggers a
+      // form change and valid Rage-projection hits on the deity's shared HP.
+      this.recordAbyssBossHit(bossTarget,attack);
       e.hit=.12;if(!e.vinePhase&&!e.airborne&&!e.mythicAir)e.x=clamp(e.x+(attack.dir||this.player.dir)*(e.boss?2:7),18,W-18);
       this.burst(e.x,Number.isFinite(attack.y)?attack.y:e.y-e.h*.5,'#ffdaa0',5);
       if(e.health<=0)this.killEnemy(e);
@@ -816,7 +833,7 @@
       const hudPlayer=this.player;
       const hudSignature=[this.screen,this.level.id,this.levelKills,this.bossSpawned,this.bossDefeated,
         hudPlayer.health,hudPlayer.maxHealth,hudPlayer.ammo,hudPlayer.maxAmmo,hudPlayer.weaponMode,
-        Math.ceil((hudPlayer.shotTimer||0)*10),this.aimMode,this.shieldCount,this.shieldProgress().count,this.score,
+        Math.ceil((hudPlayer.shotTimer||0)*10),this.aimMode,this.shieldCount,this.shieldProgress().count,this.abyssBossHits%10,this.score,
         this.save.best,this.save.resume,this.save.completed.join(','),this.settings.controls,
         this.settings.effects,this.settings.reducedMotion,this.settings.sound,this.progression?.equipped,
         this.progression?.rewards?.join(','),this.weaponPicker?.open,this.selectedStory].join('|');
@@ -835,6 +852,7 @@
       this.updateAmmoUI();
       const shieldCharge=this.shieldProgress(),shieldEnemy=shieldCharge.abyss?'quái thường':'địch';
       this.ui['shield-count'].textContent=this.shieldCount;this.ui['shield-button'].classList.toggle('ready',this.shieldCount>0);this.ui['charge-label'].textContent=this.shieldCount>0?`${this.shieldCount} khiên sẵn sàng · ${shieldCharge.count}/${shieldCharge.goal} ${shieldEnemy} tích khiên`:`${shieldCharge.count}/${shieldCharge.goal} ${shieldEnemy} · Hạ ${shieldCharge.goal} ${shieldEnemy} để nhận khiên`;
+      if(shieldCharge.abyss&&this.level.boss)this.ui['charge-label'].textContent+=` · Boss ${this.abyssBossHits%10}/10 phát trúng`;
       this.ui['pad-shield-count'].textContent=this.shieldCount;
       document.querySelector('[data-control="shield"]').classList.toggle('ready',this.shieldCount>0);
       this.ui['fullscreen-button'].disabled=!['home','playing'].includes(this.screen)&&!document.fullscreenElement;

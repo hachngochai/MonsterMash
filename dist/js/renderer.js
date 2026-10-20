@@ -2345,6 +2345,10 @@
         c.font=`600 10px ${font}`;c.fillStyle='#e9d8b0';c.lineWidth=3;c.strokeStyle='#242737ed';
         const damage=boss.encounter?.damage||0,text=`${boss.mythicAir?'NGẮM LÊN CAO · ':''}GÂY ${damage%10}/10 MÁU · +1 KHIÊN`;c.strokeText(text,centre,armorY);c.fillText(text,centre,armorY);
       }
+      if(game.level.id>=101&&game.level.id<=150){
+        c.font=`600 10px ${font}`;c.fillStyle='#b7e7d4';c.lineWidth=3;c.strokeStyle='#17232ded';
+        const text=`TRÚNG ${Math.max(0,game.abyssBossHits||0)%10}/10 PHÁT · +1 KHIÊN`;c.strokeText(text,centre,armorY);c.fillText(text,centre,armorY);
+      }
       c.restore();
     }
   }

@@ -1,6 +1,6 @@
 # Monster Mash — The Midnight Hunt
 
-Rebuild 09 (v4.0.2) của Monster Mash của KIO: 150 màn, 3 cốt truyện, Canvas 2D và bản đồ Three.js đóng gói trong repo. Không cần CDN hoặc cài package. Tiến độ màn, kỹ năng, vũ khí, kỷ lục và cài đặt lưu vĩnh viễn bằng localStorage trên trình duyệt hiện tại.
+Rebuild 09 (v4.0.3) của Monster Mash của KIO: 150 màn, 3 cốt truyện, Canvas 2D và bản đồ Three.js đóng gói trong repo. Không cần CDN hoặc cài package. Tiến độ màn, kỹ năng, vũ khí, kỷ lục và cài đặt lưu vĩnh viễn bằng localStorage trên trình duyệt hiện tại.
 
 Bản đồ gồm **Miền Nhật Thực** (1–50), **Lời Nguyền Cổ Thú** (51–100) và **Vực Sâu Cổ Đại** (101–150). Vuốt ngang hoặc dùng mũi tên/tab để chuyển I → II → III. Mỗi vùng giữ bố cục dấu X riêng, có 45 chấm màn thường và 5 X/O boss. Đường tiếp nối 50 → 51 → 60 và 100 → 101 → 110 kết nối hành trình. Camera 3D cố định, chỉ nghiêng nhẹ theo chuột.
 
@@ -133,3 +133,7 @@ Mục 05 trong Cách chơi gồm 15 chặng (1–10 đến 141–150). Lần đ�
 ## Tiếp tế khiên tại Vực Sâu Cổ Đại · v4.0.2
 
 Màn 101–150 cấp 1 khiên sau mỗi 5 quái thường hạ được (kể cả quái thường do boss triệu hồi), tối đa 3 khiên. Boss, bản sao người chơi và ảo ảnh không cộng bộ đếm. Bộ đếm riêng tiếp tục khi qua các màn của chương III; thử lại khôi phục mốc đầu màn, chơi lại từ bản đồ bắt đầu bộ đếm mới. HUD và thông báo thiếu khiên hiển thị mốc 5. Các màn 1–100 vẫn dùng nhịp 10 địch cũ.
+
+## Khiên khi bắn boss · v4.0.3
+
+Trong màn 101–150, mỗi 10 viên đạn trúng boss và được chấp nhận gây sát thương cấp thêm 1 khiên, tối đa 3. Đếm số viên trúng, không đếm lượng sát thương: Hắc Hóa vẫn chỉ tính một viên; từng xương, mũi tên hoặc giáo ném được tính riêng. Đạn hụt, đạn bị chặn/phản lại, cận chiến, ảo ảnh và bản sao người chơi không tính. Hình chiếu Nộ truyền sát thương về boss 150 được tính; các hình chiếu khác không tính. Bộ đếm giữ qua chuyển dạng của cùng trận boss và bắt đầu lại khi vào/thử lại màn. HUD trên thanh boss hiển thị số viên còn tích. Cơ chế 5 quái thường và các cơ chế thưởng khiên của màn 1–100 giữ nguyên.
