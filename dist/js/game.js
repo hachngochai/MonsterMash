@@ -63,10 +63,11 @@
       // A page entry is a fresh expedition. Settings and the personal best remain.
       if(options.newRun===true){this.save.completed=[];this.save.resume=1;this.save.guidesSeen=[];this.save.progression={version:1,rewards:[],equipped:'gun',lifeKills:0};}
       this.progression = MM.SaveManager?.normalize(this.save.progression,this.save.completed);
-      // Local play builds are a sandbox: all milestone rewards are available
-      // for testing, but this temporary inventory must never enter the save.
+      // An explicit shared playtest link works on Pages too. Its temporary
+      // inventory never enters the normal save; localhost stays test by default.
       const localHost=['localhost','127.0.0.1','[::1]'].includes(root.location?.hostname);
-      const testOverride=options.testMode===true || (!this.headless && localHost && root.location?.search!=='?test=off');
+      const testFlag=typeof root.URLSearchParams==='function' ? new root.URLSearchParams(root.location?.search||'').get('test') : null;
+      const testOverride=options.testMode===true || testFlag==='all' || (!this.headless && localHost && testFlag!=='off');
       this.testMode=testOverride;
       if(testOverride&&this.progression){
         this.progression.rewards=[...(MM.SaveManager?.milestones||[])];
@@ -98,7 +99,9 @@
         this.mobileView = MM.MobileView ? new MM.MobileView(this, root) : null;
         this.bind(); this.buildMap(); this.syncSettings(); this.updateUI(); this.resize();
         if(this.testMode){
-          const badge=document.createElement('div');badge.className='test-mode-badge';badge.textContent='CHẾ ĐỘ THỬ · ĐÃ MỞ KHÓA TOÀN BỘ';badge.setAttribute('role','status');
+          const badge=document.createElement('div');badge.className='test-mode-badge';badge.textContent='BẢN TEST · 150 MÀN · ĐÃ MỞ KHÓA TOÀN BỘ';badge.setAttribute('role','status');
+          badge.title='Toàn bộ vũ khí và kỹ năng đã mở. Bản test không ghi đè tiến trình bản chính.';
+          document.title='Monster Mash · Bản test công khai';
           document.querySelector('.app')?.append(badge);
         }
         this.frame = this.frame.bind(this);
