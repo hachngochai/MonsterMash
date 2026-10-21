@@ -80,6 +80,7 @@
       const p = g.player, dir = direction < 0 ? -1 : 1;
       if (g.screen !== 'playing' || g.weaponPicker?.open || p.shotTimer > .001 || p.stunTime > 0
         || p.petrifyTime > 0 || p.rollTime > 0 || g.rollSlash?.time > 0) return false;
+      if(MM.UnderwaterMode&&!MM.UnderwaterMode.canAttack(g))return false;
       const weapon = this.profile(g, dir);
       if (weapon.locked) return false;
       if (p.ammo < weapon.cost) {
@@ -183,6 +184,7 @@
       if (g.screen !== 'playing' || g.weaponPicker?.open || !enabled(g) || this.current(g) !== 'axes'
         || g.rollSlash?.time > 0 || (g.rollSlashCooldown || 0) > 1e-8 || p.rollTime > 0
         || p.stunTime > 0 || p.petrifyTime > 0) return false;
+      if(MM.UnderwaterMode&&!MM.UnderwaterMode.canAttack(g))return false;
       g.rollSlash = {time:.32, duration:.32, dir, hit:new Set(), lastX:p.x, lastY:p.y, empoweredUsed:false};
       g.rollSlashCooldown = .9;
       p.dir = dir; p.vx = dir * 850; p.jumpBuffer = 0;

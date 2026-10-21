@@ -113,8 +113,17 @@
       'Bản sao Ái có vũ khí và kỹ năng đã mở tương ứng. Né đòn của nó như né người chơi khác; đừng quên giữ đạn và khiên.',
       'Ở nửa máu, boss hồi đầy đúng một lần và mở Mê Cung Luân Hồi. Cảm xúc đổi mỗi 15 giây; chỉ hình chiếu Nộ chuyển sát thương vào thanh máu thật.',
       'Quan sát gương mặt và hiệu ứng màu, tìm đúng hình chiếu Nộ. Hạ thanh máu chung để kết thúc cốt truyện III.'
-    ],reward:'Mốc 150 hoàn thành Vực Sâu Cổ Đại. Tiến độ và những phần thưởng đã mở được lưu trên thiết bị; mốc này không cấp thêm vũ khí hoặc kỹ năng.'}
-  ].map((g,index)=>({...g,index:index+1,end:g.start+9,learn:g.start>=101?['Trong màn 101–150, hạ mỗi 5 quái thường hoặc bắn trúng boss đủ 10 viên nhận 1 khiên, giữ tối đa 3. Hai bộ đếm riêng biệt. Đạn hụt, bị chặn/phản lại và đòn cận chiến không tính vào mốc bắn boss. Bắn đúng hình chiếu Nộ trong mê cung vẫn được tính.',...g.learn]:g.learn}));
+    ],reward:'Mốc 150 hoàn thành Vực Sâu Cổ Đại. Tiến độ và những phần thưởng đã mở được lưu trên thiết bị; mốc này không cấp thêm vũ khí hoặc kỹ năng.'},
+    {start:151,title:'Hơi thở đầu tiên dưới biển',boss:'Quái Ngư Song Trảo · Màn 160',learn:[
+      'Trong Tầng Biển Nông, nhân vật bơi lơ lửng thay vì nhảy. Đi trái/phải để né đòn; phím ↑ hoặc nút OXY dùng 1 bình dự trữ để hồi 50% oxy. Giữ phím không dùng liên tiếp nhiều bình.',
+      'Oxy đầy duy trì 30 giây. Bắt đầu có 2 bình dự trữ; mỗi hòm OXY cho thêm 2 bình. Hết oxy sẽ khóa vũ khí ngay; sau 5 giây ngạt, bạn mất 1 HP mỗi giây. Hãy nhặt hòm và cấp oxy sớm.',
+      'Màn 151–153 có cá piranha lao tới theo hướng đã báo. Từ 154 thêm cá nóc phồng gai khi bạn đến gần; từ 157 thêm cá ngựa bắn cầu nước từ xa. Hòm tiếp tế trôi giữa nước, không nằm trên mặt đất.'
+    ],fight:[
+      'Liên Trảo báo trước rồi lao tới cào 3 nhát. Mỗi nhát trúng mất 1 HP và 1 khiên dự trữ nếu có; bật khiên để chặn HP và dùng 1 lượt đỡ. Bất Tử vẫn bảo vệ HP.',
+      'Ở nửa máu, boss tạo một bản sao có thanh máu riêng 60 HP. Boss gốc có 120 HP; phải hạ cả hai mới thắng, bản sao không nhân đôi tiếp.',
+      'Câm Lặng khóa sát thương vũ khí trong 3 giây; bạn vẫn bơi và cấp oxy được. Chiêu lặp lại mỗi 15 giây ở dạng thường và 10 giây khi Song Sinh. Rời vùng hút của lốc nước: chỉ khi chạm lõi mới mất 2 HP và một nửa oxy hiện có.'
+    ],reward:'Hạ boss 160 hoàn thành Tầng Biển Nông và lưu tiến độ. Chặng 161–200 sẽ mở trong các bản cập nhật sau; màn 160 chưa cấp thêm vũ khí hoặc kỹ năng. Các chỉ số oxy và máu trong đợt này là cân bằng chơi thử.'}
+  ].map((g,index)=>({...g,index:index+1,end:g.start+9,learn:g.start>=101&&g.start<=141?['Trong màn 101–150, hạ mỗi 5 quái thường hoặc bắn trúng boss đủ 10 viên nhận 1 khiên, giữ tối đa 3. Hai bộ đếm riêng biệt. Đạn hụt, bị chặn/phản lại và đòn cận chiến không tính vào mốc bắn boss. Bắn đúng hình chiếu Nộ trong mê cung vẫn được tính.',...g.learn]:g.learn}));
   const forLevel=id=>guides.find(g=>id>=g.start&&id<=g.end)||guides[0];
   const normalizeSeen=value=>Array.isArray(value)?[...new Set(value.filter(id=>guides.some(g=>g.start===id)))].sort((a,b)=>a-b):[];
   function element(tag,text,className){const e=root.document.createElement(tag);if(text)e.textContent=text;if(className)e.className=className;return e;}
@@ -141,11 +150,12 @@
     const guide=forLevel(g.level.id),dialog=g.ui?.['tutorial-dialog'];
     if(g.headless||!dialog||options.retry||g.level.id!==guide.start||normalizeSeen(g.save.guidesSeen).includes(guide.start))return false;
     focusHelp(g);pending.set(g,{start:guide.start,level:g.level.id});
-    g.ui['tutorial-kicker'].textContent=`CHẶNG ${String(guide.index).padStart(2,'0')} / 15 · MÀN ${guide.start}–${guide.end}`;
+    g.ui['tutorial-kicker'].textContent=`CHẶNG ${String(guide.index).padStart(2,'0')} / ${guides.length} · MÀN ${guide.start}–${guide.end}`;
     g.ui['tutorial-title'].textContent=guide.title;
     g.ui['tutorial-content'].replaceChildren(content(guide));
     const keys=MM.KeyBindings,bindings=keys?.normalize(g.settings.keyBindings);
-    g.ui['tutorial-controls'].textContent=bindings?`PC: ${keys.label(bindings.left)} / ${keys.label(bindings.right)} di chuyển · ${keys.label(bindings.jump)} nhảy · ${keys.label(bindings.shootLeft)} / ${keys.label(bindings.shootRight)} bắn · ${keys.label(bindings.shield)} khiên. Mobile: dùng nút hoặc vuốt.`:'Dùng nút hoặc vuốt trên điện thoại; các phím PC có thể đổi trong Cài đặt.';
+    const underwater=guide.start===151;
+    g.ui['tutorial-controls'].textContent=bindings?`PC: ${keys.label(bindings.left)} / ${keys.label(bindings.right)} di chuyển · ${keys.label(bindings.jump)} ${underwater?'cấp oxy':'nhảy'} · ${keys.label(bindings.shootLeft)} / ${keys.label(bindings.shootRight)} bắn · ${keys.label(bindings.shield)} khiên. Mobile: ${underwater?'nút OXY hoặc vuốt lên để cấp oxy; dùng nút hoặc vuốt ngang để bơi.':'dùng nút hoặc vuốt.'}`:underwater?'PC: ↑ cấp oxy. Mobile: nút OXY hoặc vuốt lên để cấp oxy; dùng nút hoặc vuốt ngang để bơi. Các phím PC có thể đổi trong Cài đặt.':'Dùng nút hoặc vuốt trên điện thoại; các phím PC có thể đổi trong Cài đặt.';
     g.ui['tutorial-begin'].textContent='Sẵn sàng · Bắt đầu màn '+g.level.id+' →';
     g.screen='briefing';g.clearInputs();g.updateUI();dialog.showModal();dialog.scrollTop=0;return true;
   }

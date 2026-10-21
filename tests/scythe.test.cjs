@@ -2,7 +2,7 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 function fixture(id=141){
   const scope=vm.createContext({});
-  for(const name of ['abyss-config','campaign','bosses','golem','wolves','kong','dragons','mythic','abyss-combat','save-manager','boss-manager','map-manager','skill-manager','weapon-manager','input-manager','key-bindings','game'])
+  for(const name of ['abyss-config','underwater-config','campaign','bosses','golem','wolves','kong','dragons','mythic','abyss-combat','save-manager','boss-manager','map-manager','skill-manager','weapon-manager','input-manager','key-bindings','game'])
     vm.runInContext(fs.readFileSync('js/'+name+'.js','utf8'),scope);
   const MM=scope.MM,g=new MM.Game({headless:true,storage:{getItem:()=>null,setItem(){}},random:()=>.5});
   g.progression.rewards=[40,60,100,140];g.progression.equipped='scythe';g.start(id);

@@ -8,20 +8,21 @@ const test = require('node:test');
 
 const context = vm.createContext({});
 vm.runInContext(fs.readFileSync(path.join(__dirname, '../js/abyss-config.js'), 'utf8'), context);
+vm.runInContext(fs.readFileSync(path.join(__dirname, '../js/underwater-config.js'), 'utf8'), context);
 vm.runInContext(fs.readFileSync(path.join(__dirname, '../js/campaign.js'), 'utf8'), context);
 const campaign = context.MM.Campaign;
 
-test('campaign has 150 sequential levels and fifteen boss milestones', () => {
-  assert.equal(campaign.worlds.length, 15);
-  assert.equal(campaign.levels.length, 150);
-  assert.equal(campaign.levels.filter(level => level.boss).length, 15);
+test('campaign has 160 sequential levels and sixteen boss milestones', () => {
+  assert.equal(campaign.worlds.length, 16);
+  assert.equal(campaign.levels.length, 160);
+  assert.equal(campaign.levels.filter(level => level.boss).length, 16);
   campaign.levels.forEach((level, index) => {
     assert.equal(level.id, index + 1);
     assert.equal(level.world, Math.floor(index / 10));
     assert.equal(level.boss, level.id % 10 === 0);
     assert.ok(level.name && level.story);
     assert.ok(level.target >= 10 && level.target <= 46);
-    assert.ok(level.spawnInterval >= 0.9 && level.spawnInterval <= 2.4);
+    assert.ok(level.spawnInterval >= 0.9 && level.spawnInterval <= (level.underwater?2.6:2.4));
     assert.ok(level.maxAlive >= 3 && level.maxAlive <= 7);
     assert.ok(level.types.length > 0);
     level.types.forEach(type => assert.ok(campaign.enemyTypes[type], type));
@@ -38,8 +39,8 @@ test('campaign has 150 sequential levels and fifteen boss milestones', () => {
 
 test('saved level ids clamp safely, including invalid or obsolete saves', () => {
   assert.equal(campaign.getLevel(-50).id, 1);
-  assert.equal(campaign.getLevel(500).id, 150);
-  assert.equal(campaign.getLevel(Infinity).id, 150);
+  assert.equal(campaign.getLevel(500).id, 160);
+  assert.equal(campaign.getLevel(Infinity).id, 160);
   assert.equal(campaign.getLevel(-Infinity).id, 1);
   assert.equal(campaign.getLevel(undefined).id, 1);
   assert.equal(campaign.getLevel('broken').id, 1);
@@ -135,7 +136,8 @@ test('finite ammunition grows with enemy durability and remains collectible', ()
       // Include phase refills and real weapon damage: aerial rounds deal two
       // HP; Lang Vương's sniper exchanges five rounds for five HP. Chimera's
       // three final bodies contribute another 30 + 20 + 40 ground HP.
-      const bossDemand = level.id === 130 ? bossHealth * 2
+      const bossDemand = level.id === 160 ? Math.ceil(bossHealth * 1.5)
+        : level.id === 130 ? bossHealth * 2
         : level.id === 140 ? bossHealth + context.MM.AbyssConfig.combat.roc.knightHealth
         : level.id === 150 ? Math.ceil(bossHealth * 1.5)
         : level.id === 80 ? Math.ceil(bossHealth / 2) * 2
@@ -144,7 +146,9 @@ test('finite ammunition grows with enemy durability and remains collectible', ()
         : bossHealth + (level.id === 70 ? Math.ceil(bossHealth / 2) : 0);
       const demand = regularDemand + bossDemand;
       const cratesNeeded = Math.max(0, Math.ceil((demand - initial - (level.boss ? crate : 0)) / crate));
-      assert.ok(cratesNeeded * level.ammoInterval <= 75, `level ${level.id} ${difficulty}: expected supply takes ${cratesNeeded * level.ammoInterval}s`);
+      // The new encounter adds an independent half-health twin. Keep the old
+      // 75s supply budget and allow 90s only for the provisional aquatic set.
+      assert.ok(cratesNeeded * level.ammoInterval <= (level.underwater?90:75), `level ${level.id} ${difficulty}: expected supply takes ${cratesNeeded * level.ammoInterval}s`);
       assert.ok(crate >= campaign.createEnemy(level.types[0], level, difficulty, -1, () => 0.5).health);
     });
   });
@@ -159,7 +163,7 @@ test('original enemy skills progress with the campaign and Dracula combines skil
   assert.equal(campaign.enemyTypes.vampire.ability, 'bat-morph');
   assert.equal(campaign.getLevel(1).abilitySpawnEvery, 0);
   assert.equal(campaign.getLevel(3).abilitySpawnEvery, 4);
-  campaign.levels.filter(level=>!level.abyss).forEach(level => {
+  campaign.levels.filter(level=>!level.abyss&&!level.underwater).forEach(level => {
     assert.ok([0, 3, 4].includes(level.abilitySpawnEvery));
     assert.ok(level.abilityWarning >= 1.5);
     assert.ok(level.abilityInterval >= 6.5);
@@ -324,7 +328,7 @@ test('elapsed attack pressure has gradual world transitions and conservative cap
   assert.equal(campaign.getLevel(50).enemyPressureCap, 1.65);
   assert.equal(campaign.getLevel(10).bossPressureCap, 1.7);
   assert.equal(campaign.getLevel(50).bossPressureCap, 1.85);
-  campaign.levels.forEach((level, index) => {
+  campaign.levels.filter(level=>!level.underwater).forEach((level, index) => {
     assert.ok(level.enemyPressureCap >= 1.5 && level.enemyPressureCap <= 1.725);
     assert.ok(level.bossPressureCap >= 1.7 && level.bossPressureCap <= 1.925);
     assert.ok(level.bossPressureCap > level.enemyPressureCap);

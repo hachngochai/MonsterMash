@@ -1,6 +1,14 @@
 # Monster Mash — The Midnight Hunt
 
-Rebuild 09 (v4.0.6) của Monster Mash của KIO: 150 màn, 3 cốt truyện, Canvas 2D và bản đồ Three.js đóng gói trong repo. Không cần CDN hoặc cài package. Tiến độ màn, kỹ năng, vũ khí, kỷ lục và cài đặt lưu vĩnh viễn bằng localStorage trên trình duyệt hiện tại.
+Rebuild 10 (v4.1.0) của Monster Mash của KIO: 160 màn, 4 cốt truyện, Canvas 2D và bản đồ Three.js đóng gói trong repo. Không cần CDN hoặc cài package. Tiến độ màn, kỹ năng, vũ khí, kỷ lục và cài đặt lưu vĩnh viễn bằng localStorage trên trình duyệt hiện tại.
+
+## Hải Vực Quên Lãng · v4.1.0
+
+Màn 151–160 mở Tầng Biển Nông: bơi lơ lửng, oxy hữu hạn, hòm tiếp tế trôi giữa nước và ba loài cá theo mẫu tham chiếu. Boss **Quái Ngư Song Trảo** có Liên Trảo, Song Sinh, Câm Lặng và Cầu Xoáy Hút. Cốt truyện IV giữ bố cục vuốt và đường nối từ màn 150; mốc 170–200 hiển thị sắp mở, chưa có màn hoặc boss mới.
+
+↑ hoặc nút OXY dùng một bình dự trữ để hồi 15/30 giây oxy; bắt đầu có 2 bình, mỗi hòm thêm 2. Hết oxy khóa sát thương vũ khí; ngạt đủ 5 giây mất 1 HP rồi tiếp tục 1 HP/giây. Câm Lặng 3 giây khóa sát thương riêng, vẫn cho cấp oxy và di chuyển. Boss có 120 HP ở Cân bằng; bản sao độc lập 60 HP xuất hiện một lần tại nửa máu, phải hạ cả hai mới thắng. Các giá trị chưa chốt được đánh dấu **cân bằng chơi thử**, tách trong `js/underwater-config.js`.
+
+[Phòng thử biển](tests/underwater-preview.html) có nút chạy/dừng, thử Song Sinh, đổi vũ khí và điều khiển cảm ứng, không ghi save. Xem [cấu hình và kiểm chứng](docs/shallow-sea.md), [prompt tạo hình](docs/underwater-art-prompts.md). Các màn 1–150 giữ nguyên dữ liệu và cơ chế.
 
 ## Tạo hình Thiên Thủ Cổ Thần · v4.0.6
 
@@ -10,9 +18,9 @@ Kiểm tra phóng lớn tại [phòng thử Cổ Thần](tests/deity-preview.htm
 
 ## Bản test công khai · v4.0.5
 
-[Mở và chia sẻ bản test](https://hachngochai.github.io/MonsterMash/?test=all&v=4.0.6). Ai có link đều chơi được trên PC hoặc điện thoại, không cần tài khoản. Mỗi người chơi trên thiết bị riêng.
+[Mở và chia sẻ bản test](https://hachngochai.github.io/MonsterMash/?test=all&v=4.1.0). Ai có link đều chơi được trên PC hoặc điện thoại, không cần tài khoản. Mỗi người chơi trên thiết bị riêng.
 
-Link `?test=all` mở đủ 150 màn và toàn bộ phần thưởng, vũ khí, kỹ năng để thử. Badge **BẢN TEST** giúp nhận biết. Độ khó, sát thương, giới hạn đạn và cơ chế boss giữ nguyên. Màn 70 vẫn dùng quy tắc riêng của Trăng Máu.
+Link `?test=all` mở đủ 160 màn và toàn bộ phần thưởng, vũ khí, kỹ năng để thử. Badge **BẢN TEST** giúp nhận biết. Độ khó, sát thương, giới hạn đạn và cơ chế boss giữ nguyên. Màn 70 vẫn dùng quy tắc riêng của Trăng Máu.
 
 Tiến trình, trang bị, kỹ năng và cài đặt thay đổi trong bản test chỉ tồn tại trong phiên đang mở, không ghi đè save thật. Mở link chính không có `test=all` để tiếp tục hành trình đã lưu. Localhost mặc định vẫn bật test; thêm `?test=off` (có thể kèm `v`) để thử lưu tiến độ bình thường.
 

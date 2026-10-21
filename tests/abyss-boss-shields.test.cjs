@@ -3,7 +3,7 @@ const test=require('node:test'),assert=require('node:assert/strict'),fs=require(
 
 function fixture(level=110){
  const scope=vm.createContext({});
- for(const name of ['abyss-config','campaign','bosses','golem','wolves','kong','dragons','mythic','abyss-combat','save-manager','boss-manager','map-manager','skill-manager','weapon-manager','input-manager','game'])vm.runInContext(fs.readFileSync('js/'+name+'.js','utf8'),scope);
+ for(const name of ['abyss-config','underwater-config','campaign','bosses','golem','wolves','kong','dragons','mythic','abyss-combat','save-manager','boss-manager','map-manager','skill-manager','weapon-manager','input-manager','game'])vm.runInContext(fs.readFileSync('js/'+name+'.js','utf8'),scope);
  const MM=scope.MM,g=new MM.Game({headless:true,storage:{getItem:()=>null,setItem(){}},random:()=>.5});g.start(level);g.level.target=999;g.spawnTimer=g.ammoTimer=1e6;g.level.hazardTypes=[];
  g.player.health=g.player.maxHealth=100;g.player.immortalTime=100;g.player.ammo=100;
  const boss=g.spawn('boss',-1);Object.assign(boss,{phase:'active',x:620,speed:0,abyssNext:1e6,nextEmotion:1e6,nextVanish:1e6});

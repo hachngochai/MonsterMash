@@ -45,7 +45,7 @@ function forceCast(f,index=0) {
 }
 function realGame(level=150,{equipped='gun',rewards=[]}={}) {
   const context=vm.createContext({});
-  for(const name of ['abyss-config','campaign','bosses','golem','wolves','kong','dragons','mythic','abyss-combat',
+  for(const name of ['abyss-config','underwater-config','campaign','bosses','golem','wolves','kong','dragons','mythic','abyss-combat',
     'save-manager','boss-manager','map-manager','skill-manager','weapon-manager','input-manager','game']) {
     vm.runInContext(fs.readFileSync(path.join(root,name+'.js'),'utf8'),context,{filename:name+'.js'});
   }

@@ -436,10 +436,12 @@
     const slash=game?.rollSlash,slashing=(slash?.time||0)>0;
     const knocked = player.knockdownTime > 0, rolling = player.rollTime > 0 || slashing;
     const rollProgress=slashing?1-slash.time/Math.max(.01,slash.duration):player.rollProgress||0,rollDir=slashing?slash.dir:player.rollDir||dir;
-    const stride = !knocked && effects && Math.abs(player.vx || 0) > 10 ? Math.sin(t * 18) * 4 * motion : 0;
+    const swimming=player.swimming===true;
+    const stride = !knocked && effects ? swimming?Math.sin(player.swimPhase||t*2)*(2+5*motion):Math.abs(player.vx||0)>10?Math.sin(t*18)*4*motion:0:0;
     const airborne = y < GROUND - 4, bob = !knocked && !airborne && effects ? Math.abs(Math.sin(t * 18)) * motion * .9 : 0;
-    shadow(c, x, y, knocked ? 62 : player.w || 38, airborne);
+    if(!swimming)shadow(c, x, y, knocked ? 62 : player.w || 38, airborne);
     c.save(); c.translate(x, y - bob); c.scale((player.w || 38) / 38, (player.h || 54) / 54); c.lineJoin = 'round'; c.lineCap = 'round';
+    if(swimming&&!rolling&&!knocked){c.translate(0,-27);c.rotate(player.swimTilt||0);c.translate(0,27);}
     if (knocked) c.rotate(-1.16 * dir);
     if (rolling) { c.translate(0, -27); c.rotate(rollProgress * TAU * rollDir); c.translate(0, 27); }
     if (player.invulnerable > 0 && effects) c.globalAlpha = .72 + Math.sin(t * 37) * .18;
@@ -447,11 +449,17 @@
     const sniper = weapon==='gun' && player.weaponMode === 'sniper', highAim = player.weaponMode === 'highAim';
     const outline = '#101923', skin = '#d8b47d', empty = (sniper ? player.ammo < 5 : player.ammo === 0) && !(player.shotTimer > .001);
     // Combat boots and articulated legs under the original square camo body.
+    if(swimming){
+      for(const side of [-1,1]){c.save();c.translate(side*8,-13);c.rotate(side*stride*.07);
+        rounded(c,-4,-1,8,13,2,side<0?'#283e3a':'#35493d',outline,2);
+        polygon(c,[[-5,9],[6,9],[10,16],[-7,16]],'#247986',outline,1.5);line(c,-3,12,5,13,'#86dce1',1);c.restore();}
+    }else{
     rounded(c, -13 + stride, -13, 9, 13, 2, '#283e3a', outline, 2);
     rounded(c, 4 - stride, -13, 9, 13, 2, '#35493d', outline, 2);
     rounded(c, -16 + stride, -5, 14, 6, 2, '#17252b', outline, 1.5);
     rounded(c, 3 - stride, -5, 14, 6, 2, '#223039', outline, 1.5);
     line(c, -13 + stride, -2, -5 + stride, -2, '#73806b', 1); line(c, 6 - stride, -2, 14 - stride, -2, '#73806b', 1);
+    }
     rounded(c, -18, -33, 36, 24, 4, '#577846', outline, 2);
     polygon(c, [[-14, -31], [-4, -31], [-2, -24], [-10, -20], [-16, -24]], '#354f36');
     polygon(c, [[7, -24], [15, -29], [17, -17], [8, -14], [4, -19]], '#3c593b');
@@ -2395,12 +2403,16 @@
     if (!scenes.has(sceneWorld)) scenes.set(sceneWorld, createScene(sceneWorld));
     c.save();
     if (effects && game.shake > 0) c.translate(Math.sin(t * 83) * game.shake, Math.cos(t * 97) * game.shake * .6);
-    const abyss=window.MM?.AbyssRenderer;
+    const abyss=window.MM?.AbyssRenderer,water=window.MM?.UnderwaterRenderer;
+    const waterScene=water?.drawBackground(c,game,t);
     const abyssScene=abyss?.drawBackground(c,game,t);
-    if(!abyssScene){c.drawImage(scenes.get(sceneWorld), 0, 0); drawAtmosphere(c, sceneWorld, t, effects);}
+    if(!abyssScene&&!waterScene){c.drawImage(scenes.get(sceneWorld), 0, 0); drawAtmosphere(c, sceneWorld, t, effects);}
     drawBloodMoon(c, game, t, effects);
     drawKongRage(c, game);
-    if (game.screen === 'home' && (!game.enemies || !game.enemies.length)) drawHomeCast(c, t, effects, world, game.level);
+    if (game.screen === 'home' && (!game.enemies || !game.enemies.length)) {
+      if(waterScene){for(const [i,type] of ['piranha','pufferfish','seahorse'].entries())water.drawEnemy(c,game,{type,archetype:type,x:190+i*285,y:300,w:type==='seahorse'?55:75,h:type==='seahorse'?90:60,health:1,maxHealth:1,phase:'active',dir:i%2?-1:1},t);}
+      else drawHomeCast(c, t, effects, world, game.level);
+    }
     else {
       drawBossHazards(c, game.bossHazards, t, effects, world);
       drawGroundCracks(c, game.groundCracks);
@@ -2411,9 +2423,11 @@
       drawRealmZones(c,game.mythicZones,t,effects,game.viewTop||0);
       drawBananaPeels(c, game.bananaPeels, t, effects);
       abyss?.drawEffects(c,game,false);
+      water?.drawEffects(c,game,t,false);
       drawPlatforms(c, game.enemies || [], t, effects);
       for (const p of game.pickups || []) drawPickup(c, p, t, effects);
       for (const crate of game.ammoCrates || []) drawAmmoCrate(c, crate, t, effects);
+      water?.drawLoot(c,game,t);
       drawBossEggs(c, game.bossEggs, t, effects);
       for (const e of game.enemies || []) {
         if (e.phase === 'warning') drawWarning(c, e, t, effects, world);
@@ -2422,7 +2436,7 @@
           const shadowGame={...game,progression:{...game.progression,equipped:e.shadowSnapshot?.weapon||'gun'},rollSlash:null,weaponAttack:null};
           drawHunter(c,{...e,ammo:e.ammo,weaponMode:e.shadowSnapshot?.profile?.kind||'normal'},t,effects,shadowGame);
           c.globalCompositeOperation='source-atop';ellipse(c,e.x,e.y-e.h*.5,e.w*.7,e.h*.55,'#51347166');c.restore();
-        }else if(!abyss?.drawEnemy(c,game,e,t))drawMonster(c, e, t, effects, world, game.viewTop || 0);
+        }else if(!water?.drawEnemy(c,game,e,t)&&!abyss?.drawEnemy(c,game,e,t))drawMonster(c, e, t, effects, world, game.viewTop || 0);
         if ((e.splitTriggered || e.draculaClone) && e.health > 0 && !e.intangible) {
           c.save(); rounded(c, e.x - 10, e.y - e.h - 27, 20, 17, 3, '#202634c9', '#bd98a05e', 1);
           c.font = `600 11px ${font}`; c.fillStyle = '#f6d7bd'; c.textAlign = 'center'; c.fillText(e.draculaClone ? 'II' : 'I', e.x, e.y - e.h - 15); c.restore();
@@ -2451,6 +2465,7 @@
       for (const shot of game.mythicShots || []) drawRealmShot(c,shot,t,effects);
       if (effects) for (const p of game.particles || []) drawParticle(c, p);
       abyss?.drawEffects(c,game,true);
+      water?.drawEffects(c,game,t,true);
       abyss?.drawLighting(c,game);
       drawFloats(c, game.floats);
       drawBossHUD(c, (game.enemies || []).filter(e => e.boss && e.health > 0), game);

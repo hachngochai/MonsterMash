@@ -8,7 +8,7 @@ const MILESTONES=[10,20,30,40,50,60,70,80,90,100];
 const plain=value=>JSON.parse(JSON.stringify(value));
 function fresh({level=1,rewards=MILESTONES.filter(id=>id!==40),equipped='gun',data}={}) {
   const context=vm.createContext({});
-  for(const name of ['abyss-config','campaign','bosses','golem','wolves','kong','dragons','mythic',
+  for(const name of ['abyss-config','underwater-config','campaign','bosses','golem','wolves','kong','dragons','mythic',
     'key-bindings','save-manager','boss-manager','map-manager','skill-manager','weapon-manager','input-manager','game']) {
     vm.runInContext(fs.readFileSync(path.join(__dirname,'../js',name+'.js'),'utf8'),context,{filename:name+'.js'});
   }

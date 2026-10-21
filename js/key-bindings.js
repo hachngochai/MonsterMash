@@ -40,7 +40,8 @@
   if(g.headless||!g.ui)return;const map=normalize(g.settings.keyBindings),signature=JSON.stringify(map)+'|'+g.keyCapture;if(g.bindingUISignature===signature)return;g.bindingUISignature=signature;
   for(const button of root.document.querySelectorAll('[data-bind-action]')){const action=button.dataset.bindAction;button.textContent=g.keyCapture===action?'Nhấn phím…':label(map[action]);button.classList.toggle('recording',g.keyCapture===action);button.setAttribute('aria-label',names[action]+': '+button.textContent);}
   for(const node of root.document.querySelectorAll('[data-key-label]'))node.textContent=label(map[node.dataset.keyLabel]);
-  const desc=`Đi: ${label(map.left)} / ${label(map.right)}. Nhảy: ${label(map.jump)}. Bắn: ${label(map.shootLeft)} / ${label(map.shootRight)}. Khiên: ${label(map.shield)}.`;
+  const diving=MM.UnderwaterMode?.active(g);
+  const desc=`${diving?'Bơi':'Đi'}: ${label(map.left)} / ${label(map.right)}. ${diving?'Cấp oxy':'Nhảy'}: ${label(map.jump)}. Bắn: ${label(map.shootLeft)} / ${label(map.shootRight)}. Khiên: ${label(map.shield)}.`;
   if(g.ui['current-key-guide'])g.ui['current-key-guide'].textContent=desc+' Esc luôn tạm dừng; Enter xác nhận bảng vũ khí.';
   g.canvas?.setAttribute('aria-label','Sân chơi. '+desc);
   if(g.ui['shield-button'])g.ui['shield-button'].title=label(map.shield)+' hoặc vuốt xuống';

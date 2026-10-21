@@ -17,7 +17,8 @@
     { id: 11, name: 'Hang Ký Sinh Cổ Đại', subtitle: 'Phân biệt thực và ảo', color: '#d68cf5', enemy: 'parasite', scenery: 11 },
     { id: 12, name: 'Hồ Nước Ngầm và Hang Thạch Anh', subtitle: 'Ánh sáng sau chiếc mai gương', color: '#86e6f8', enemy: 'littleTurtle', scenery: 12 },
     { id: 13, name: 'Vách Đá Vọng Âm và Sân Nghi Lễ', subtitle: 'Lần theo tiếng vọng của cổ điểu', color: '#bd96ec', enemy: 'abyssCrow', scenery: 13 },
-    { id: 14, name: 'Lăng Mộ Luân Hồi', subtitle: 'Một đầu xoay, bốn cõi lòng', color: '#e0bb73', enemy: 'clayGuard', scenery: 14 }
+    { id: 14, name: 'Lăng Mộ Luân Hồi', subtitle: 'Một đầu xoay, bốn cõi lòng', color: '#e0bb73', enemy: 'clayGuard', scenery: 14 },
+    { id: 15, name: 'Tầng Biển Nông', subtitle: 'Hải Vực Quên Lãng · Học cách thở dưới nước', color: '#6cdded', enemy: 'piranha', scenery: 15, underwater:true }
   ];
 
   const enemyTypes = {
@@ -49,6 +50,9 @@
   const abyssConfig = root.MM && root.MM.AbyssConfig;
   if (!abyssConfig) throw new Error('Load js/abyss-config.js before js/campaign.js.');
   Object.assign(enemyTypes, abyssConfig.enemies, abyssConfig.bosses);
+  const underwaterConfig = root.MM && root.MM.UnderwaterConfig;
+  if (!underwaterConfig) throw new Error('Load js/underwater-config.js before js/campaign.js.');
+  Object.assign(enemyTypes, underwaterConfig.enemies);
 
   const chapters = [
     {
@@ -414,6 +418,35 @@
     levels.push(config);
   }));
 
+  // This release opens only the shallow sea. The remaining planned ocean
+  // milestones are map landmarks, not playable levels or invented bosses.
+  const seaNames=['Hơi thở đầu tiên dưới biển','Răng nhọn giữa san hô','Dòng nước săn mồi','Bóng gai trong nước','Khoảng cách an toàn','Qua rặng san hô gai','Vòng nước nén','Ba loài dưới nắng','Ánh sáng phía đáy sâu','Quái Ngư Song Trảo'];
+  const seaStories=[
+    'Dòng nước sau lăng mộ đưa người giữ đèn vào Hải Vực Quên Lãng. Bạn lơ lửng giữa nước; ↑ hoặc nút OXY tiêu một bình dự trữ để cấp oxy, không còn nhảy.',
+    'Piranha há miệng báo trước cú lao. Bơi khỏi đường tấn công, giữ đạn và thu hòm oxy đang chìm xuống giữa vùng nước.',
+    'Các đàn cá săn mồi bơi qua san hô. Quan sát cả thanh oxy đang có và số bình dự trữ; bình dự trữ không tự biến thành oxy.',
+    'Cá nóc phồng lên khi bạn đến gần. Bơi lùi để nó xẹp, hoặc bắn từ ngoài vùng gai; va chạm lúc phồng mất một máu và bị đẩy ra.',
+    'Piranha và cá nóc chia nhau dòng chảy. Giữ một khoảng trống để tránh cú lao mà không chạm vào cá nóc đang phồng.',
+    'Những hòm tiếp tế dừng ở giữa vùng nước rồi lơ lửng. Nhặt đạn, máu và bình oxy trước khi tiến qua rặng san hô.',
+    'Cá ngựa xuất hiện với mõm phát sáng trước khi bắn. Tia nước cao áp chỉ đi trong nửa chiều ngang vùng chơi; tránh đường ngắm của nó.',
+    'Ba loài cá phối hợp giữa những cột đá cổ. Dùng nhịp nghỉ sau cú lao để rời đường nước nén và thu oxy.',
+    'Ánh sáng mặt biển yếu dần. Chuẩn bị bình oxy và khiên trước tiếng cào vọng lên từ phía đáy sâu.',
+    'Quái Ngư Song Trảo lao tới cào ba nhát riêng biệt, tạo Câm Lặng ba giây và gọi cầu xoáy hút. Ở nửa máu, một bản sao có thanh máu riêng xuất hiện đúng một lần; hạ cả hai trong khi vẫn quản lý oxy.'
+  ];
+  const seaBalance=underwaterConfig.campaign;
+  seaNames.forEach((name,stage)=>{
+    const boss=stage===9,skills=boss?['triple-claw','monstrous-twins','silence','suction-vortex']:[];
+    levels.push(Object.assign({},seaBalance,{
+      id:151+stage,world:15,name,underwater:true,balanceStatus:'provisional-playtest',
+      target:seaBalance.targets[stage],spawnInterval:seaBalance.intervals[stage],maxAlive:seaBalance.caps[stage],
+      types:stage<3?['piranha']:stage<6?['piranha','pufferfish']:['piranha','pufferfish','seahorse'],
+      hazardTypes:[],layout:boss?'underwater-arena':'shallow-sea',abilitySpawnEvery:0,
+      boss,bossArchetype:boss?'twinClawFish':null,bossHealth:boss?underwaterConfig.boss.health:0,
+      bossAbilities:skills.slice(),bossSkills:skills.slice(),story:seaStories[stage],tutorial:seaStories[stage],recovery:false,
+      ...(boss?{bossName:'Quái Ngư Song Trảo'}:{})
+    }));
+  });
+
   const difficultySettings = {
     story: { health: 7, spawnMultiplier: 1.2, speedMultiplier: 0.86, enemyHealthMultiplier: 0.9, warningTime: 1.35, damageMultiplier: 1, ammoMultiplier: 1.35, pressureMultiplier: 0.75 },
     normal: { health: 5, spawnMultiplier: 1, speedMultiplier: 1, enemyHealthMultiplier: 1, warningTime: 1.1, damageMultiplier: 1, ammoMultiplier: 1, pressureMultiplier: 1 },
@@ -445,8 +478,8 @@
     return {
       x: side === -1 ? -50 : 1010,
       y: 438,
-      w: config.abyss ? stats.w : boss ? (archetype === 'golem' ? 156 : archetype === 'werewolf' ? 80 : archetype === 'kong' ? 126 : archetype === 'dragon' ? 252 : archetype === 'chimera' ? 300 : Math.max(96, stats.w * 1.85)) : stats.w,
-      h: config.abyss ? stats.h : boss ? (archetype === 'golem' ? 172 : archetype === 'werewolf' ? 108 : archetype === 'kong' ? 138 : archetype === 'dragon' ? 190 : archetype === 'chimera' ? 210 : Math.max(94, stats.h * 1.5)) : stats.h,
+      w: config.abyss || config.underwater ? stats.w : boss ? (archetype === 'golem' ? 156 : archetype === 'werewolf' ? 80 : archetype === 'kong' ? 126 : archetype === 'dragon' ? 252 : archetype === 'chimera' ? 300 : Math.max(96, stats.w * 1.85)) : stats.w,
+      h: config.abyss || config.underwater ? stats.h : boss ? (archetype === 'golem' ? 172 : archetype === 'werewolf' ? 108 : archetype === 'kong' ? 138 : archetype === 'dragon' ? 190 : archetype === 'chimera' ? 210 : Math.max(94, stats.h * 1.5)) : stats.h,
       dir: side === -1 ? 1 : -1,
       type: boss ? 'boss' : enemyType,
       archetype: archetype,
@@ -460,7 +493,7 @@
       maxHealth: health,
       speed: stats.speed * config.speedMultiplier * settings.speedMultiplier * (0.95 + random * 0.1) * (boss ? 0.74 : 1),
       score: boss ? 750 + config.world * 250 : stats.score,
-      damage: config.abyss ? stats.damage : 1,
+      damage: config.abyss || config.underwater ? stats.damage : 1,
       phase: 'warning',
       warning: settings.warningTime + (boss ? 0.45 : 0),
       age: 0,

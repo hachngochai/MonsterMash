@@ -92,6 +92,7 @@
       this.tuning = Campaign.tuning(this.settings.difficulty); this.player = this.makePlayer();
       this.sound = new Sound(this); this.checkpoint = null; this.resultAction = null;
       MM.WeaponManager?.init(this);MM.SkillManager?.init(this);MM.InputManager?.init(this);
+      MM.UnderwaterMode?.reset(this);
       if(options.newRun===true)this.persist();
       if (!this.headless) {
         this.canvas = document.getElementById('canvas'); this.ctx = this.canvas.getContext('2d');
@@ -99,7 +100,7 @@
         this.mobileView = MM.MobileView ? new MM.MobileView(this, root) : null;
         this.bind(); this.buildMap(); this.syncSettings(); this.updateUI(); this.resize();
         if(this.testMode){
-          const badge=document.createElement('div');badge.className='test-mode-badge';badge.textContent='BẢN TEST · 150 MÀN · ĐÃ MỞ KHÓA TOÀN BỘ';badge.setAttribute('role','status');
+          const badge=document.createElement('div');badge.className='test-mode-badge';badge.textContent=`BẢN TEST · ${Campaign.levels.length} MÀN · ĐÃ MỞ KHÓA TOÀN BỘ`;badge.setAttribute('role','status');
           badge.title='Toàn bộ vũ khí và kỹ năng đã mở. Bản test không ghi đè tiến trình bản chính.';
           document.title='Monster Mash · Bản test công khai';
           document.querySelector('.app')?.append(badge);
@@ -120,6 +121,8 @@
       MM.AbyssCombat?.reset(this);
       const {carry = false, retry = false} = options;
       const oldHealth = this.player.health, oldAmmo=this.player.ammo, wasAbyss=this.level.id>=101&&this.level.id<=150;
+      const wasWater=MM.UnderwaterMode?.active(this),oldReserve=this.underwater?.reserve;
+      MM.UnderwaterMode?.stop(this);
       if (retry && this.checkpoint) {
         this.score = this.checkpoint.score; this.totalKills = this.checkpoint.totalKills; this.shieldCount = this.checkpoint.shieldCount;
       } else if (!carry) { this.score = 0; this.totalKills = 0; this.shieldCount = 0; }
@@ -132,7 +135,8 @@
       MM.WeaponManager?.init(this);MM.SkillManager?.reset(this);MM.InputManager?.init(this);this.aimMode='ground';
       if(carry)this.player.ammo=Math.min(this.player.maxAmmo,oldAmmo+this.player.ammo);
       else if(retry&&this.checkpoint)this.player.ammo=clamp(this.checkpoint.ammo??this.player.ammo,0,this.player.maxAmmo);
-      this.checkpoint = {score:this.score,totalKills:this.totalKills,shieldCount:this.shieldCount,ammo:this.player.ammo,abyssShieldKills:this.abyssShieldKills};
+      const waterReserve=retry&&this.checkpoint?this.checkpoint.oxygenReserve:carry&&wasWater?oldReserve:undefined;
+      this.checkpoint = {score:this.score,totalKills:this.totalKills,shieldCount:this.shieldCount,ammo:this.player.ammo,abyssShieldKills:this.abyssShieldKills,oxygenReserve:waterReserve??MM.UnderwaterConfig?.oxygen.initialReserve};
       this.enemies = []; this.bullets = []; this.particles = []; this.floats = []; this.pickups = [];
       this.ammoCrates=[];this.enemyShots=[];this.ammoTimer=2.4;
       this.bossHazards=[];this.bossEggs=[];this.golemZones=[];this.groundCracks=[];this.wolfZones=[];
@@ -142,6 +146,7 @@
       this.bossSpawned = false; this.bossDefeated = false; this.shake = 0; this.flash = 0;
       this.screen = 'playing'; this.clearInputs(); this.sound.unlock();
       MM.AbyssCombat?.reset(this);this.lastGravityDirection=1;
+      MM.UnderwaterMode?.reset(this,{reserve:waterReserve});
       this.save.resume = this.level.id; this.persist();
       if (!this.headless) {
         document.querySelectorAll('dialog[open]').forEach(dialog => dialog.close());
@@ -155,6 +160,7 @@
       MM.Tutorial?.onStart(this,options);
     }
     goHome() {
+      MM.UnderwaterMode?.stop(this);
       MM.Tutorial?.cancel(this);
       MM.AbyssCombat?.reset(this);
       MM.InputManager?.close(this,false);
@@ -264,8 +270,8 @@
       if(![...this.padInputs.values()].includes(button.dataset.control))button.classList?.remove('held');
       try { button.releasePointerCapture(event.pointerId); } catch { /* Optional capture. */ }
     }
-    jump() { if (this.screen === 'playing' && this.player.stunTime <= 0 && this.player.petrifyTime <= 0 && this.player.rollTime <= 0) this.player.jumpBuffer = .14; }
-    jumpAction(){return MM.SkillManager?MM.SkillManager.jumpTap(this):this.jump();}
+    jump() { if(MM.UnderwaterMode?.active(this))return MM.UnderwaterMode.supply(this);if (this.screen === 'playing' && this.player.stunTime <= 0 && this.player.petrifyTime <= 0 && this.player.rollTime <= 0) this.player.jumpBuffer = .14; }
+    jumpAction(){if(MM.UnderwaterMode?.active(this))return MM.UnderwaterMode.supply(this);return MM.SkillManager?MM.SkillManager.jumpTap(this):this.jump();}
     shieldAction(){return MM.SkillManager?MM.SkillManager.shieldTap(this):this.activateShield();}
     verticalAction(action){
       const mapped=MM.AbyssCombat?.invertAction(this,action)||action;
@@ -328,6 +334,7 @@
       return {kind:'normal',cost:1,damage:1,cooldown:.17,speed:780,locked:false};
     }
     shoot(dir) {
+      if(MM.UnderwaterMode?.active(this)&&!MM.UnderwaterMode.canAttack(this))return false;
       if(MM.WeaponManager)return MM.WeaponManager.fire(this,dir);
       if (this.screen !== 'playing' || this.player.shotTimer > .001 || this.player.stunTime > 0 || this.player.petrifyTime > 0 || this.player.rollTime > 0) return false;
       const p = this.player,weapon=this.getWeaponProfile(dir); p.dir = dir;p.weaponMode=weapon.kind;
@@ -353,6 +360,7 @@
     }
     updateAmmo(dt) {
       if(this.screen!=='playing')return;
+      if(MM.UnderwaterMode?.active(this))return MM.UnderwaterLoot.updateAmmo(this,dt);
       this.ammoTimer-=dt;
       if(this.ammoTimer<=0){
         if(this.dropAmmo())this.ammoTimer=this.level.ammoInterval||5.8;
@@ -401,7 +409,8 @@
       if(enemy.archetype==='kong')MM.KongCombat?.setup(this,enemy);
       if(enemy.archetype==='dragon')MM.DragonCombat?.setup(this,enemy);
       if(['lion','medusa','goatman','chimera'].includes(enemy.archetype))MM.MythicCombat?.setup(this,enemy);
-      this.enemies.push(enemy);MM.AbyssCombat?.init(this,enemy);return enemy;
+      this.enemies.push(enemy);MM.AbyssCombat?.init(this,enemy);
+      MM.UnderwaterEnemies?.setup(this,enemy);MM.Boss160?.setup(this,enemy);return enemy;
     }
     configureAbility(enemy, state) {
       if(state==='bat'){this.morphToBat(enemy);return enemy;}
@@ -463,6 +472,7 @@
     }
     updateEnemy(e,dt) {
       if(MM.SkillManager?.frozen(e))return;
+      if(MM.UnderwaterEnemies?.updateEnemy(this,e,dt)||MM.Boss160?.updateEnemy(this,e,dt))return;
       e.age+=dt;e.hit=Math.max(0,e.hit-dt);
       if(e.tsunamiChild)return; // The wave owns its staggered entry and one-way movement.
       if(e.phase==='warning'){
@@ -534,8 +544,9 @@
     }
     killEnemy(enemy) {
       if (this.screen !== 'playing' || enemy.dead || enemy.spiderling) return;
+      if(MM.Boss160?.beforeKill?.(this,enemy)===false)return;
       if(MM.AbyssCombat?.beforeKill?.(this,enemy)===false)return;
-      enemy.dead = true; enemy.health = 0;MM.AbyssCombat?.onKill(this,enemy);
+      enemy.dead = true; enemy.health = 0;MM.AbyssCombat?.onKill(this,enemy);MM.Boss160?.onKill(this,enemy);
       this.totalKills++; this.score += enemy.score || 100;
       if(enemy.archetype==='golem')MM.GolemCombat?.cleanup(this,enemy);
       if(enemy.archetype==='werewolf')MM.WolfCombat?.cleanup(this,enemy);
@@ -650,7 +661,7 @@
           else if(boss.archetype==='vampire')this.configureAbility(boss,'bat');
           // This is a physical falling box; entering a boss fight never refills the gun directly.
           this.dropAmmo(clamp(this.player.x+(this.player.x<W/2?180:-180),60,W-60));
-          this.banner(this.level.bossName,'BOSS XUẤT HIỆN · NHẢY VÀ DÙNG KHIÊN ĐỂ NÉ',3); this.sound.play('shield');
+          this.banner(this.level.bossName,this.level.underwater?'BOSS XUẤT HIỆN · BƠI NÉ, GIỮ OXY VÀ DÙNG KHIÊN':'BOSS XUẤT HIỆN · NHẢY VÀ DÙNG KHIÊN ĐỂ NÉ',3); this.sound.play('shield');
         }
       } else this.finish(true);
     }
@@ -658,6 +669,7 @@
       dt = clamp(Number.isFinite(dt) ? dt : 0,0,.05);
       MM.InputManager?.update(this,dt);
       MM.ProgressionUI?.sync(this);
+      MM.UnderwaterMode?.syncUI(this);
       if(this.weaponPicker?.open)return;
       if (this.screen !== 'playing') { if (this.screen === 'home') this.time += dt; return; }
       this.time += dt; this.levelTime += dt; this.restTimer = Math.max(0,(this.restTimer||0)-dt);
@@ -667,6 +679,7 @@
       if(p.stunTime<1e-8)p.stunTime=0;if(p.knockdownTime<1e-8)p.knockdownTime=0;
       if(wasStunned&&p.stunTime===0)p.stunGrace=.6;
       this.updatePlayerEffects(dt);if(this.screen!=='playing')return;
+      MM.UnderwaterMode?.update(this,dt);if(this.screen!=='playing')return;
       MM.SkillManager?.update(this,dt);
       MM.AbyssCombat?.update(this,dt);if(this.screen!=='playing')return;
       let move = (this.keys.has('ArrowRight')?1:0)-(this.keys.has('ArrowLeft')?1:0);
@@ -684,6 +697,8 @@
       if(movingWithPad)move=clamp(padMove,-1,1);
       move*=MM.AbyssCombat?.inputDirection(this)||1;
       if(p.stunTime>0||p.petrifyTime>0){move=0;fire=0;p.vx=0;p.jumpBuffer=0;}
+      if(MM.UnderwaterMode?.active(this))MM.UnderwaterMode.swim(this,move,dt);
+      else{
       const speed=285, acceleration=2100;
       const desired=move*speed; p.vx += clamp(desired-p.vx,-acceleration*dt,acceleration*dt); if (move) p.dir=move;
       if(p.rollTime>0){p.vx=p.rollDir*850;p.dir=p.rollDir;fire=0;}
@@ -697,6 +712,7 @@
       if(gravity>0&&p.y>=GROUND){p.y=GROUND;p.vy=0;p.grounded=true;}
       else if(gravity<0&&p.y<=ceiling){p.y=ceiling;p.vy=0;p.grounded=true;}
       if(this.level.id>=101)p.y=clamp(p.y,ceiling,GROUND);
+      }
       if (fire) this.shoot(fire);
       MM.WeaponManager?.update(this,dt);
       this.updateAmmo(dt);
@@ -732,6 +748,8 @@
       if(this.screen==='playing')MM.KongCombat?.update(this,dt);
       if(this.screen==='playing')MM.DragonCombat?.update(this,dt);
       if(this.screen==='playing')MM.MythicCombat?.update(this,dt);
+      if(this.screen==='playing')MM.UnderwaterEnemies?.update(this,dt);
+      if(this.screen==='playing')MM.Boss160?.update(this,dt);
       if(this.player.weaponMode!=='normal')this.updateAmmoUI();
       if(this.screen!=='playing')return;
       for(const shot of this.enemyShots){
@@ -761,7 +779,7 @@
       }
       if(this.screen!=='playing')return;
       this.bullets=this.bullets.filter(b=>!spent.has(b)&&b.life>0&&b.x>-30&&b.x<W+30&&b.y>-30&&b.y<H+30);
-      for(const pickup of this.pickups){pickup.life-=dt;if(Math.abs(p.x-pickup.x)<p.w/2+16&&Math.abs(p.y-pickup.y)<70){p.health=Math.min(p.maxHealth,p.health+1);pickup.life=0;this.floating(p.x,p.y-p.h-12,'+1 MÁU','#afe4bc');this.sound.play('health');this.updateUI();}}
+      for(const pickup of this.pickups){if(MM.UnderwaterMode?.active(this))MM.UnderwaterLoot.updateHealthItem(this,pickup,dt);pickup.life-=dt;if(Math.abs(p.x-pickup.x)<p.w/2+16&&Math.abs(p.y-pickup.y)<70){p.health=Math.min(p.maxHealth,p.health+1);pickup.life=0;this.floating(p.x,p.y-p.h-12,'+1 MÁU','#afe4bc');this.sound.play('health');this.updateUI();}}
       this.pickups=this.pickups.filter(pickup=>pickup.life>0);
       this.particles.forEach(effect=>{effect.life-=dt;effect.x+=effect.vx*dt;effect.y+=effect.vy*dt;if(effect.type!=='ring')effect.vy+=180*dt;});this.particles=this.particles.filter(effect=>effect.life>0);
       this.floats.forEach(effect=>{effect.life-=dt;effect.y-=24*dt;});this.floats=this.floats.filter(effect=>effect.life>0);
@@ -776,17 +794,19 @@
       if(won){if(!this.save.completed.includes(this.level.id))this.save.completed.push(this.level.id);this.save.resume=this.level.id<Campaign.levels.length?this.level.id+1:this.level.id;this.sound.play('win');}
       this.persist();
       MM.AbyssCombat?.reset(this);
+      MM.UnderwaterMode?.stop(this);
       if(!this.headless){this.ui['stage-banner'].hidden=true;this.ui['toast'].hidden=true;this.showResult();this.buildMap();}
       this.updateUI();
     }
     // Every player weapon shares boss immunity, phase transitions and death accounting.
     dealEnemyDamage(e,amount,attack={}) {
       if(this.screen!=='playing'||!e||e.dead||e.health<=0||e.intangible||e.bulletUntargetable||e.phase!=='active')return false;
+      if(MM.UnderwaterMode&&!MM.UnderwaterMode.canAttack(this))return false;
       const bossTarget=e.emotionProjection?e.projectionOwner:e.boss?e:null;
       const damage=Math.max(1,Number.isFinite(amount)?amount:1);
       if(MM.BossCombat?.hit(this,e)===false){this.burst(e.x,e.y-e.h*.5,'#a7edab',4);return false;}
       let handled=false;
-      for(const combat of [MM.AbyssCombat,MM.WolfCombat,MM.KongCombat,MM.DragonCombat,MM.MythicCombat]){
+      for(const combat of [MM.AbyssCombat,MM.WolfCombat,MM.KongCombat,MM.DragonCombat,MM.MythicCombat,MM.Boss160]){
         const result=combat?.hit(this,e,damage,attack);
         if(result===false){this.burst(e.x,e.y-e.h*.55,'#d6c7ed',5);return false;}
         if(result===true)handled=true;
@@ -829,6 +849,7 @@
     }
     updateUI() {
       if(this.headless)return;
+      MM.UnderwaterMode?.syncUI(this);
       MM.ProgressionUI?.sync(this);
       // Combat still updates every frame. Rebuild the stable DOM HUD only
       // when its visible values change, rather than recreating heart SVGs
@@ -923,6 +944,7 @@
       });
       if(root.matchMedia?.('(pointer:coarse)').matches)this.ui['control-mode'].textContent='GESTURES & CẢM ỨNG';
       MM.ProgressionUI?.bind(this);
+      MM.UnderwaterMode?.bind(this);
       MM.StoryUI?.bind(this);
       MM.KeyBindings?.bind(this);
       MM.Tutorial?.bind(this);

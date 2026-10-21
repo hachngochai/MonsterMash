@@ -10,7 +10,7 @@
   if(!context)return;
   let renderer,scene,camera,sun,frame=0,last=0,signature='',lost=false;
   const pages=Object.create(null);
-  const currentPage=()=>/^chapter[123]$/.test(map.dataset.atlasView)?map.dataset.atlasView:'chapter1';
+  const currentPage=()=>/^chapter[1234]$/.test(map.dataset.atlasView)?map.dataset.atlasView:'chapter1';
   function syncCamera(){
     if(!camera)return;
     const view=MM.Story?.viewport(Number(currentPage().slice(-1))),fallback=view?[view.x,view.y,view.width,view.height].join(' '):'-50 -20 600 430';
@@ -50,11 +50,11 @@
       const values=path.getAttribute('d').match(/-?\d+(?:\.\d+)?/g).map(Number),shape=new THREE.Shape();
       for(let n=0;n<values.length;n+=2){const x=values[n]-500,y=200-values[n+1];if(n===0)shape.moveTo(x,y);else shape.lineTo(x,y);}shape.closePath();
       const geometry=new THREE.ExtrudeGeometry(shape,{depth:32,steps:1,bevelEnabled:true,bevelThickness:2,bevelSize:2,bevelSegments:2});geometry.translate(0,0,-32);
-      const top=new THREE.MeshStandardMaterial({color:page==='chapter3'?0x494255:i===0?0x526445:0x3f6550,roughness:.95,flatShading:true});
-      const side=new THREE.MeshStandardMaterial({color:page==='chapter3'?0x282535:i===0?0x253528:0x213c35,roughness:1,flatShading:true});
+      const top=new THREE.MeshStandardMaterial({color:page==='chapter4'?0x28667b:page==='chapter3'?0x494255:i===0?0x526445:0x3f6550,roughness:.95,flatShading:true});
+      const side=new THREE.MeshStandardMaterial({color:page==='chapter4'?0x173d53:page==='chapter3'?0x282535:i===0?0x253528:0x213c35,roughness:1,flatShading:true});
       terrain.add(new THREE.Mesh(geometry,[top,side]));
       const shelfGeometry=new THREE.ExtrudeGeometry(shape,{depth:7,steps:1,bevelEnabled:true,bevelThickness:1,bevelSize:4,bevelSegments:1});shelfGeometry.translate(0,0,-34);
-      terrain.add(new THREE.Mesh(shelfGeometry,new THREE.MeshStandardMaterial({color:page==='chapter3'?0x1c2030:0x183333,roughness:1,flatShading:true})));
+      terrain.add(new THREE.Mesh(shelfGeometry,new THREE.MeshStandardMaterial({color:page==='chapter4'?0x123548:page==='chapter3'?0x1c2030:0x183333,roughness:1,flatShading:true})));
     }
     map.prepend(canvas);map.classList.add('atlas-webgl');resize();sync();
     new root.ResizeObserver(resize).observe(map);

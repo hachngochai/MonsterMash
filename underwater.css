@@ -1,0 +1,22 @@
+/* Underwater HUD is one flex/grid item: oxygen stays directly below hearts. */
+.health-stack{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;margin-left:10px;min-width:0}
+.health-stack .health{margin-left:0}
+.oxygen-hud{display:flex;flex-direction:column;align-items:center;gap:3px;color:#a6e8ec;font-size:8px;line-height:1.2;white-space:nowrap}
+.oxygen-hud[hidden]{display:none}
+.oxygen-pips{display:flex;align-items:center;gap:3px;min-height:7px}
+.oxygen-pips i{display:block;width:6px;height:6px;border:1px solid #76bec566;border-radius:50%;background:#5896ad12;transition:background .2s,box-shadow .2s}
+.oxygen-pips i.filled{background:#a4f0f5;border-color:#cefaff;box-shadow:0 0 4px #67d4ed66}
+.oxygen-hud.oxygen-low{color:#ffd7a2}
+.oxygen-low .oxygen-pips i.filled{background:#f3c080;border-color:#ffe5b4}
+.oxygen-hud.suffocating{color:#ffb3a0;animation:oxygen-alert 1s ease-in-out infinite}
+.oxygen-hud #underwater-status:empty{display:none}
+.oxygen-hud #underwater-status{font-weight:700;color:#e8bcff;font-size:8px}
+.underwater-playing .jump-control{border-color:#6ed9e9;background:#153e4cdb;color:#b6f6ff}
+#oxygen-button{border-color:#68c9dc66;color:#adf1fa}
+#oxygen-button:disabled{opacity:.5}
+@keyframes oxygen-alert{50%{opacity:.45}}
+@media(max-width:1000px){.health-stack{margin-left:0;gap:3px}.oxygen-pips{gap:2px}.oxygen-pips i{width:5px;height:5px}.oxygen-hud{font-size:7px}}
+@media(max-width:600px){.health-stack{grid-column:2;grid-row:1}.underwater-playing .hud{min-height:68px}.oxygen-hud{gap:2px}}
+@media(max-width:400px) and (orientation:portrait){.health-stack{grid-column:1/3;grid-row:2}}
+html[data-landscape="rotated"] .health-stack{flex:0 0 auto;grid-column:auto;grid-row:auto;margin-left:0}
+@media(prefers-reduced-motion:reduce){.oxygen-hud.suffocating{animation:none}.oxygen-pips i{transition:none}}

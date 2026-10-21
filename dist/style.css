@@ -2048,6 +2048,17 @@ html[data-landscape="rotated"] .atlas-edition{font-size:7px}
 .land-abyss{left:30%;top:4%;width:40%;border-color:#b89acf66;background:#252434e8}
 .land-abyss strong{color:#e1c4ef}.land-abyss .atlas-number{color:#c8addb}
 .land-abyss[aria-pressed="true"]{border-color:#d8b8eb;background:#42334ce8}
+.land-ocean{left:29%;top:4%;width:42%;border-color:#80cbd477;background:#143c4be8}
+.land-ocean strong{color:#b9f3ed}.land-ocean .atlas-number{color:#9bdde1}
+.land-ocean[aria-pressed="true"]{border-color:#b0ece9;background:#225966e8}
+.atlas-map[data-atlas-view="chapter4"]{background:#123342}
+.atlas-map .ocean-trail{stroke-dasharray:4 5}
+.atlas-map .atlas-boss-mark.planned{opacity:.45;cursor:default;filter:saturate(.35)}
+.atlas-map .atlas-boss-mark.planned .atlas-mark-symbol{color:#94b1b8;text-shadow:0 2px 3px #102a35}
+.atlas-map .atlas-boss-mark.planned small{white-space:nowrap;font-size:7px;color:#b4d2d9}
+.ocean-depth-label{left:41%;top:72%;font-size:8px;letter-spacing:2px;color:#b0dfe06b}
+.bridge-next-three{left:85%;top:78%}.bridge-back-four{left:11%;top:24%}
+@media(max-height:650px),(max-width:700px){.land-ocean{min-height:48px;width:48%;left:26%}.land-ocean .atlas-land-tagline{font-size:7px}.ocean-depth-label{display:none}.atlas-page-tabs{gap:2px}.atlas-page-tabs button{padding-inline:5px}}
 .story-atlas[data-story="3"] .atlas-abyss{stroke:#d6b8e7;stroke-width:3}
 .abyss-depth-label{left:14%;top:83%;color:#d0bed278;letter-spacing:1.5px}
 @media(max-height:650px),(max-width:700px){.atlas-page-tabs button{font-size:8px;min-height:23px;padding:4px 6px}.atlas-edition{gap:4px}.land-abyss{min-height:48px;width:42%;left:29%}.abyss-depth-label{font-size:6px}}
@@ -2067,12 +2078,14 @@ html[data-landscape="rotated"] .atlas-page-tabs button{font-size:8px;padding:4px
 .atlas-bridge small{font-size:6px;letter-spacing:1.2px;color:#9cb0ab}.atlas-bridge span{font-size:9px}.atlas-bridge:hover,.atlas-bridge:focus-visible{border-color:#dbc59c;background:#2d3b35}
 .bridge-next-one{left:73.3%;top:80.2%}.bridge-back-two{left:20%;top:28%}.bridge-next-two{left:83.3%;top:78%}.bridge-back-three{left:12%;top:22%}
 .atlas-map .atlas-sea-name{left:13%;top:79%;letter-spacing:1.2px}.atlas-map .abyss-depth-label{left:34%;top:92%;font-size:6px}
+.atlas-map .ocean-depth-label{left:41%;top:72%;letter-spacing:2px;font-size:8px;color:#b0dfe06b}
 .atlas-page-arrow{position:absolute;z-index:7;top:50%;transform:translateY(-50%);width:38px;height:54px;padding:0;background:#142c2bd9;border:1px solid #b6c3ae4d;border-radius:9px;color:#e3d1ac;font:500 35px/1 var(--font-display);box-shadow:0 5px 15px #07151a66}
 .atlas-page-previous{left:12px}.atlas-page-next{right:12px}.atlas-page-arrow:disabled{opacity:.22;cursor:default}.atlas-page-arrow:not(:disabled):hover{background:#3a4936;border-color:#d8c098}
 .atlas-carousel-position{position:absolute;z-index:7;left:50%;bottom:7px;transform:translateX(-50%);display:flex;align-items:center;gap:11px;color:#a6b9b0;font-size:7px;white-space:nowrap;pointer-events:none}
 .atlas-page-dots{display:flex;gap:6px;align-items:center;pointer-events:auto}.atlas-page-dots button{width:19px;height:19px;display:grid;place-items:center;padding:0;background:transparent;border-radius:50%}.atlas-page-dots button::before{content:'';width:5px;height:5px;border:1px solid #b8c5b3;border-radius:50%;background:#18312e}.atlas-page-dots button[aria-current="true"]::before{width:7px;height:7px;background:#e6c58c;border-color:#efd7ad;box-shadow:0 0 9px #e6c58c66}
 #atlas-page-count{font-size:7px;letter-spacing:1px;color:#c0c9b5}
 @media(max-height:650px),(max-width:700px){.atlas-map .atlas-land{min-height:44px;top:2%;padding:5px 7px}.atlas-bridge{padding:5px 7px;gap:2px;min-height:32px}.atlas-bridge small{font-size:5px;letter-spacing:.7px}.atlas-bridge span{font-size:7px}.atlas-page-arrow{width:30px;height:42px;font-size:29px}.atlas-page-previous{left:7px}.atlas-page-next{right:7px}.atlas-carousel-position{bottom:3px;gap:7px;font-size:6px}.atlas-page-tabs button{font-size:7px;padding:4px 6px}.atlas-map .atlas-sea-name{font-size:6px}.atlas-map .abyss-depth-label{display:none}}
+@media(max-height:650px),(max-width:700px){.atlas-map .land-ocean{width:48%;left:26%}.atlas-map .ocean-depth-label{display:none}}
 html[data-landscape="rotated"] .atlas-map{touch-action:pan-x}
 @media(prefers-reduced-motion:reduce){.atlas-map,.atlas-land,.atlas-boss-mark{transition:none}}
 
