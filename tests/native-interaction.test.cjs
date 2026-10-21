@@ -5,7 +5,7 @@ function game(selection){
  const context={};
  if(selection!==undefined)context.getSelection=()=>selection;
  const c=vm.createContext(context);
- for(const file of ['abyss-config','underwater-config','campaign','game'])vm.runInContext(fs.readFileSync(path.join(__dirname,'../js',file+'.js'),'utf8'),c);
+ for(const file of ['abyss-config','underwater-config','middle-sea-config','campaign','game'])vm.runInContext(fs.readFileSync(path.join(__dirname,'../js',file+'.js'),'utf8'),c);
  return new c.MM.Game({headless:true,storage:{getItem(){return null;},setItem(){}}});
 }
 function element({scope='app',editable=false,inheritedEditable=false}={}){

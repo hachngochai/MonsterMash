@@ -522,7 +522,7 @@
       polygon(c,[[-8,-52],[-4,-42],[-8,-33],[1,-25],[-1,-14]],null,'#556b73',1.4);
       rounded(c,-51,-84,102,18,4,'#1b2936ee','#c9d4d281');c.font=`700 11px ${font}`;c.textAlign='center';c.fillStyle='#e1e5dc';c.fillText(`HÓA ĐÁ ${player.petrifyTime.toFixed(1)}s`,0,-71);
     }
-    if (player.stunTime > 0 && !knocked && player.stunStyle === 'stars') {
+    if (player.stunTime > 0 && !knocked && ['stars','electric'].includes(player.stunStyle)) {
       const orbit = effects ? t * 5 : .6;
       c.save();c.strokeStyle='#ffe9aa99';c.lineWidth=1;c.beginPath();c.ellipse(0,-67,24,7,0,0,TAU);c.stroke();
       for(let i=0;i<3;i++){const angle=orbit+i*TAU/3,x=Math.cos(angle)*24,y=-67+Math.sin(angle)*7;const points=[];for(let k=0;k<10;k++){const a=-Math.PI/2+k*Math.PI/5,r=k%2?2.4:5.4;points.push([x+Math.cos(a)*r,y+Math.sin(a)*r]);}polygon(c,points,'#ffe49a','#8f6b45',.8);}
@@ -2410,7 +2410,7 @@
     drawBloodMoon(c, game, t, effects);
     drawKongRage(c, game);
     if (game.screen === 'home' && (!game.enemies || !game.enemies.length)) {
-      if(waterScene){for(const [i,type] of ['piranha','pufferfish','seahorse'].entries())water.drawEnemy(c,game,{type,archetype:type,x:190+i*285,y:300,w:type==='seahorse'?55:75,h:type==='seahorse'?90:60,health:1,maxHealth:1,phase:'active',dir:i%2?-1:1},t);}
+      if(waterScene){for(const [i,type] of (game.level.middleSea?['babyShark','electricJellyfish','seahorse']:['piranha','pufferfish','seahorse']).entries())water.drawEnemy(c,game,{type,archetype:type,x:190+i*285,y:300,w:type==='seahorse'?55:75,h:['seahorse','electricJellyfish'].includes(type)?90:60,health:1,maxHealth:1,phase:'active',dir:i%2?-1:1},t);}
       else drawHomeCast(c, t, effects, world, game.level);
     }
     else {
@@ -2468,7 +2468,7 @@
       water?.drawEffects(c,game,t,true);
       abyss?.drawLighting(c,game);
       drawFloats(c, game.floats);
-      drawBossHUD(c, (game.enemies || []).filter(e => e.boss && e.health > 0), game);
+      drawBossHUD(c, (game.enemies || []).filter(e => e.boss && e.health > 0 && !e.middleSeaTwin), game);
     }
     if (game.flash > 0 && effects && !abyssScene) { c.globalAlpha = Math.min(.19, game.flash); rect(c, 0, 0, W, H, '#d2eeec'); c.globalAlpha = 1; }
     c.restore();

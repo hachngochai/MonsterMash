@@ -11,7 +11,8 @@
     g.underwater={active:enabled,clock:0,oxygen:c.oxygen.capacity,maxOxygen:c.oxygen.capacity,
       reserve:clamp(Number.isFinite(options.reserve)?options.reserve:c.oxygen.initialReserve,0,c.oxygen.maxReserve),
       suffocating:false,suffocationTime:0,damageClock:0,silenceTime:0,refillCooldown:0,
-      bubbles:[],bubblePool:[],bubbleTimer:0,oxygenCrates:[],oxygenTimer:c.loot.oxygenInterval,uiSignature:null};
+      bubbles:[],bubblePool:[],bubbleTimer:0,oxygenCrates:[],oxygenTimer:c.loot.oxygenInterval,middleHazardTimer:MM.MiddleSeaConfig?.jellyfish.spawnInterval||5.5,uiSignature:null};
+    g.middleSeaEncounter=null;
     const p=g.player;if(p){p.swimming=enabled;p.suffocating=false;p.swimPhase=0;p.swimTilt=0;p.swimAnchorY=c.arena.centerY;p.jumpBuffer=0;
       if(enabled){p.y=c.arena.centerY;p.vy=0;p.grounded=false;p.coyote=0;}}
     return g.underwater;
@@ -20,6 +21,8 @@
     const s=g.underwater;if(s){s.suffocating=false;s.suffocationTime=s.damageClock=s.silenceTime=0;s.bubbles.length=0;s.bubblePool.length=0;s.oxygenCrates.length=0;s.uiSignature=null;}
     g.waterShots=[];g.waterZones=[];if(g.player)g.player.suffocating=false;
     MM.Boss160?.reset(g);
+    MM.Boss170?.reset(g);MM.MiddleSeaEnemies?.reset(g);
+    if(g.player)g.player.electricStunGrace=0;
   }
   function state(g){return g.underwater?.active===active(g)?g.underwater:reset(g);}
   function canAttack(g){return !active(g)||state(g).oxygen>EPS&&state(g).silenceTime<=EPS;}
@@ -39,6 +42,7 @@
   function supply(g){
     if(!active(g)||g.screen!=='playing'||g.weaponPicker?.open)return false;
     const s=state(g),o=cfg().oxygen;
+    if(g.level.middleSea&&g.player.stunTime>0&&MM.MiddleSeaConfig?.boss.supplyWhileStunned===false)return false;
     if(s.refillCooldown>EPS)return false;
     if(s.oxygen>=s.maxOxygen-EPS){g.toast?.('Oxy đang đầy · giữ bình dự trữ cho lúc cần');return false;}
     if(s.reserve<1){g.toast?.('Hết bình oxy dự trữ · tìm hòm O₂ màu xanh');g.floating?.(g.player.x,g.player.y-g.player.h-10,'CẦN HÒM O₂','#ffbd91');return false;}
@@ -126,14 +130,15 @@
     if(jump){const caption=jump.querySelector('small');if(caption)caption.textContent=on?'OXY':'NHẢY';jump.setAttribute('aria-label',on?'Cấp oxy từ bình dự trữ':'Nhảy');}
     if(!on)return;
     if(button){button.disabled=g.screen!=='playing'||g.weaponPicker?.open||s.reserve<1||s.oxygen>=s.maxOxygen-EPS||s.refillCooldown>EPS;button.textContent='↑ Cấp O₂ · '+s.reserve+' bình';}
-    const signature=[Math.ceil(s.oxygen*10),s.reserve,s.suffocating,Math.ceil(s.suffocationTime),Math.ceil(s.silenceTime),g.screen].join('|');
+    const electricStun=g.player.stunStyle==='electric'&&g.player.stunTime>0?g.player.stunTime:0;
+    const signature=[Math.ceil(s.oxygen*10),s.reserve,s.suffocating,Math.ceil(s.suffocationTime),Math.ceil(s.silenceTime),Math.ceil(electricStun),g.screen].join('|');
     if(s.uiSignature===signature)return;s.uiSignature=signature;
     if(bar){bar.classList.toggle('oxygen-low',s.oxygen/s.maxOxygen<cfg().oxygen.warningRatio);bar.classList.toggle('suffocating',s.suffocating);
       bar.setAttribute('aria-label',`Oxy ${Math.ceil(s.oxygen)} trên ${s.maxOxygen}. ${s.reserve} bình dự trữ.`);}
     const pips=g.ui['oxygen-pips'];if(pips){if(!pips.children.length)for(let i=0;i<10;i++){const pip=root.document.createElement('i');pip.setAttribute('aria-hidden','true');pips.append(pip);}
       [...pips.children].forEach((pip,i)=>pip.classList.toggle('filled',s.oxygen/s.maxOxygen*10>i));}
     if(g.ui['oxygen-label'])g.ui['oxygen-label'].textContent='O₂ '+Math.ceil(s.oxygen)+'s · '+s.reserve+' bình';
-    if(g.ui['underwater-status'])g.ui['underwater-status'].textContent=[s.suffocating?'NGẠT '+Math.max(0,Math.ceil(cfg().oxygen.suffocationGrace-s.suffocationTime))+'s':'',s.silenceTime>EPS?'CÂM LẶNG '+Math.ceil(s.silenceTime)+'s':''].filter(Boolean).join(' · ');
+    if(g.ui['underwater-status'])g.ui['underwater-status'].textContent=[s.suffocating?'NGẠT '+Math.max(0,Math.ceil(cfg().oxygen.suffocationGrace-s.suffocationTime))+'s':'',s.silenceTime>EPS?'CÂM LẶNG '+Math.ceil(s.silenceTime)+'s':'',electricStun?'⚡ CHOÁNG '+Math.ceil(electricStun)+'s':''].filter(Boolean).join(' · ');
   }
   function bind(g){g.ui?.['oxygen-button']?.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();supply(g);g.canvas?.focus({preventScroll:true});});}
   MM.UnderwaterMode={active,reset,stop,state,update,swim,canAttack,supply,oxygenChanged,bubble,bubbleBurst,syncUI,bind};

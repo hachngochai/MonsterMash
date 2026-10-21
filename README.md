@@ -1,6 +1,12 @@
 # Monster Mash — The Midnight Hunt
 
-Rebuild 10 (v4.1.0) của Monster Mash của KIO: 160 màn, 4 cốt truyện, Canvas 2D và bản đồ Three.js đóng gói trong repo. Không cần CDN hoặc cài package. Tiến độ màn, kỹ năng, vũ khí, kỷ lục và cài đặt lưu vĩnh viễn bằng localStorage trên trình duyệt hiện tại.
+Rebuild 11 (v4.2.0) của Monster Mash của KIO: 170 màn, 4 cốt truyện, Canvas 2D và bản đồ Three.js đóng gói trong repo. Không cần CDN hoặc cài package. Tiến độ màn, kỹ năng, vũ khí, kỷ lục và cài đặt lưu vĩnh viễn bằng localStorage trên trình duyệt hiện tại.
+
+## Bóng Ma Điện Quang · v4.2.0
+
+Màn 161–170 mở Tầng Trung Đầu Tiên với Cá Mập Con, Sứa Điện bất tử và Cá Ngựa giữ nguyên. Sứa là chướng ngại riêng, không tính vào số quái phải hạ. Boss Sứa Ma Khổng Lồ có Tê Tái, Tập Tính Bầy Đàn, Laze Plasma và Ảo Giác. Bản sao chỉ đánh lạc hướng; hạ boss thật là thắng. Tạo hình mới theo bản vẽ người dùng cung cấp.
+
+[Phòng thử boss 170](tests/middle-sea-preview.html) · [Cơ chế và chỉ số tạm](docs/middle-sea.md) · [Prompt tách tạo hình](docs/middle-sea-art-prompts.md). Cốt truyện IV đã mở151–170;180–200 chờ cập nhật. Save đã hoàn thành160 tự mở161 khi cập nhật.
 
 ## Hải Vực Quên Lãng · v4.1.0
 
@@ -18,9 +24,9 @@ Kiểm tra phóng lớn tại [phòng thử Cổ Thần](tests/deity-preview.htm
 
 ## Bản test công khai · v4.0.5
 
-[Mở và chia sẻ bản test](https://hachngochai.github.io/MonsterMash/?test=all&v=4.1.0). Ai có link đều chơi được trên PC hoặc điện thoại, không cần tài khoản. Mỗi người chơi trên thiết bị riêng.
+[Mở và chia sẻ bản test](https://hachngochai.github.io/MonsterMash/?test=all&v=4.2.0). Ai có link đều chơi được trên PC hoặc điện thoại, không cần tài khoản. Mỗi người chơi trên thiết bị riêng.
 
-Link `?test=all` mở đủ 160 màn và toàn bộ phần thưởng, vũ khí, kỹ năng để thử. Badge **BẢN TEST** giúp nhận biết. Độ khó, sát thương, giới hạn đạn và cơ chế boss giữ nguyên. Màn 70 vẫn dùng quy tắc riêng của Trăng Máu.
+Link `?test=all` mở đủ 170 màn và toàn bộ phần thưởng, vũ khí, kỹ năng để thử. Badge **BẢN TEST** giúp nhận biết. Độ khó, sát thương, giới hạn đạn và cơ chế boss giữ nguyên. Màn 70 vẫn dùng quy tắc riêng của Trăng Máu.
 
 Tiến trình, trang bị, kỹ năng và cài đặt thay đổi trong bản test chỉ tồn tại trong phiên đang mở, không ghi đè save thật. Mở link chính không có `test=all` để tiếp tục hành trình đã lưu. Localhost mặc định vẫn bật test; thêm `?test=off` (có thể kèm `v`) để thử lưu tiến độ bình thường.
 

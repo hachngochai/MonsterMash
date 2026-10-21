@@ -122,7 +122,18 @@
       'Liên Trảo báo trước rồi lao tới cào 3 nhát. Mỗi nhát trúng mất 1 HP và 1 khiên dự trữ nếu có; bật khiên để chặn HP và dùng 1 lượt đỡ. Bất Tử vẫn bảo vệ HP.',
       'Ở nửa máu, boss tạo một bản sao có thanh máu riêng 60 HP. Boss gốc có 120 HP; phải hạ cả hai mới thắng, bản sao không nhân đôi tiếp.',
       'Câm Lặng khóa sát thương vũ khí trong 3 giây; bạn vẫn bơi và cấp oxy được. Chiêu lặp lại mỗi 15 giây ở dạng thường và 10 giây khi Song Sinh. Rời vùng hút của lốc nước: chỉ khi chạm lõi mới mất 2 HP và một nửa oxy hiện có.'
-    ],reward:'Hạ boss 160 hoàn thành Tầng Biển Nông và lưu tiến độ. Chặng 161–200 sẽ mở trong các bản cập nhật sau; màn 160 chưa cấp thêm vũ khí hoặc kỹ năng. Các chỉ số oxy và máu trong đợt này là cân bằng chơi thử.'}
+    ],reward:'Hạ boss 160 hoàn thành Tầng Biển Nông và mở đường xuống Tầng Trung Đầu Tiên, màn 161–170. Màn 160 chưa cấp thêm vũ khí hoặc kỹ năng. Tiến độ được lưu; các chỉ số oxy và máu trong đợt này là cân bằng chơi thử.'},
+    {start:161,title:'Ánh điện trong tầng nước thẳm',boss:'Sứa Ma Khổng Lồ · Màn 170',learn:[
+      'Giữ nguyên cách bơi, oxy và tiếp tế của Tầng Biển Nông. ↑ hoặc nút OXY dùng bình dự trữ để cấp oxy, không nhảy. Oxy vẫn giảm khi bạn bị choáng; hết oxy vẫn khóa vũ khí và bắt đầu đếm ngạt 5 giây.',
+      'Màn 161–163 có cá ngựa giữ nguyên đạn nước cao áp và cá mập con liên tục bơi tới cắn. Né vùng miệng khi hàm mở; cá mập không có chiêu lao xuyên màn hình hoặc gây choáng.',
+      'Màn 164–166 kết hợp cá mập với Sứa Điện từ đáy bơi thẳng lên. Từ 167 có đủ ba loài. Sứa không thể bị tiêu diệt: chạm thân hoặc xúc tu gây choáng 2 giây, không mất HP hay oxy trực tiếp. Hãy né và chờ chúng bơi khỏi sân.'
+    ],fight:[
+      'Tê Tái mỗi 10 giây: boss đến gần, xúc tu sáng rồi đâm. Trúng vùng đánh mới bị choáng 3 giây, mất 1 HP và một nửa oxy. Rời vùng xúc tu trước khi chạm.',
+      'Tập Tính Bầy Đàn mỗi 15 giây gọi đúng 5 sứa bất tử từ dưới lên. Mỗi con chạm gây choáng 2 giây và mất một phần ba oxy, không trừ HP trực tiếp.',
+      'Laze Plasma mỗi 8 giây: mắt boss sáng trước khi bắn chùm xanh tím dài nửa sân. Trúng mất 2 HP, không bị choáng hoặc trừ oxy trực tiếp. Né khỏi đường báo trước khi laze phát ra.',
+      'Còn 25% HP, boss tạo đúng một ảo ảnh giống hệt, có thanh máu riêng bằng boss lúc triệu hồi và không ra chiêu. Hai thực thể báo sáng 0,8 giây rồi đổi vị trí mỗi 6 giây; chỉ cần hạ boss thật để thắng.',
+      'Các chiêu trừ phần trăm đều tính theo oxy hiện có. Khiên đang bật chặn sát thương, choáng và hao oxy của đòn trúng, đổi lại mất 1 lượt đỡ. Bạn vẫn có thể cấp oxy trong lúc choáng.'
+    ],reward:'Hạ boss 170 hoàn thành Tầng Trung Đầu Tiên và lưu tiến độ. Vùng 171–200 chưa mở; mốc này chưa cấp thêm vũ khí hoặc kỹ năng. Những thông số chưa được quy định của quái mới và ảo ảnh được tách trong cấu hình chơi thử.'}
   ].map((g,index)=>({...g,index:index+1,end:g.start+9,learn:g.start>=101&&g.start<=141?['Trong màn 101–150, hạ mỗi 5 quái thường hoặc bắn trúng boss đủ 10 viên nhận 1 khiên, giữ tối đa 3. Hai bộ đếm riêng biệt. Đạn hụt, bị chặn/phản lại và đòn cận chiến không tính vào mốc bắn boss. Bắn đúng hình chiếu Nộ trong mê cung vẫn được tính.',...g.learn]:g.learn}));
   const forLevel=id=>guides.find(g=>id>=g.start&&id<=g.end)||guides[0];
   const normalizeSeen=value=>Array.isArray(value)?[...new Set(value.filter(id=>guides.some(g=>g.start===id)))].sort((a,b)=>a-b):[];
@@ -154,7 +165,7 @@
     g.ui['tutorial-title'].textContent=guide.title;
     g.ui['tutorial-content'].replaceChildren(content(guide));
     const keys=MM.KeyBindings,bindings=keys?.normalize(g.settings.keyBindings);
-    const underwater=guide.start===151;
+    const underwater=guide.start>=151;
     g.ui['tutorial-controls'].textContent=bindings?`PC: ${keys.label(bindings.left)} / ${keys.label(bindings.right)} di chuyển · ${keys.label(bindings.jump)} ${underwater?'cấp oxy':'nhảy'} · ${keys.label(bindings.shootLeft)} / ${keys.label(bindings.shootRight)} bắn · ${keys.label(bindings.shield)} khiên. Mobile: ${underwater?'nút OXY hoặc vuốt lên để cấp oxy; dùng nút hoặc vuốt ngang để bơi.':'dùng nút hoặc vuốt.'}`:underwater?'PC: ↑ cấp oxy. Mobile: nút OXY hoặc vuốt lên để cấp oxy; dùng nút hoặc vuốt ngang để bơi. Các phím PC có thể đổi trong Cài đặt.':'Dùng nút hoặc vuốt trên điện thoại; các phím PC có thể đổi trong Cài đặt.';
     g.ui['tutorial-begin'].textContent='Sẵn sàng · Bắt đầu màn '+g.level.id+' →';
     g.screen='briefing';g.clearInputs();g.updateUI();dialog.showModal();dialog.scrollTop=0;return true;

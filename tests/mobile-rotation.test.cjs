@@ -33,7 +33,7 @@ function fresh(options = {}) {
     matchMedia:query => ({matches:query==='(pointer:coarse)'&&!options.desktop})});
   const context = vm.createContext({document,
     getComputedStyle:canvas => ({objectFit:canvas.style.objectFit || 'fill', objectPosition:canvas.style.objectPosition || '50% 100%'})});
-  for (const file of ['abyss-config.js','underwater-config.js','campaign.js','game.js','mobile.js']) {
+  for (const file of ['abyss-config.js','underwater-config.js','middle-sea-config.js','campaign.js','game.js','mobile.js']) {
     vm.runInContext(fs.readFileSync(path.join(__dirname, '../js', file), 'utf8'), context, {filename:file});
   }
   const game = new context.MM.Game({headless:true, random:() => .5, storage:{getItem() { return null; }, setItem() {}}});
@@ -222,7 +222,7 @@ function freshResize({width, height, rotated = false, dpr = 1}) {
   const context = vm.createContext({devicePixelRatio:dpr,
     getComputedStyle:canvas => ({objectFit:canvas.style.objectFit || 'cover',
       objectPosition:canvas.style.objectPosition || '50% 100%'})});
-  for (const file of ['abyss-config.js','underwater-config.js','campaign.js', 'game.js']) {
+  for (const file of ['abyss-config.js','underwater-config.js','middle-sea-config.js','campaign.js', 'game.js']) {
     vm.runInContext(fs.readFileSync(path.join(__dirname, '../js', file), 'utf8'), context, {filename:file});
   }
   const game = new context.MM.Game({headless:true, random:() => .5,

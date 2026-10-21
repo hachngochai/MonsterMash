@@ -18,7 +18,8 @@
     { id: 12, name: 'Hồ Nước Ngầm và Hang Thạch Anh', subtitle: 'Ánh sáng sau chiếc mai gương', color: '#86e6f8', enemy: 'littleTurtle', scenery: 12 },
     { id: 13, name: 'Vách Đá Vọng Âm và Sân Nghi Lễ', subtitle: 'Lần theo tiếng vọng của cổ điểu', color: '#bd96ec', enemy: 'abyssCrow', scenery: 13 },
     { id: 14, name: 'Lăng Mộ Luân Hồi', subtitle: 'Một đầu xoay, bốn cõi lòng', color: '#e0bb73', enemy: 'clayGuard', scenery: 14 },
-    { id: 15, name: 'Tầng Biển Nông', subtitle: 'Hải Vực Quên Lãng · Học cách thở dưới nước', color: '#6cdded', enemy: 'piranha', scenery: 15, underwater:true }
+    { id: 15, name: 'Tầng Biển Nông', subtitle: 'Hải Vực Quên Lãng · Học cách thở dưới nước', color: '#6cdded', enemy: 'piranha', scenery: 15, underwater:true },
+    { id: 16, name: 'Tầng Trung Đầu Tiên', subtitle: 'Hải Vực Quên Lãng · Bóng Ma Điện Quang', color: '#899eea', enemy: 'babyShark', scenery: 16, underwater:true, middleSea:true }
   ];
 
   const enemyTypes = {
@@ -53,6 +54,9 @@
   const underwaterConfig = root.MM && root.MM.UnderwaterConfig;
   if (!underwaterConfig) throw new Error('Load js/underwater-config.js before js/campaign.js.');
   Object.assign(enemyTypes, underwaterConfig.enemies);
+  const middleSeaConfig = root.MM && root.MM.MiddleSeaConfig;
+  if (!middleSeaConfig) throw new Error('Load js/middle-sea-config.js before js/campaign.js.');
+  Object.assign(enemyTypes, middleSeaConfig.enemies);
 
   const chapters = [
     {
@@ -444,6 +448,35 @@
       boss,bossArchetype:boss?'twinClawFish':null,bossHealth:boss?underwaterConfig.boss.health:0,
       bossAbilities:skills.slice(),bossSkills:skills.slice(),story:seaStories[stage],tutorial:seaStories[stage],recovery:false,
       ...(boss?{bossName:'Quái Ngư Song Trảo'}:{})
+    }));
+  });
+
+  // Immortal electric jellyfish are a separate obstacle stream. Only the
+  // killable fish occupy ordinary enemy slots or contribute to the quota.
+  const middleSeaNames=['Vùng nước xanh thẳm','Bóng vây giữa ánh lam','Hàm răng trong dòng chảy','Dòng điện từ đáy biển','Xúc tu giữa san hô','Qua lớp sóng điện','Hành lang ma quang','Nhịp thở dưới áp lực','Ánh mắt sau màn nước','Sứa Ma Khổng Lồ'];
+  const middleSeaStories=[
+    'Vượt qua Quái Ngư Song Trảo, bạn xuống tầng trung đầu tiên. Nước chuyển xanh thẳm; cá ngựa vẫn bắn nước cao áp như trước, còn cá mập con bơi tới để cắn.',
+    'Nhìn hàm cá mập mở trước khi cắn. Bơi khỏi vùng miệng, đừng để đường nước của cá ngựa ép bạn vào tầm răng.',
+    'Cá mập con tiếp tục bơi và truy đuổi sau cú cắn. Giữ nhịp cấp oxy cũ; tầng nước này không thay đổi vật lý bơi hoặc lượng oxy dự trữ.',
+    'Sứa Điện nổi từ dưới lên. Thân và xúc tu gây choáng hai giây nhưng không trừ máu hay oxy trực tiếp; vũ khí không thể tiêu diệt sứa.',
+    'Quan sát đường bơi thẳng đứng và luồn qua khoảng trống giữa các xúc tu. Cá mập vẫn có thể tiếp cận trong lúc bạn né sứa.',
+    'Những con sứa bơi khỏi khung hình sẽ biến mất. Hãy né để chúng đi qua, giữ đạn cho cá mập và tiếp tục nhặt hòm oxy giữa nước.',
+    'Cá ngựa trở lại giữa đàn cá mập và sứa điện. Bơi khỏi đường đạn nước mà không chạm những bóng sứa đang đi lên.',
+    'Trong bóng xanh của vách đá, san hô phát quang soi những luồng điện. Sau khi hết choáng, oxy vẫn phải đủ thì vũ khí mới hoạt động lại.',
+    'Năm bóng xúc tu lướt qua dưới nền cổ. Giữ khiên và oxy trước lãnh địa Bóng Ma Điện Quang.',
+    'Sứa Ma dùng Tê Tái mỗi mười giây, gọi đúng năm sứa mỗi mười lăm giây và bắn Laze Plasma mỗi tám giây. Ở một phần tư máu, boss tạo đúng một ảo ảnh có máu độc lập rồi hoán đổi vị trí theo dấu báo.'
+  ];
+  const middleBalance=middleSeaConfig.campaign;
+  middleSeaNames.forEach((name,stage)=>{
+    const boss=stage===9,skills=boss?['electric-numb','jellyfish-swarm','plasma-laser','illusion-swap']:[];
+    levels.push(Object.assign({},middleBalance,{
+      id:161+stage,world:16,name,underwater:true,middleSea:true,balanceStatus:'provisional-playtest',
+      target:middleBalance.targets[stage],spawnInterval:middleBalance.intervals[stage],maxAlive:middleBalance.caps[stage],
+      types:stage<3?['seahorse','babyShark']:stage<6?['babyShark']:['seahorse','babyShark'],
+      hazardTypes:stage<3?[]:['electricJellyfish'],layout:boss?'middle-sea-arena':'middle-sea',abilitySpawnEvery:0,
+      boss,bossArchetype:boss?'phantomJellyfish':null,bossHealth:boss?middleSeaConfig.boss.health:0,
+      bossAbilities:skills.slice(),bossSkills:skills.slice(),story:middleSeaStories[stage],tutorial:middleSeaStories[stage],recovery:false,
+      ...(boss?{bossName:'Sứa Ma Khổng Lồ · Bóng Ma Điện Quang'}:{})
     }));
   });
 

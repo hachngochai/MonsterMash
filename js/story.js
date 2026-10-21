@@ -19,11 +19,11 @@
         'Theo con đường thạch anh xuống hồ ngầm, vượt Vách Đá Vọng Âm để tìm Lăng Mộ Luân Hồi. Thiên Thủ Cổ Thần đang canh giữ điều gì đó còn cổ hơn lời nguyền trên mặt đất. Bốn gương mặt của tượng biết cười, nổi giận, yêu thương và căm ghét. Nếu ánh đuốc bị nuốt mất, hãy nhớ: ánh sáng bạn đã giành lại không chỉ nằm trong ngọn lửa.'],
       arcs:['Minotaur Chúa giữ cửa mê cung. Hãy đọc dấu nấm độc và bụi nhũ đá để tìm lối xuống sâu hơn.','Trong hang ký sinh, Mộc Tâm Hoa Quỷ kéo những bộ xương bằng rễ đen. Phân biệt thực và ảo để lấy lại Búa Minotaur.','Hồ ngầm giữ chiếc mai gương của Xích Kính Quái Sùng. Giữa khúc xạ và phản đòn, thạch anh sẽ trao ánh sáng cho vũ khí.','Tiếng hét của Hóa Thạch Sí Vũ đảo lộn phương hướng. Hạ cả linh hồn chim lẫn Kị Sĩ Xương để mở cửa lăng mộ.','Thiên Thủ Cổ Thần xoay một đầu bốn mặt. Trong Mê Cung Luân Hồi, chỉ cơn Nộ chân thực mới chạm tới trái tim của tượng.'],
       ending:'Những cánh tay đá lần lượt hạ xuống. Hỉ, Nộ, Ái và Ố tan vào cùng một gương mặt bình yên, còn ánh sáng nhỏ trên vũ khí của bạn xuyên qua lớp bụi ngàn năm. Mê Cung Luân Hồi sụp đổ, để lộ một dòng nước đang chảy về phía bình minh. Bạn mang ngọn đèn trở lên, cùng ký ức về những người đã canh giữ vực sâu. Ở mép bản đồ, một ký hiệu chưa từng thấy vẫn âm thầm phát sáng.'},
-    {id:4,start:151,end:160,plannedEnd:200,name:'Hải Vực Quên Lãng',tagline:'Theo dòng ký ức xuống miền biển chưa thức giấc.',color:'#75d8e8',
+    {id:4,start:151,end:170,plannedEnd:200,name:'Hải Vực Quên Lãng',tagline:'Theo dòng ký ức xuống miền biển chưa thức giấc.',color:'#75d8e8',
       intro:['Dòng nước sau Lăng Mộ Luân Hồi không dẫn trở lên mặt đất. Nó cuốn người giữ đèn qua một cánh cổng chìm, tới những rặng san hô mọc giữa tàn tích của một hải quốc. Ánh nắng còn xuyên qua mặt biển, nhưng mỗi bậc đá phía dưới lại giữ một ký ức đã bị quên lãng.',
-        'Hãy học cách thở, giữ nguồn oxy dự trữ và bơi qua những sinh vật đang canh vùng biển nông. Quái Ngư Song Trảo giữ lối xuống sâu; khi nó phân tách, cả hai bản thể đều phải bị đánh bại. Bản đồ mới chỉ hé mở chặng đầu từ 151 đến 160. Những dấu xa hơn còn nằm dưới màn nước chưa được khám phá.'],
-      arcs:['Tầng Biển Nông thử thách hơi thở giữa san hô. Piranha, cá nóc và cá ngựa canh giữ đường tới Quái Ngư Song Trảo.','Vùng biển 161–170 sẽ được mở trong một đợt phát triển sau.','Vùng biển 171–180 chưa được triển khai.','Vùng biển 181–190 vẫn đang được phong kín.','Vùng biển 191–200 chờ bộ kỹ năng và cốt truyện tiếp theo.'],
-      ending:'Hai bản thể Quái Ngư Song Trảo chìm vào dòng xoáy cuối cùng. Người giữ đèn lấy lại nhịp thở giữa những cột đá xanh, còn các sinh vật nhỏ bắt đầu trở về rặng san hô. Phía dưới sân cổ, một con đường khác vừa lộ ra trong làn nước tối. Tầng Biển Nông đã được vượt qua; những miền sâu hơn của Hải Vực Quên Lãng sẽ được mở khi hành trình tiếp tục.'}
+        'Hãy học cách thở, giữ nguồn oxy dự trữ và bơi qua những sinh vật đang canh vùng biển nông. Quái Ngư Song Trảo giữ lối xuống tầng trung, nơi cá mập con và sứa điện bơi giữa san hô phát quang. Sứa Ma Khổng Lồ che giấu lối đi trong những ảo ảnh giống hệt nhau. Bản đồ đã hé mở từ 151 đến 170; các miền sâu hơn còn nằm dưới màn nước chưa được khám phá.'],
+      arcs:['Tầng Biển Nông thử thách hơi thở giữa san hô. Piranha, cá nóc và cá ngựa canh giữ đường tới Quái Ngư Song Trảo.','Tầng Trung Đầu Tiên chìm trong ánh lam và điện tím. Né sứa bất tử, vượt hàm cá mập để tìm Bóng Ma Điện Quang giữa ảo giác hoán đổi.','Vùng biển 171–180 chưa được triển khai.','Vùng biển 181–190 vẫn đang được phong kín.','Vùng biển 191–200 chờ bộ kỹ năng và cốt truyện tiếp theo.'],
+      ending:'Những xúc tu điện cuối cùng lặng xuống. Hai bóng Sứa Ma tan khỏi sân cổ, để lại dòng nước không còn bị ảo giác bẻ hướng. Người giữ đèn lấy lại nhịp thở giữa những rạn san hô phát quang và những bức tường đá xanh thẳm. Bên dưới nơi Bóng Ma Điện Quang từng canh giữ, một đường nứt dẫn vào tầng nước chưa có tên. Tầng Trung Đầu Tiên đã được vượt qua; những miền sâu hơn của Hải Vực Quên Lãng vẫn chờ hành trình tiếp tục.'}
   ];
   const get=id=>stories.find(s=>s.id===Number(id))||stories[0];
   const forLevel=id=>stories.find(s=>id>=s.start&&id<=s.end)||stories[0];
@@ -73,7 +73,7 @@
     const text=(id,value)=>{if(g.ui[id])g.ui[id].textContent=value;};
     text('atlas-story-name',story.name);text('atlas-tagline',story.tagline);
     text('start-label',count>0&&count<length(story)?'Tiếp bước · Màn '+nextLevel(story,g.save.completed):'Bước vào câu chuyện');
-    text('save-label',`${String(story.start).padStart(2,'0')}—${story.end} · ${count}/${length(story)} MÀN ĐÃ QUA${story.plannedEnd?' · 161–200 SẮP MỞ':''}`);
+    text('save-label',`${String(story.start).padStart(2,'0')}—${story.end} · ${count}/${length(story)} MÀN ĐÃ QUA${story.plannedEnd?` · ${story.end+1}–${story.plannedEnd} SẮP MỞ`:''}`);
     text('campaign-title',story.name);text('map-story-description',story.tagline+' Chọn một điểm trên hành trình.');
     g.ui['home-overlay']?.setAttribute('data-story',String(story.id));
     const atlasPage='chapter'+story.id,view=viewport(story);
@@ -103,7 +103,7 @@
     for(const s of stories){
       const marks=milestones(s,rewards);
       const bossCount=marks.filter(m=>m.available).length;
-      text('story-progress-'+s.id,`${marks.filter(m=>m.cleared).length}/${bossCount} boss · ${progress(s,g.save.completed)}/${length(s)} màn${s.plannedEnd?' · 161–200 sắp mở':''}`);
+      text('story-progress-'+s.id,`${marks.filter(m=>m.cleared).length}/${bossCount} boss · ${progress(s,g.save.completed)}/${length(s)} màn${s.plannedEnd?` · ${s.end+1}–${s.plannedEnd} sắp mở`:''}`);
       for(const mark of marks){
         const button=g.ui['atlas-boss-'+mark.level];if(!button)continue;
         const label=mark.planned?`Mốc ${mark.level} · Chưa mở trong đợt này`:`Boss màn ${mark.level} · ${mark.cleared?'Đã khám phá':'Chưa đánh bại'} · Xem hành trình`;
@@ -175,8 +175,8 @@
   function result(g){
     const story=forLevel(g.level.id);
     if(g.screen!=='won'||g.level.id!==story.end)return;
-    g.ui['result-kicker'].textContent=story.plannedEnd?'HOÀN THÀNH CHẶNG ĐẦU':'KHÉP LẠI CỐT TRUYỆN '+String(story.id).padStart(2,'0');
-    g.ui['result-title'].textContent=story.plannedEnd?'Tầng Biển Nông · Đã vượt qua':story.name;
+    g.ui['result-kicker'].textContent=story.plannedEnd?'HOÀN THÀNH CHẶNG HIỆN TẠI':'KHÉP LẠI CỐT TRUYỆN '+String(story.id).padStart(2,'0');
+    g.ui['result-title'].textContent=story.plannedEnd?'Tầng Trung Đầu Tiên · Đã vượt qua':story.name;
     g.ui['result-description'].textContent=story.ending;
     const following=stories.find(s=>s.start===story.end+1);
     g.ui['result-primary'].textContent=following?'Đến '+following.name+' →':'Trở về bản đồ →';

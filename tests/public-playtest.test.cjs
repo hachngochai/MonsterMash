@@ -4,7 +4,7 @@ const original={campaignSize:150,resume:61,completed:[1,10,20,30,40,50],best:123
   progression:{version:1,rewards:[10,20,30,40,50],equipped:'bones',lifeKills:7},settings:{difficulty:'hard',sound:true}};
 function fixture(search='',hostname='hachngochai.github.io'){
   const scope=vm.createContext({URLSearchParams,location:{hostname,search}});
-  for(const name of ['abyss-config','underwater-config','campaign','bosses','golem','wolves','kong','dragons','mythic','abyss-combat','save-manager','boss-manager','map-manager','skill-manager','weapon-manager','input-manager','key-bindings','tutorial','game'])
+  for(const name of ['abyss-config','underwater-config','middle-sea-config','campaign','bosses','golem','wolves','kong','dragons','mythic','abyss-combat','save-manager','boss-manager','map-manager','skill-manager','weapon-manager','input-manager','key-bindings','tutorial','game'])
     vm.runInContext(fs.readFileSync('js/'+name+'.js','utf8'),scope);
   let bytes=JSON.stringify(original),writes=0;
   const storage={getItem:()=>bytes,setItem(k,v){writes++;bytes=v;}};

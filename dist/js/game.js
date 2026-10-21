@@ -410,7 +410,8 @@
       if(enemy.archetype==='dragon')MM.DragonCombat?.setup(this,enemy);
       if(['lion','medusa','goatman','chimera'].includes(enemy.archetype))MM.MythicCombat?.setup(this,enemy);
       this.enemies.push(enemy);MM.AbyssCombat?.init(this,enemy);
-      MM.UnderwaterEnemies?.setup(this,enemy);MM.Boss160?.setup(this,enemy);return enemy;
+      MM.UnderwaterEnemies?.setup(this,enemy);MM.Boss160?.setup(this,enemy);
+      MM.MiddleSeaEnemies?.setup(this,enemy);MM.Boss170?.setup(this,enemy);return enemy;
     }
     configureAbility(enemy, state) {
       if(state==='bat'){this.morphToBat(enemy);return enemy;}
@@ -472,7 +473,7 @@
     }
     updateEnemy(e,dt) {
       if(MM.SkillManager?.frozen(e))return;
-      if(MM.UnderwaterEnemies?.updateEnemy(this,e,dt)||MM.Boss160?.updateEnemy(this,e,dt))return;
+      if(MM.UnderwaterEnemies?.updateEnemy(this,e,dt)||MM.Boss160?.updateEnemy(this,e,dt)||MM.MiddleSeaEnemies?.updateEnemy(this,e,dt)||MM.Boss170?.updateEnemy(this,e,dt))return;
       e.age+=dt;e.hit=Math.max(0,e.hit-dt);
       if(e.tsunamiChild)return; // The wave owns its staggered entry and one-way movement.
       if(e.phase==='warning'){
@@ -544,9 +545,9 @@
     }
     killEnemy(enemy) {
       if (this.screen !== 'playing' || enemy.dead || enemy.spiderling) return;
-      if(MM.Boss160?.beforeKill?.(this,enemy)===false)return;
+      if(MM.Boss160?.beforeKill?.(this,enemy)===false||MM.Boss170?.beforeKill?.(this,enemy)===false||MM.MiddleSeaEnemies?.beforeKill?.(this,enemy)===false)return;
       if(MM.AbyssCombat?.beforeKill?.(this,enemy)===false)return;
-      enemy.dead = true; enemy.health = 0;MM.AbyssCombat?.onKill(this,enemy);MM.Boss160?.onKill(this,enemy);
+      enemy.dead = true; enemy.health = 0;MM.AbyssCombat?.onKill(this,enemy);MM.Boss160?.onKill(this,enemy);MM.Boss170?.onKill(this,enemy);
       this.totalKills++; this.score += enemy.score || 100;
       if(enemy.archetype==='golem')MM.GolemCombat?.cleanup(this,enemy);
       if(enemy.archetype==='werewolf')MM.WolfCombat?.cleanup(this,enemy);
@@ -613,7 +614,7 @@
       let applied=false;
       if(damage>0){p.health=Math.max(0,p.health-damage);p.invulnerable=1.35;this.flash=.12;this.sound.play('hit');applied=true;}
       if(spec.petrify>0&&p.petrifyTime<=0&&p.petrifyGrace<=0){p.petrifyTime=Math.min(1.5,spec.petrify);this.clearInputs();applied=true;}
-      if(spec.stun>0&&p.stunTime<=0&&p.stunGrace<=0){p.stunTime=Math.min(2,spec.stun);p.stunStyle='stars';this.clearInputs();applied=true;}
+      if(spec.stun>0&&p.stunTime<=0&&p.stunGrace<=0){p.stunTime=Math.min(clamp(spec.stunLimit||2,0,3),spec.stun);p.stunStyle='stars';this.clearInputs();applied=true;}
       if(spec.burn>0){if(p.burnTime<=0)p.burnTick=1;p.burnTime=Math.max(p.burnTime,Math.min(2,spec.burn));applied=true;}
       if(spec.knockup){p.vy=typeof spec.knockup==='number'?spec.knockup:-620;p.grounded=false;applied=true;}
       if(applied){this.burst(p.x,p.y-24,damage?'#f4ae83':'#b5d9e4',10);if(damage>1)this.floating(p.x,p.y-p.h-14,`−${damage} MÁU`,'#ffb391');}
@@ -677,7 +678,7 @@
       const wasStunned=p.stunTime>0;
       p.stunTime=Math.max(0,p.stunTime-dt);p.knockdownTime=Math.max(0,p.knockdownTime-dt);p.stunGrace=Math.max(0,p.stunGrace-dt);
       if(p.stunTime<1e-8)p.stunTime=0;if(p.knockdownTime<1e-8)p.knockdownTime=0;
-      if(wasStunned&&p.stunTime===0)p.stunGrace=.6;
+      if(wasStunned&&p.stunTime===0){p.stunGrace=Math.max(.6,p.electricStunGrace||0);p.electricStunGrace=0;}
       this.updatePlayerEffects(dt);if(this.screen!=='playing')return;
       MM.UnderwaterMode?.update(this,dt);if(this.screen!=='playing')return;
       MM.SkillManager?.update(this,dt);
@@ -717,7 +718,7 @@
       MM.WeaponManager?.update(this,dt);
       this.updateAmmo(dt);
       this.spawnTimer -= dt;
-      const alive = this.enemies.filter(e=>!e.boss&&!e.minion).length;
+      const alive = this.enemies.filter(e=>!e.boss&&!e.minion&&!e.middleSeaHazard).length;
       if (this.spawnTimer<=0 && this.regularSpawned<this.level.target && alive<this.level.maxAlive && this.restTimer<=0) {
         const ordinal=this.regularSpawned+1;
         let type=this.level.types[Math.floor(this.random()*this.level.types.length)];
@@ -750,6 +751,8 @@
       if(this.screen==='playing')MM.MythicCombat?.update(this,dt);
       if(this.screen==='playing')MM.UnderwaterEnemies?.update(this,dt);
       if(this.screen==='playing')MM.Boss160?.update(this,dt);
+      if(this.screen==='playing')MM.MiddleSeaEnemies?.update(this,dt);
+      if(this.screen==='playing')MM.Boss170?.update(this,dt);
       if(this.player.weaponMode!=='normal')this.updateAmmoUI();
       if(this.screen!=='playing')return;
       for(const shot of this.enemyShots){
@@ -806,7 +809,7 @@
       const damage=Math.max(1,Number.isFinite(amount)?amount:1);
       if(MM.BossCombat?.hit(this,e)===false){this.burst(e.x,e.y-e.h*.5,'#a7edab',4);return false;}
       let handled=false;
-      for(const combat of [MM.AbyssCombat,MM.WolfCombat,MM.KongCombat,MM.DragonCombat,MM.MythicCombat,MM.Boss160]){
+      for(const combat of [MM.AbyssCombat,MM.WolfCombat,MM.KongCombat,MM.DragonCombat,MM.MythicCombat,MM.Boss160,MM.MiddleSeaEnemies,MM.Boss170]){
         const result=combat?.hit(this,e,damage,attack);
         if(result===false){this.burst(e.x,e.y-e.h*.55,'#d6c7ed',5);return false;}
         if(result===true)handled=true;

@@ -1,17 +1,17 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),crypto=require('node:crypto');
 const plain=value=>JSON.parse(JSON.stringify(value));
-function load(globals={}){const c=vm.createContext(globals);for(const name of ['abyss-config','underwater-config','campaign','story'])vm.runInContext(fs.readFileSync(path.join(__dirname,'../js',name+'.js'),'utf8'),c);return c.MM;}
+function load(globals={}){const c=vm.createContext(globals);for(const name of ['abyss-config','underwater-config','middle-sea-config','campaign','story'])vm.runInContext(fs.readFileSync(path.join(__dirname,'../js',name+'.js'),'utf8'),c);return c.MM;}
 const digest=value=>crypto.createHash('sha256').update(JSON.stringify(value)).digest('hex');
 
 test('Ancient Abyss appends fifty stages and keeps the complete original campaign data byte-equivalent',()=>{
- const {Campaign:C,AbyssConfig:A,UnderwaterConfig:U}=load();
- assert.equal(C.levels.length,160);assert.equal(C.worlds.length,16);
+ const {Campaign:C,AbyssConfig:A,UnderwaterConfig:U,MiddleSeaConfig:M}=load();
+ assert.equal(C.levels.length,170);assert.equal(C.worlds.length,17);
  assert.equal(digest(C.levels.slice(0,100)),'7f358a02560c1a124f2c3ddd2fb386882d714d303a9dabb5bee4c7b504b30818');
  assert.equal(digest(C.worlds.slice(0,10)),'3f6f6bbfcbe769938c4557b2b4b5817732a73ec2aa15792b9a9fd98d077e8b78');
- const appended=new Set([...Object.keys(A.enemies),...Object.keys(A.bosses),...Object.keys(U.enemies)]);
+ const appended=new Set([...Object.keys(A.enemies),...Object.keys(A.bosses),...Object.keys(U.enemies),...Object.keys(M.enemies)]);
  assert.equal(digest(Object.fromEntries(Object.entries(C.enemyTypes).filter(([key])=>!appended.has(key)))),'7696fa212370f4b2bf051ede030c9939de958d7aa58f355297c30ed7e61b7206');
- assert.deepEqual(plain(C.levels.map(level=>level.id)),Array.from({length:160},(_,i)=>i+1));
+ assert.deepEqual(plain(C.levels.map(level=>level.id)),Array.from({length:170},(_,i)=>i+1));
 });
 
 test('the five underground worlds have distinct scenery, ten named stages and their own final boss',()=>{
@@ -50,7 +50,7 @@ test('new enemy and boss factories use centralized health and exact model dimens
 
 test('four stories cover the expanded campaign and keep both original trail layouts',()=>{
  const {Story:S,Campaign:C}=load();assert.equal(S.stories.length,4);
- for(const story of S.stories){assert.equal(story.end-story.start+1,story.id===4?10:50);assert.equal(story.arcs.length,5);assert.equal(story.intro.length,2);assert.ok(story.ending.length>150);}
+ for(const story of S.stories){assert.equal(story.end-story.start+1,story.id===4?20:50);assert.equal(story.arcs.length,5);assert.equal(story.intro.length,2);assert.ok(story.ending.length>150);}
  for(const level of C.levels)assert.equal(S.stories.filter(story=>level.id>=story.start&&level.id<=story.end).length,1);
  assert.deepEqual(plain(S.trail(S.get(1)).bosses),[[150,208],[260,180],[360,236],[290,320],[160,308]]);
  assert.deepEqual(plain(S.trail(S.get(2)).bosses),[[650,185],[850,165],[790,265],[620,280],[880,315]]);
@@ -83,7 +83,7 @@ test('the second story ending opens the Abyss and the third opens the sea and th
  for(const id of ['result-kicker','result-title','result-description','result-primary'])g.ui[id]=node();
  MM.StoryUI.result(g);g.resultAction();assert.equal(g.selectedStory,3);assert.equal(g.storyLaunch.level,101);assert.equal(g.storyLaunch.options.carry,true);assert.equal(g.opened,'story-dialog');
  g.level.id=150;MM.StoryUI.result(g);assert.equal(g.ui['result-description'].textContent,MM.Story.get(3).ending);g.resultAction();assert.equal(g.selectedStory,4);assert.equal(g.storyLaunch.level,151);
- g.level.id=160;MM.StoryUI.result(g);g.resultAction();assert.equal(g.screen,'home');
+ g.level.id=170;MM.StoryUI.result(g);g.resultAction();assert.equal(g.screen,'home');
 });
 
 test('atlas page selection shows exactly one story and restores either original island',()=>{

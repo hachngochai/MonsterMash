@@ -2,7 +2,7 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 function fixture(level=151){
  const scope=vm.createContext({});
- for(const name of ['abyss-config','underwater-config','campaign','bosses','golem','wolves','kong','dragons','mythic','abyss-combat','underwater','underwater-enemies','boss160','save-manager','boss-manager','map-manager','skill-manager','weapon-manager','input-manager','key-bindings','game'])
+ for(const name of ['abyss-config','underwater-config','middle-sea-config','campaign','bosses','golem','wolves','kong','dragons','mythic','abyss-combat','underwater','underwater-enemies','boss160','save-manager','boss-manager','map-manager','skill-manager','weapon-manager','input-manager','key-bindings','game'])
   vm.runInContext(fs.readFileSync('js/'+name+'.js','utf8'),scope,{filename:name+'.js'});
  const MM=scope.MM,g=new MM.Game({headless:true,storage:{getItem:()=>null,setItem(){}},random:()=>.5});g.start(level);
  g.spawnTimer=g.ammoTimer=1e6;g.level.target=999;g.underwater.oxygenTimer=1e6;

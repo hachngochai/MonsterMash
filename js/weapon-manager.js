@@ -152,7 +152,7 @@
     swapTarget(g) {
       const p=g.player;
       return (g.enemies||[]).filter(e=>!e.dead&&!e.retired&&e.health>0&&e.phase==='active'&&!e.boss&&!e.emotionProjection&&!e.projectionOwner
-        &&!e.flowerIllusion&&!e.abyssClone&&!e.playerShadow)
+        &&!e.flowerIllusion&&!e.abyssClone&&!e.playerShadow&&!e.indestructible)
         .sort((a,b)=>Math.hypot(a.x-p.x,a.y-a.h*.5-(p.y-p.h*.5))
           -Math.hypot(b.x-p.x,b.y-b.h*.5-(p.y-p.h*.5)))[0]||null;
     },
