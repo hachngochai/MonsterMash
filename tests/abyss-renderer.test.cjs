@@ -12,6 +12,7 @@ function fixture(options={}){
   {get(o,k){if(k in o)return o[k];return (...v)=>logs.push([k,...v]);},set(o,k,v){o[k]=v;return true;}});
  const scope={window:{MM:{AbyssConfig:{lighting:{torchViewportRatio:.5,weaponRadius:95,darkWeaponRadius:24,deityDarkWeaponSteps:3},combat:{arena:{step:40}}},SaveManager:{unlocked(g,id){return g.progression?.rewards?.includes(id)||false;}}}}};
  if(options.Image)scope.window.Image=options.Image;
+ if(options.document)scope.window.document=options.document;
  vm.createContext(scope);vm.runInContext(fs.readFileSync('js/abyss-renderer.js','utf8'),scope);
  const game={level:{id:101},time:1.4,settings:{},abyss:{},player:{x:300,y:438,w:38,h:54,dir:1},progression:{equipped:'gun',rewards:[]}};
  return {A:scope.window.MM.AbyssRenderer,MM:scope.window.MM,ctx,logs,gradients,game,depth:()=>depth};
@@ -275,17 +276,47 @@ test('grounded Abyss bosses animate a visible alternating stride while moving',(
  A.drawEnemy(ctx,game,boss);boss.x+=5;game.time+=.05;logs.length=0;A.drawEnemy(ctx,game,boss);
  const rotations=logs.filter(v=>v[0]==='rotate').map(v=>Math.abs(v[1]));assert.ok(rotations.some(v=>v>.04),'the leg artwork rotates visibly during a walking step');
 });
-test('deity turns a single head before its emotion changes and crossfades the reference palette',()=>{
+test('deity bends a connected surface through its head turn and palette transition without cut-out holes',()=>{
  const {A,ctx,logs,game,depth}=fixture(),image={width:2172,height:724};A.setSprite('deity',image);
  const boss={type:'thousandHands',x:500,y:438,w:200,h:255,health:100,boss:true,dir:1,emotion:'rage',emotionFrom:'joy',emotionChangedAt:0,emotionTurnDuration:1.4,abyssClock:0,abyssState:'patrol'};
  A.drawEnemy(ctx,game,boss);let frames=logs.filter(v=>v[0]==='drawImage');
- assert.equal(frames.length,4,'the old expression and body stay intact during the first half turn');
- assert.ok(frames.every(v=>v[1]===image));assert.equal(frames.at(-1)[2],0,'the original expression stays visible before the turn');
+ assert.ok(frames.length>1&&frames.length<=160,'a bounded mesh replaces disconnected head and arm pieces');
+ assert.ok(frames.every(v=>v[1]===image&&v[2]>=0&&v[2]+v[4]<=543.001),'the complete old expression is used before the turn');
+ assert.equal(logs.some(v=>v[0]==='clip'&&v[1]==='evenodd'),false,'no head hole or severed shoulder cutout');
+ const baseCount=frames.length,baseTransforms=logs.filter(v=>v[0]==='transform');
  logs.length=0;boss.abyssClock=.7;game.time+=.7;A.drawEnemy(ctx,game,boss);frames=logs.filter(v=>v[0]==='drawImage');
- assert.equal(frames.length,7);assert.equal(frames.at(-1)[2],543,'the new expression appears at the edge-on midpoint');
- assert.ok(logs.some(v=>v[0]==='scale'&&Math.abs(v[1]-.08)<.001),'the head turns edge-on before revealing the new face');
+ assert.equal(frames.length,baseCount,'one reference pose prevents ghost fingers and doubled facial features');
+ const transforms=logs.filter(v=>v[0]==='transform');
+ assert.ok(frames.every(v=>v[2]>=543&&v[2]+v[4]<=1086.001),'expression switches while its connected surface is edge-on');
+ assert.ok(transforms.every(v=>v.slice(1).every(Number.isFinite)&&v[1]*v[4]-v[2]*v[3]>0),'mesh never folds or creates a mirrored fragment');
+ assert.ok(Math.min(...transforms.map(v=>v[1]))<Math.min(...baseTransforms.map(v=>v[1]))*.5,'head surface narrows through the midpoint');
+ assert.equal(logs.some(v=>v[0]==='clip'&&v[1]==='evenodd'),false);
  logs.length=0;boss.abyssClock=1.4;game.time+=.7;A.drawEnemy(ctx,game,boss);
- assert.equal(logs.filter(v=>v[0]==='drawImage').length,3,'the finished pose returns to one new-color body');assert.equal(depth(),0);
+ frames=logs.filter(v=>v[0]==='drawImage');assert.equal(frames.length,baseCount,'the finished pose returns to a single connected palette');
+ assert.ok(frames.every(v=>v[2]>=543&&v[2]+v[4]<=1086.001));assert.equal(depth(),0);
+});
+
+test('deity atlas cleanup removes detached edge fragments once while preserving connected hands and central ornaments',()=>{
+ let prepared=0,painted;
+ const canvas={width:0,height:0,getContext(){return {
+  drawImage(){},createLinearGradient:()=>({addColorStop(){}}),fillRect(){},
+  getImageData(){
+   const w=canvas.width,h=canvas.height,data=new Uint8ClampedArray(w*h*4);
+   const box=(x,y,width,height)=>{for(let yy=y;yy<y+height;yy++)for(let xx=x;xx<x+width;xx++)data[(yy*w+xx)*4+3]=255;};
+   box(160,140,220,430);box(5,280,160,40); // body with a connected outer hand
+   box(12,80,14,22); // stray tip from its neighbour in the atlas
+   box(265,25,12,15); // intentional floating central crystal
+   return {data,width:w,height:h};
+  },putImageData(pixels){prepared++;painted=pixels;}
+ };}};
+ const {A,ctx,game}=fixture({document:{createElement:()=>canvas}});A.setSprite('deity',{width:2172,height:724});
+ const boss={type:'thousandHands',x:500,y:438,w:200,h:255,health:100,boss:true,dir:1,emotion:'joy'};
+ A.drawEnemy(ctx,game,boss);const alpha=(x,y)=>painted.data[(y*painted.width+x)*4+3];
+ assert.equal(alpha(18,90),0,'the disconnected neighbour fragment is gone');
+ assert.equal(alpha(10,290),255,'a connected hand at the same frame edge stays intact');
+ assert.equal(alpha(270,30),255,'central floating ornaments are preserved');
+ assert.equal(alpha(200,200),255);assert.equal(prepared,1);
+ A.drawEnemy(ctx,game,boss);assert.equal(prepared,1,'pixel processing is cached outside the animation loop');
 });
 test('approved backgrounds use measured source ledges, never a shared guessed floor ratio',()=>{
  const {A,ctx,logs,game}=fixture();game.settings.reducedMotion=true;

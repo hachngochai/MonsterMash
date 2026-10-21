@@ -1,10 +1,16 @@
 # Monster Mash — The Midnight Hunt
 
-Rebuild 09 (v4.0.5) của Monster Mash của KIO: 150 màn, 3 cốt truyện, Canvas 2D và bản đồ Three.js đóng gói trong repo. Không cần CDN hoặc cài package. Tiến độ màn, kỹ năng, vũ khí, kỷ lục và cài đặt lưu vĩnh viễn bằng localStorage trên trình duyệt hiện tại.
+Rebuild 09 (v4.0.6) của Monster Mash của KIO: 150 màn, 3 cốt truyện, Canvas 2D và bản đồ Three.js đóng gói trong repo. Không cần CDN hoặc cài package. Tiến độ màn, kỹ năng, vũ khí, kỷ lục và cài đặt lưu vĩnh viễn bằng localStorage trên trình duyệt hiện tại.
+
+## Tạo hình Thiên Thủ Cổ Thần · v4.0.6
+
+Boss 150 dùng bề mặt biến dạng liên tục cho vai, tay, cổ và bước chân, thay các mảng cắt xoay độc lập. Đầu vẫn xoay và chuyển sắc qua bốn cảm xúc, với một tạo hình duy nhất tại mỗi thời điểm để tránh bóng tay/mặt chồng nhau. Mẩu ảnh của nhân vật lân cận trong sprite sheet được loại bỏ và mép ô ảnh được làm mềm một lần khi tải; chuyển động không chạy lại bước xử lý pixel.
+
+Kiểm tra phóng lớn tại [phòng thử Cổ Thần](tests/deity-preview.html), có thanh dừng giữa động tác xoay và đo thời gian vẽ. Các kỹ năng, sát thương và điều kiện chuyển pha giữ nguyên.
 
 ## Bản test công khai · v4.0.5
 
-[Mở và chia sẻ bản test](https://hachngochai.github.io/MonsterMash/?test=all&v=4.0.5). Ai có link đều chơi được trên PC hoặc điện thoại, không cần tài khoản. Mỗi người chơi trên thiết bị riêng.
+[Mở và chia sẻ bản test](https://hachngochai.github.io/MonsterMash/?test=all&v=4.0.6). Ai có link đều chơi được trên PC hoặc điện thoại, không cần tài khoản. Mỗi người chơi trên thiết bị riêng.
 
 Link `?test=all` mở đủ 150 màn và toàn bộ phần thưởng, vũ khí, kỹ năng để thử. Badge **BẢN TEST** giúp nhận biết. Độ khó, sát thương, giới hạn đạn và cơ chế boss giữ nguyên. Màn 70 vẫn dùng quy tắc riêng của Trăng Máu.
 

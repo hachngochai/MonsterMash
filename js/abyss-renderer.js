@@ -10,6 +10,7 @@
   const flameTransitions = new WeakMap();
   const visualStates = new WeakMap();
   const facingStates = new WeakMap();
+  const deityFrames = new WeakMap();
   let visualSeed = 0;
   // Each image is decoded once. Native drawings stay visible until its artwork
   // has loaded, and remain the fallback if an image cannot be decoded.
@@ -22,7 +23,11 @@
     if(typeof root.Image!=='function')return Promise.resolve();
     return new Promise(resolve=>{
       const image=new root.Image(),entry=spriteEntries[key];entry.image=image;image.decoding='async';
-      image.onload=()=>{entry.ready=(image.naturalWidth||image.width)>0;resolve();};
+      image.onload=()=>{
+        entry.ready=(image.naturalWidth||image.width)>0;
+        if(key==='deity'&&entry.ready){const ih=image.naturalHeight||image.height;for(let index=0;index<4;index++)deityFrame(image,index,16*ih/724,668*ih/724);}
+        resolve();
+      };
       image.onerror=()=>{entry.ready=false;resolve();};image.src=spriteBase+file+spriteVersion;
     });
   }));
@@ -584,10 +589,6 @@
       {points:[[.02,.77],[.29,.77],[.30,1],[.01,1]],pivot:[.17,.78],angle:stride*.12,offset:[stride*.018,-Math.max(0,stride)*.035]},
       {points:[[.43,.77],[.70,.77],[.72,1],[.42,1]],pivot:[.55,.78],angle:-stride*.12,offset:[-stride*.018,-Math.max(0,-stride)*.035]}
     ];
-    if(key==='deity')return [
-      {points:[[0,0],[.27,0],[.30,.69],[0,.74]],pivot:[.29,.53],angle:Math.sin(pose.phase*.55)*.055},
-      {points:[[.73,0],[1,0],[1,.74],[.70,.69]],pivot:[.71,.53],angle:-Math.sin(pose.phase*.55)*.055}
-    ];
     if(key==='knight')return [{points:[[0,.25],[.30,.24],[.43,.49],[.25,.81],[0,.80]],pivot:[.43,.50],angle:Math.sin(pose.phase*.5)*.05}];
     return [];
   }
@@ -602,41 +603,131 @@
       c.drawImage(image,sx,sy,sw,sh,x,y,w,h);c.restore();
     }
   }
-  function drawDeitySprite(c,image,source,destination,effects,e,parts){
+  const deityMeshU=[0,.34,.44,.54,.64,.74,1];
+  const deityMeshV=[0,.12,.25,.34,.43,.54,.68,.84,1];
+  function cleanDeityAtlasEdges(context,w,h){
+    if(!context.getImageData||!context.putImageData)return;
+    try{
+      const pixels=context.getImageData(0,0,w,h),data=pixels.data,size=w*h;
+      const visited=new Uint8Array(size),core=new Uint8Array(size),queue=new Int32Array(size);
+      for(let start=0;start<size;start++){
+        if(visited[start]||data[start*4+3]<80)continue;
+        let read=0,count=1,minX=w,maxX=0;queue[0]=start;visited[start]=1;
+        while(read<count){
+          const at=queue[read++],xx=at%w;minX=Math.min(minX,xx);maxX=Math.max(maxX,xx);
+          for(const next of [xx?at-1:-1,xx<w-1?at+1:-1,at-w,at+w]){
+            if(next<0||next>=size||visited[next]||data[next*4+3]<80)continue;
+            visited[next]=1;queue[count++]=next;
+          }
+        }
+        const center=(minX+maxX)/(2*w);
+        // Keep the connected body (including its outer hands), plus central
+        // floating ornaments. Reject detached fragments from adjacent cells.
+        if(count>size*.08||center>.13&&center<.87)for(let i=0;i<count;i++)core[queue[i]]=1;
+      }
+      const pitch=w+1,prefix=new Uint32Array(pitch*(h+1));
+      for(let yy=0;yy<h;yy++){let row=0;for(let xx=0;xx<w;xx++){row+=core[yy*w+xx];prefix[(yy+1)*pitch+xx+1]=prefix[yy*pitch+xx+1]+row;}}
+      // Retain the original antialiasing/glow around every kept component.
+      for(let yy=0;yy<h;yy++)for(let xx=0;xx<w;xx++){
+        const left=Math.max(0,xx-6),right=Math.min(w,xx+7),top=Math.max(0,yy-6),bottom=Math.min(h,yy+7);
+        if(!(prefix[bottom*pitch+right]-prefix[top*pitch+right]-prefix[bottom*pitch+left]+prefix[top*pitch+left]))data[(yy*w+xx)*4+3]=0;
+      }
+      context.putImageData(pixels,0,0);
+    }catch{/* A canvas that cannot expose pixels still uses the soft edge mask. */}
+  }
+  function deityFrame(image,index,sy,sh){
+    const raw={image,frame:[index*image.width/4,sy,image.width/4,sh]};
+    if(!root.document?.createElement)return raw;
+    let cached=deityFrames.get(image);
+    if(!cached){cached=new Map();deityFrames.set(image,cached);}
+    const key=index+':'+sy+':'+sh;if(cached.has(key))return cached.get(key);
+    const canvas=root.document.createElement('canvas');canvas.width=Math.round(image.width/4);canvas.height=Math.round(sh);
+    const context=canvas.getContext?.('2d');if(!context)return raw;
+    context.drawImage(image,...raw.frame,0,0,canvas.width,canvas.height);
+    cleanDeityAtlasEdges(context,canvas.width,canvas.height);
+    // The four references touch their atlas-cell edges. Fade the outermost
+    // pixels once so clipped hand-tip fragments never leave a straight rim.
+    const feather=12/canvas.width,mask=context.createLinearGradient(0,0,canvas.width,0);
+    mask.addColorStop(0,'#fff0');mask.addColorStop(feather,'#ffff');
+    mask.addColorStop(1-feather,'#ffff');mask.addColorStop(1,'#fff0');
+    context.globalCompositeOperation='destination-in';context.fillStyle=mask;context.fillRect(0,0,canvas.width,canvas.height);
+    const prepared={image:canvas,frame:[0,0,canvas.width,canvas.height]};cached.set(key,prepared);return prepared;
+  }
+  const smoothBand=(a,b,n)=>{const v=clamp((n-a)/(b-a),0,1);return v*v*(3-2*v);};
+  function deityVertex(u,v,pose,turnScale){
+    // One continuous surface: hands, shoulders, neck and head share vertices.
+    // The head narrows through its turn without leaving a punched-out hole.
+    const headY=smoothBand(.025,.12,v)*(1-smoothBand(.34,.49,v));
+    const headX=smoothBand(.27,.43,u)*(1-smoothBand(.65,.79,u));
+    const stride=Math.sin(pose.phase)*pose.move,leg=smoothBand(.67,.94,v);
+    const left=1-smoothBand(.32,.52,u),right=smoothBand(.56,.76,u);
+    const arms=(1-smoothBand(.22,.4,u))-smoothBand(.7,.89,u);
+    return [u+(u-.54)*(turnScale-1)*headY*headX+stride*.017*leg*(left-right),
+      v+Math.sin(pose.phase*.55)*.014*arms*(1-smoothBand(.55,.75,v))
+        -Math.max(0,stride*(left-right))*.028*leg];
+  }
+  function paintDeitySurface(c,image,frame,rect,pose,turnScale){
+    const [x,y,w,h]=rect;
+    const rows=deityMeshV.map(v=>deityMeshU.map(u=>{
+      const [du,dv]=deityVertex(u,v,pose,turnScale);
+      return {source:[x+u*w,y+v*h],target:[x+du*w,y+dv*h]};
+    }));
+    const triangle=(a,b,d)=>{
+      const [ax,ay]=a.source,[bx,by]=b.source,[dx,dy]=d.source;
+      const [px,py]=a.target,[qx,qy]=b.target,[rx,ry]=d.target;
+      const determinant=(bx-ax)*(dy-ay)-(dx-ax)*(by-ay);
+      if(Math.abs(determinant)<1e-8)return;
+      const aa=((qx-px)*(dy-ay)-(rx-px)*(by-ay))/determinant;
+      const bb=((qy-py)*(dy-ay)-(ry-py)*(by-ay))/determinant;
+      const cc=((rx-px)*(bx-ax)-(qx-px)*(dx-ax))/determinant;
+      const dd=((ry-py)*(bx-ax)-(qy-py)*(dx-ax))/determinant;
+      const cx=(px+qx+rx)/3,cy=(py+qy+ry)/3;
+      c.save();c.beginPath();
+      // Subpixel overlap hides Canvas triangle-edge antialiasing. Texture
+      // coordinates remain shared, so there is no visible cut or detached rim.
+      for(const [index,[xx,yy]] of [[px,py],[qx,qy],[rx,ry]].entries()){
+        const length=Math.max(.001,Math.hypot(xx-cx,yy-cy));
+        const ex=xx+(xx-cx)/length*.45,ey=yy+(yy-cy)/length*.45;
+        if(index)c.lineTo(ex,ey);else c.moveTo(ex,ey);
+      }
+      c.closePath();c.clip();c.transform(aa,bb,cc,dd,px-aa*ax-cc*ay,py-bb*ax-dd*ay);
+      const left=Math.max(x,Math.min(ax,bx,dx)-1),top=Math.max(y,Math.min(ay,by,dy)-1);
+      const right=Math.min(x+w,Math.max(ax,bx,dx)+1),bottom=Math.min(y+h,Math.max(ay,by,dy)+1);
+      // Paint just this cell, rather than redrawing the entire high-resolution
+      // reference for every triangle (especially important on mobile GPUs).
+      c.drawImage(image,frame[0]+(left-x)/w*frame[2],frame[1]+(top-y)/h*frame[3],
+        (right-left)/w*frame[2],(bottom-top)/h*frame[3],left,top,right-left,bottom-top);c.restore();
+    };
+    for(let row=0;row<rows.length-1;row++)for(let col=0;col<rows[row].length-1;col++){
+      const a=rows[row][col],b=rows[row][col+1],d=rows[row+1][col],e=rows[row+1][col+1];
+      triangle(a,b,d);triangle(b,e,d);
+    }
+  }
+  function drawDeitySprite(c,image,source,destination,effects,e,pose){
     const [sx,sy,sw,sh]=source,[x,y,w,h]=destination;
     const order=['joy','rage','love','hate'],current=Math.max(0,order.indexOf(e.emotion||e.abyssEmotion||'joy'));
     const hasTurn=effects&&e.emotionChangedAt!=null&&e.emotionFrom&&e.emotionFrom!==(e.emotion||e.abyssEmotion);
     const duration=Math.max(.1,e.emotionTurnDuration||1.4),progress=hasTurn?clamp(((e.abyssClock||0)-e.emotionChangedAt)/duration,0,1):1;
     const previous=hasTurn?Math.max(0,order.indexOf(e.emotionFrom)):current;
-    const headIndex=hasTurn&&progress<.5?previous:current;
-    const head={x:.54,y:.255,rx:.19,ry:.205};
-    const drawFrame=(index,alpha,cutHead)=>{
-      const frame=[index*image.width/4,sy,image.width/4,sh];c.save();c.globalAlpha*=alpha;
-      if(parts?.length){
-        const pathPart=part=>{part.points.forEach(([u,v],i)=>i?c.lineTo(x+u*w,y+v*h):c.moveTo(x+u*w,y+v*h));c.closePath();};
-        c.beginPath();c.rect(x,y,w,h);for(const part of parts)pathPart(part);
-        if(cutHead)c.ellipse(x+head.x*w,y+head.y*h,head.rx*w,head.ry*h,0,0,TAU);
-        c.clip('evenodd');c.drawImage(image,...frame,x,y,w,h);c.restore();
-        for(const part of parts){const px=x+part.pivot[0]*w,py=y+part.pivot[1]*h;c.save();c.globalAlpha*=alpha;c.translate(px,py);c.rotate(part.angle);c.translate(-px,-py);c.beginPath();pathPart(part);c.clip();c.drawImage(image,...frame,x,y,w,h);c.restore();}
-        return;
+    const turnScale=hasTurn&&progress<1?.14+.86*Math.abs(Math.cos(progress*Math.PI)):1;
+    const drawFrame=index=>{
+      const prepared=deityFrame(image,index,sy,sh);c.save();
+      if(hasTurn&&progress>0&&progress<1){
+        const pulse=Math.pow(Math.sin(progress*Math.PI),6),hues=[42,8,326,268];
+        let delta=hues[current]-hues[previous];if(delta>180)delta-=360;if(delta< -180)delta+=360;
+        const hue=progress<.5?delta*smoothBand(0,.5,progress)*.5:-delta*(1-smoothBand(.5,1,progress))*.5;
+        c.filter=`brightness(${1+pulse*.32}) saturate(${1-pulse*.18}) hue-rotate(${hue}deg)`;
       }
-      c.beginPath();c.rect(x,y,w,h);
-      if(cutHead){c.ellipse(x+head.x*w,y+head.y*h,head.rx*w,head.ry*h,0,0,TAU);c.clip('evenodd');}else c.clip();
-      c.drawImage(image,...frame,x,y,w,h);c.restore();
+      // Stationary maze projections inherit the outer breathing/facing pose;
+      // they do not need another articulated mesh for each transparent copy.
+      if(effects&&!e.emotionProjection&&e.abyssState!=='corpse')paintDeitySurface(c,prepared.image,prepared.frame,destination,pose,turnScale);
+      else c.drawImage(prepared.image,...prepared.frame,x,y,w,h);
+      c.restore();
     };
-    if(!hasTurn||progress>=1)drawFrame(current,1,false);
-    else{
-      const colorProgress=clamp((progress-.5)*2,0,1);
-      if(progress<.5)drawFrame(previous,1,true);
-      else{drawFrame(previous,1-colorProgress,true);drawFrame(current,colorProgress,true);}
-      // Keep exactly one head visible. It turns edge-on first, switches its
-      // expression at the narrow midpoint, then reveals the new palette.
-      const turnScale=.08+.92*Math.abs(Math.cos(progress*Math.PI));
-      const hx=x+head.x*w,hy=y+head.y*h;
-      c.save();c.translate(hx,hy);c.scale(turnScale,1);c.translate(-hx,-hy);
-      c.beginPath();c.ellipse(hx,hy,head.rx*w,head.ry*h,0,0,TAU);c.clip();
-      c.drawImage(image,headIndex*image.width/4,sy,image.width/4,sh,x,y,w,h);c.restore();
-    }
+    // A single reference pose at every instant: blending two different hand
+    // arrangements creates ghost fingers. Light and hue carry the transition;
+    // the expression switches while the connected head is edge-on.
+    drawFrame(hasTurn&&progress<.5?previous:current);
   }
   function drawMinotaurRage(c,e,t,width,height,pivot,effects){
     const pulse=effects?.72+Math.sin(t*16)*.12:.76;
@@ -693,7 +784,7 @@
       if(progress<1){const palette=EMOTIONS[e.emotion]||EMOTIONS.joy;c.globalAlpha*=.9+.1*Math.sin(progress*Math.PI);glow(c,0,-height*.57,height*.7,palette.color,.2*Math.sin(progress*Math.PI));}
     }
     const parts=effects&&e.abyssState!=='corpse'?spriteParts(key,pose):[];
-    if(key==='deity')drawDeitySprite(c,image,[sx,sy,sw,sh],[-width*pivot,-height,width,height],effects,e,parts);
+    if(key==='deity')drawDeitySprite(c,image,[sx,sy,sw,sh],[-width*pivot,-height,width,height],effects,e,pose);
     else if(parts.length)paintSpriteParts(c,image,[sx,sy,sw,sh],[-width*pivot,-height,width,height],parts);
     else c.drawImage(image,sx,sy,sw,sh,-width*pivot,-height,width,height);
     if(key==='minotaur'&&e.minotaurRage&&type==='minotaurLord')drawMinotaurRage(c,e,t,width,height,pivot,effects);
