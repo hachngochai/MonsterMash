@@ -106,7 +106,8 @@
     if (game.screen !== 'playing' || !alive(e) || e.intangible || e.dragonGuarded) return false;
     if (!e.dragonState) setup(game, e);
     const amount = Number.isFinite(damage) ? Math.max(1, Math.trunc(damage)) : 1;
-    e.health = Math.max(0, e.health - amount);
+    if(attack.damageReceipt&&MM.DamageReceipt)MM.DamageReceipt.subtract(e,damage,attack);
+    else e.health = Math.max(0, e.health - amount);
     if (e.boss && e.dragonForm === 'dragon') {
       if (!e.yinYangTriggered && e.health <= e.maxHealth / 2) beginReincarnation(game, e);
       else if (e.health <= 0) becomeKnight(game, e);

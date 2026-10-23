@@ -8,7 +8,7 @@ const test = require('node:test');
 
 function loadGame(globals = {}, afterLoad = () => {}) {
   const context = vm.createContext(globals);
-  for (const file of ['abyss-config.js','underwater-config.js','middle-sea-config.js','campaign.js', 'golem.js', 'wolves.js', 'kong.js', 'dragons.js', 'mythic.js', 'game.js']) {
+  for (const file of ['abyss-config.js','underwater-config.js','middle-sea-config.js','predator-sea-config.js','deep-sea-config.js','final-sea-config.js','campaign.js', 'golem.js', 'wolves.js', 'kong.js', 'dragons.js', 'mythic.js', 'game.js']) {
     vm.runInContext(fs.readFileSync(path.join(__dirname, '../js', file), 'utf8'), context, { filename: file });
   }
   afterLoad(context);
@@ -364,7 +364,7 @@ test('completed old campaign saves continue into the new chapter while explicit 
   const MM=loadGame();
   const old=MM.readSave(storage({version:2,resume:50,completed:Array.from({length:50},(_,i)=>i+1),best:12345,settings:{controls:'buttons',difficulty:'hard'}}));
   assert.equal(old.resume,51);
-  assert.equal(old.campaignSize,170);
+  assert.equal(old.campaignSize,200);
   assert.equal(old.completed.length,50);
   assert.equal(old.best,12345);
   assert.equal(old.settings.controls,'buttons');
@@ -381,7 +381,7 @@ test('completed old campaign saves continue into the new chapter while explicit 
   assert.equal(replay60.resume,60);
   const completed70=MM.readSave(storage({campaignSize:70,resume:70,completed:Array.from({length:70},(_,i)=>i+1),best:34567,settings:{controls:'gestures',difficulty:'story'}}));
   assert.equal(completed70.resume,71);
-  assert.equal(completed70.campaignSize,170);
+  assert.equal(completed70.campaignSize,200);
   assert.equal(completed70.completed.length,70);
   assert.equal(completed70.best,34567);
   assert.equal(completed70.settings.controls,'gestures');
@@ -390,7 +390,7 @@ test('completed old campaign saves continue into the new chapter while explicit 
   assert.equal(replay70.resume,70);
   const completed80=MM.readSave(storage({campaignSize:80,resume:80,completed:Array.from({length:80},(_,i)=>i+1),best:45678,settings:{controls:'buttons',difficulty:'hard',sound:true}}));
   assert.equal(completed80.resume,81);
-  assert.equal(completed80.campaignSize,170);
+  assert.equal(completed80.campaignSize,200);
   assert.equal(completed80.completed.length,80);
   assert.equal(completed80.best,45678);
   assert.equal(completed80.settings.controls,'buttons');
@@ -407,7 +407,13 @@ test('completed old campaign saves continue into the new chapter while explicit 
   const current160=MM.readSave(storage({campaignSize:160,resume:160,completed:[160]}));
   assert.equal(current160.resume,161,'completing the shallow sea opens the middle sea');
   const current170=MM.readSave(storage({campaignSize:170,resume:170,completed:[170]}));
-  assert.equal(current170.resume,170,'current final stage stays replayable without fabricating171');
+  assert.equal(current170.resume,171,'completing the previous sea release opens the predator chapter');
+  const current180=MM.readSave(storage({campaignSize:180,resume:180,completed:[180]}));
+  assert.equal(current180.resume,181,'the previous final stage opens the appended deep sea');
+  const current190=MM.readSave(storage({campaignSize:190,resume:190,completed:[190]}));
+  assert.equal(current190.resume,191,'completing Leviathan opens the final sea');
+  const current200=MM.readSave(storage({campaignSize:200,resume:200,completed:[200]}));
+  assert.equal(current200.resume,200,'the final stage stays replayable without fabricating201');
 });
 
 test('keyboard and mobile sniper repeat at normal gun speed, costing five ammo per successful shot', () => {
@@ -649,7 +655,7 @@ test('malformed and denied saves fall back safely; progress and options survive 
   const game = new MM.Game({ headless: true, storage: denied });
   assert.doesNotThrow(() => { game.start(); game.finish(true); });
   const unsafe = MM.readSave(storage({ resume: 900, best: -1, completed: [1, 1, 50, 51, 61, 71, 80, 81, 90, 100, 101, '2', null], settings: { difficulty: 'bogus', sound: 'true', effects: false } }));
-  assert.equal(unsafe.resume, 170);
+  assert.equal(unsafe.resume, 200);
   assert.equal(unsafe.best, 0);
   assert.equal(JSON.stringify(unsafe.completed), '[1,50,51,61,71,80,81,90,100,101]');
   assert.equal(unsafe.settings.difficulty, 'normal');

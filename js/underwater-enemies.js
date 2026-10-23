@@ -32,7 +32,7 @@
   function contact(g,e,damage,knockback=0){
     const p=g.player;if(e.waterContactCooldown>EPS||!overlaps({...p,w:p.w*.8,h:p.h*.9},e))return false;
     const before=p.health;
-    g.applyCombatEffect?.({kind:'water-contact',damage,x:e.x,y:e.y});
+    g.applyCombatEffect?.({kind:'water-contact',damage,x:e.x,y:e.y,owner:e,sourceBoss:e.boss===true});
     if(p.health<before){
       if(knockback)p.vx=(Math.sign(p.x-e.x)||-(e.dir||1))*knockback;
       g.burst?.(p.x,p.y-p.h*.5,'#86e6ed',8,'ring');
@@ -145,7 +145,7 @@
       const elapsed=distance>left?dt*left/Math.max(distance,EPS):dt;
       s.previousX=s.x;s.previousY=s.y;s.x+=s.vx*elapsed;s.y+=s.vy*elapsed;s.travelled+=Math.min(distance,left);s.life-=dt;
       if(segmentHit(s.previousX,s.previousY,s.x,s.y,g.player)){
-        g.applyCombatEffect?.({kind:'water-pressure',damage:s.damage});s.life=0;
+        g.applyCombatEffect?.({kind:'water-pressure',damage:s.damage,owner:s.owner,sourceBoss:s.owner?.boss===true});s.life=0;
         g.burst?.(s.x,s.y,'#b0f5ff',10,'ring');
       }else if(s.travelled+EPS>=s.range||s.x<0||s.x>config().arena.width||s.y<0||s.y>config().arena.height){
         s.life=0;g.burst?.(s.x,s.y,'#8cdbe8',4);

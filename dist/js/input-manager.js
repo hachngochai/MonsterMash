@@ -138,7 +138,7 @@
         event.preventDefault?.(); if (!event.repeat) this.weaponDown(g);
         return true;
       }
-      if (['KeyW', 'KeyS'].includes(code) && MM.WeaponManager.setAim(g, MM.AbyssCombat?.invertAction(g,code==='KeyW'?'high':'ground')||(code==='KeyW'?'high':'ground'))) {
+      if (!MM.UnderwaterMode?.freeSwim(g)&&['KeyW', 'KeyS'].includes(code) && MM.WeaponManager.setAim(g, MM.AbyssCombat?.invertAction(g,code==='KeyW'?'high':'ground')||(code==='KeyW'?'high':'ground'))) {
         event.preventDefault?.(); return true;
       }
       return false;

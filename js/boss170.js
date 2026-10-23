@@ -42,15 +42,16 @@
     e.middleIllusionTimer=copy.middleIllusionTimer=c.illusionWarning;
     g.toast?.('ẢO GIÁC · Hai bóng ma hoán đổi vị trí');g.burst?.(e.x,e.y-e.h*.5,'#c2a6ff',24,'ring');g.sound?.play('shield');return true;
   }
-  function hit(g,e,damage){
+  function hit(g,e,damage,attack={}){
     if(!owns(e))return undefined;const c=cfg(),battle=encounter(g),before=e.health,amount=Math.max(0,Number.isFinite(damage)?damage:0);
-    const threshold=Math.max(1,e.maxHealth*c.illusionThreshold);
-    if(!e.middleSeaTwin&&!battle.illusionTriggered&&before>threshold&&before-amount<=threshold){
+    if(attack.damageReceipt&&MM.DamageReceipt)MM.DamageReceipt.subtract(e,amount,attack);
+    else e.health=Math.max(0,before-amount);
+    const after=e.health,threshold=Math.max(1,e.maxHealth*c.illusionThreshold);
+    if(!e.middleSeaTwin&&!battle.illusionTriggered&&before>threshold&&after<=threshold){
       // Resolve the crossing at 25%, then keep all residual damage on the
       // original. Even a lethal crossing creates a positive-HP copy, no heal.
-      e.health=threshold;createIllusion(g,e,threshold);e.health=Math.max(0,before-amount);
+      e.health=threshold;createIllusion(g,e,threshold);e.health=after;
     }else{
-      e.health=Math.max(0,before-amount);
       if(!e.middleSeaTwin&&!battle.illusionTriggered&&e.health>0&&e.health<=threshold)createIllusion(g,e,e.health);
     }
     return true;
@@ -178,7 +179,7 @@
           z.timer=Math.max(0,z.timer-dt);
           if(z.timer<=EPS){z.expired=true;continue;}
         }
-        if(z.phase==='active'&&!z.hit&&shockTouches(p,z))z.hit=MM.MiddleSeaEnemies.applyElectric(g,{kind:'middle-shock',damage:c.shockDamage,stun:c.shockStun,stunLimit:c.shockStun,oxygenFraction:c.shockOxygenFraction});
+        if(z.phase==='active'&&!z.hit&&shockTouches(p,z))z.hit=MM.MiddleSeaEnemies.applyElectric(g,{kind:'middle-shock',damage:c.shockDamage,stun:c.shockStun,stunLimit:c.shockStun,oxygenFraction:c.shockOxygenFraction,owner:z.owner,sourceBoss:true});
         continue;
       }
       z.timer=Math.max(0,z.timer-dt);
@@ -188,7 +189,7 @@
         if(z.timer<=EPS){z.phase='active';z.timer=z.total=c.laserLife;g.sound?.play('shot');}continue;
       }
       if(!z.hit&&laserTouches(p,z)&&p.rollTime<=0&&p.invulnerable<=EPS){
-        z.hit=true;g.applyCombatEffect?.({kind:'middle-plasma',damage:c.laserDamage});g.burst?.(p.x,p.y-p.h*.5,'#bdaaff',12,'ring');
+        z.hit=true;g.applyCombatEffect?.({kind:'middle-plasma',damage:c.laserDamage,owner:z.owner,sourceBoss:true});g.burst?.(p.x,p.y-p.h*.5,'#bdaaff',12,'ring');
       }
       if(z.timer<=EPS){z.expired=true;if(z.owner.middleLaserZone===z)z.owner.middleLaserZone=null;}
     }

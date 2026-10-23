@@ -46,11 +46,12 @@
     g.bossDefeated=false;g.burst?.(e.x,e.y-e.h*.5,'#8cf4f0',22,'ring');
     g.toast?.('SONG SINH MA QUÁI · Hạ cả hai bản thể');g.sound?.play('shield');g.updateUI?.();return true;
   }
-  function hit(g,e,damage){
+  function hit(g,e,damage,attack={}){
     if(!owns(e))return undefined;
     const battle=encounter(g),c=cfg();
     const target=c.twinHealthMode==='shared'&&e.waterTwin&&alive(battle.original)?battle.original:e;
-    target.health=Math.max(0,target.health-Math.max(0,Number.isFinite(damage)?damage:0));
+    if(attack.damageReceipt&&MM.DamageReceipt)MM.DamageReceipt.subtract(target,damage,attack);
+    else target.health=Math.max(0,target.health-Math.max(0,Number.isFinite(damage)?damage:0));
     if(target!==e)e.health=target.health;
     if(!battle.splitTriggered&&!target.waterTwin&&target.health<=target.maxHealth*c.splitThreshold)changePhase(g,target);
     return true;
@@ -186,8 +187,8 @@
       }
       if(!z.hit&&distance<=z.coreRadius){
         z.hit=true;z.expired=true;
-        if(g.underwater){g.underwater.oxygen=Math.max(0,g.underwater.oxygen*(1-c.vortexOxygenFraction));MM.UnderwaterMode?.oxygenChanged?.(g);}
-        g.applyCombatEffect?.({kind:'water-vortex',damage:c.vortexDamage,forceHit:true});
+        if(g.underwater&&!MM.MerfolkTransformation?.protectsOxygen(g)){g.underwater.oxygen=Math.max(0,g.underwater.oxygen*(1-c.vortexOxygenFraction));MM.UnderwaterMode?.oxygenChanged?.(g);}
+        g.applyCombatEffect?.({kind:'water-vortex',damage:c.vortexDamage,forceHit:true,owner:z.owner,sourceBoss:true});
         g.burst?.(z.x,z.y,'#b0faff',24,'ring');g.updateUI?.();
       }
     }

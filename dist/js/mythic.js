@@ -137,12 +137,15 @@
     g.floating?.(W/2,170,'CHIMERA PHÂN HÓA · BA VƯƠNG THÚ','#edcc9d');
     g.sound?.play('roar');g.updateUI?.();
   }
-  function hit(g,e,damage=1) {
+  function hit(g,e,damage=1,attack={}) {
     if(!accepts(e))return null;
     if(g.screen!=='playing'||!alive(e)||e.intangible||e.mythicShield)return false;
     if(!e.mythicActions)setup(g,e);
     const amount=Number.isFinite(damage)?Math.max(1,Math.trunc(damage)):1;
-    const applied=Math.min(e.health,amount);e.health=Math.max(0,e.health-amount);award(g,e,applied);
+    let applied;
+    if(attack.damageReceipt&&MM.DamageReceipt)applied=MM.DamageReceipt.subtract(e,damage,attack);
+    else {applied=Math.min(e.health,amount);e.health=Math.max(0,e.health-amount);}
+    award(g,e,applied);
     if(kind(e)==='chimera'&&e.boss) {
       if(!e.mythicAirTriggered&&e.health<=e.maxHealth/2)rise(g,e);
       else if(e.mythicAir&&e.health<=10&&!e.mythicSplit)split(g,e);

@@ -19,7 +19,10 @@
     { id: 13, name: 'Vách Đá Vọng Âm và Sân Nghi Lễ', subtitle: 'Lần theo tiếng vọng của cổ điểu', color: '#bd96ec', enemy: 'abyssCrow', scenery: 13 },
     { id: 14, name: 'Lăng Mộ Luân Hồi', subtitle: 'Một đầu xoay, bốn cõi lòng', color: '#e0bb73', enemy: 'clayGuard', scenery: 14 },
     { id: 15, name: 'Tầng Biển Nông', subtitle: 'Hải Vực Quên Lãng · Học cách thở dưới nước', color: '#6cdded', enemy: 'piranha', scenery: 15, underwater:true },
-    { id: 16, name: 'Tầng Trung Đầu Tiên', subtitle: 'Hải Vực Quên Lãng · Bóng Ma Điện Quang', color: '#899eea', enemy: 'babyShark', scenery: 16, underwater:true, middleSea:true }
+    { id: 16, name: 'Tầng Trung Đầu Tiên', subtitle: 'Hải Vực Quên Lãng · Bóng Ma Điện Quang', color: '#899eea', enemy: 'babyShark', scenery: 16, underwater:true, middleSea:true },
+    { id: 17, name: 'Tầng Trung Hải Vực', subtitle: 'Vùng săn mồi của đại dương cổ đại', color: '#7cabc2', enemy: 'hammerhead', scenery: 17, underwater:true, predatorSea:true },
+    { id: 18, name: 'Vực Sâu Vô Quang', subtitle: 'Chúa tể dưới miền biển không ánh sáng', color: '#8e93d4', enemy: 'gulper', scenery: 18, underwater:true, deepSea:true },
+    { id: 19, name: 'Đáy Biển Vĩnh Hằng', subtitle: 'Ngôi mộ Kraken và lối về mặt biển', color: '#81c9cf', enemy: 'seaCrab', scenery: 19, underwater:true, finalSea:true }
   ];
 
   const enemyTypes = {
@@ -57,6 +60,15 @@
   const middleSeaConfig = root.MM && root.MM.MiddleSeaConfig;
   if (!middleSeaConfig) throw new Error('Load js/middle-sea-config.js before js/campaign.js.');
   Object.assign(enemyTypes, middleSeaConfig.enemies);
+  const predatorSeaConfig = root.MM && root.MM.PredatorSeaConfig;
+  if (!predatorSeaConfig) throw new Error('Load js/predator-sea-config.js before js/campaign.js.');
+  Object.assign(enemyTypes, predatorSeaConfig.enemies);
+  const deepSeaConfig = root.MM && root.MM.DeepSeaConfig;
+  if (!deepSeaConfig) throw new Error('Load js/deep-sea-config.js before js/campaign.js.');
+  Object.assign(enemyTypes, deepSeaConfig.enemies);
+  const finalSeaConfig = root.MM && root.MM.FinalSeaConfig;
+  if (!finalSeaConfig) throw new Error('Load js/final-sea-config.js before js/campaign.js.');
+  Object.assign(enemyTypes, finalSeaConfig.enemies);
 
   const chapters = [
     {
@@ -477,6 +489,91 @@
       boss,bossArchetype:boss?'phantomJellyfish':null,bossHealth:boss?middleSeaConfig.boss.health:0,
       bossAbilities:skills.slice(),bossSkills:skills.slice(),story:middleSeaStories[stage],tutorial:middleSeaStories[stage],recovery:false,
       ...(boss?{bossName:'Sứa Ma Khổng Lồ · Bóng Ma Điện Quang'}:{})
+    }));
+  });
+
+  // Swordfish use one-pass hazard spawns: leaving the screen cannot strand a
+  // kill quota, and clearing a moving hazard does not summon the boss early.
+  const predatorNames=['Rãnh biển tĩnh lặng','Chiếc búa dưới làn nước','Nhịp húc thất thường','Đồng bằng điện ngầm','Bóng cánh giữa dòng điện','Lối qua hai kẻ săn mồi','Hành lang cá kiếm','Mũi giáo từ mép tối','Dấu xương trong rãnh sâu','Mega London'];
+  const predatorStories=[
+    'Sau Bóng Ma Điện Quang, vách đá mở vào vùng săn mồi cổ đại. Cá Mập Đầu Búa tuần tra chậm rồi hạ đầu báo trước cú húc mỗi hai giây, gây một máu khi trúng.',
+    'Theo dõi phần đầu búa thay vì chỉ nhìn đuôi cá. Né khỏi hướng húc đã báo hoặc bật khiên; đòn húc không gây choáng hay hút oxy.',
+    'Giữ nhịp cấp oxy cũ và dùng khoảng nghỉ sau mỗi cú húc để phản công. Hóa Ngư Nhân từ boss 160 có thể bảo vệ bạn trong mười giây dưới nước.',
+    'Cá Đuối Điện giang vây giữa những vách đá xanh thẫm. Mỗi mười giây nó tích điện rồi phóng về phía bạn; trúng mất một máu và choáng một giây.',
+    'Những mạch điện sáng trên lưng cá đuối báo thời điểm phản công. Đừng để cú húc của Đầu Búa dồn bạn vào đường điện đang chuẩn bị phóng.',
+    'Giữa hai đợt tấn công, thu hòm đạn và oxy đang lơ lửng. Cầu Chớp từ boss 170 nối tối đa năm mục tiêu, chỉ tốn đạn bằng lượng máu thực sự bị trừ.',
+    'Cá Kiếm xuất hiện qua dấu báo ở một mép sân, lao ngang đúng một hướng rồi rời đi. Một đợt có một con trong cửa năm giây; bắn hạ hoặc dùng phòng thủ trước mũi kiếm.',
+    'Đầu Búa, Cá Đuối và những mũi kiếm chia nhau vùng nước tối. Hướng cảnh báo của Cá Kiếm luôn là hướng nó đi vào, không quay đầu giữa đường.',
+    'Những bộ xương khổng lồ đánh dấu lãnh địa Mega London. Chuẩn bị khiên, oxy và lượt Hóa Ngư Nhân trước khi tiếng hàm cắn vang lên trong nước.',
+    'Mega London cắn trực diện mỗi mười lăm giây và lặn khuất ba giây để phục kích mỗi mười giây; từng cú cắn gây ba máu nếu không chặn bằng khiên. Rời nửa sân có sóng gầm. Hết máu, boss cuồng nộ bất khả xâm phạm năm giây rồi mới gục ngã.'
+  ];
+  const predatorBalance=predatorSeaConfig.campaign;
+  predatorNames.forEach((name,stage)=>{
+    const boss=stage===9,skills=boss?['sonic-bite','deep-ambush','shockwave-roar','final-rage']:[];
+    levels.push(Object.assign({},predatorBalance,{
+      id:171+stage,world:17,name,underwater:true,predatorSea:true,balanceStatus:'provisional-playtest',
+      target:predatorBalance.targets[stage],spawnInterval:predatorBalance.intervals[stage],maxAlive:predatorBalance.caps[stage],
+      types:stage<3?['hammerhead']:['hammerhead','electricRay'],hazardTypes:stage<6?[]:['swordfish'],
+      layout:boss?'predator-sea-arena':'predator-sea',abilitySpawnEvery:0,
+      boss,bossArchetype:boss?'megaLondon':null,bossHealth:boss?predatorSeaConfig.boss.health:0,
+      bossAbilities:skills.slice(),bossSkills:skills.slice(),story:predatorStories[stage],tutorial:predatorStories[stage],recovery:false,
+      ...(boss?{bossName:'Mega London · Hung Thần Biển Cổ Đại'}:{})
+    }));
+  });
+
+  const deepNames=['Vùng tối đầu tiên','Hàm nuốt trong màn đen','Bốn bước trước miệng lươn','Ánh mắt cá mập ma','Bóng săn vực thẳm','Dòng nước không mặt trời','Địa ngục phát quang','Những đốm sáng biết nổ','Bộ xương dưới đáy tối','Leviathan Chúa'];
+  const deepStories=[
+    'Sau Mega London, ánh mặt trời gần như biến mất. Oxy hao gấp một rưỡi tầng nông, còn dung lượng bình và cách cấp oxy giữ nguyên. Gulper há miệng báo trước dòng hút tầm bốn bước.',
+    'Luồng nước cuộn về hàm lươn mỗi năm giây. Rời vùng hút hoặc bật khiên trước khi chạm miệng; cú hút trúng chỉ gây một máu, không lặp lại trên từng khung hình.',
+    'Ba sao biển từ Mega London cùng soi một vùng tám bước quanh người giữ đèn. Trong bóng tối, tìm hòm oxy và giữ nguồn sáng khỏi những vách đá cổ đại.',
+    'Cá Mập Ma phát hiện bạn trong sáu bước. Ngoài vùng đó nó tuần tra; khi thấy mục tiêu, mắt sáng lên rồi hàm răng lởm chởm báo trước cú cắn.',
+    'Đừng để luồng hút của Gulper đưa bạn vào hàm Cá Mập Ma. Những kỹ năng mới vẫn tuân theo khiên, oxy và vũ khí đã mở từ các tầng trước.',
+    'Giữa làn phù sa xanh tím, những con cá mập lặng lẽ giữ đường xuống. Hóa Ngư Nhân dừng hao oxy mười giây nhưng không hóa giải đòn nuốt của boss.',
+    'Bọ Phát Sáng bơi giữa vách tối. Lõi sáng nhấp nháy trước khi nổ; mỗi con chỉ nổ một lần rồi biến mất. Giữ khoảng trống và đừng nhầm chúng với tiếp tế.',
+    'Ba loài chia nhau miền không ánh sáng: lươn hút, cá mập săn và bọ phát nổ. Cầu Chớp nối những mục tiêu hợp lệ nhưng chỉ tiêu đạn khi chúng thực sự mất máu.',
+    'Bộ xương cá voi khổng lồ nằm dưới khe đá. Giữ khiên cho lãnh địa Leviathan: ở đây, cạn máu chưa có nghĩa chúa tể đáy biển đã gục ngã.',
+    'Leviathan táp mỗi mười giây, gọi hai con qua Âm Vang Bầy Đàn và dùng Hố Đen nuốt năm giây. Hết máu lần đầu hồi một phần tư máu rồi phản công; lần hai là Hơi Thở Cuối Cùng, cần bật khiên theo dấu báo để sống sót.'
+  ];
+  const deepBalance=deepSeaConfig.campaign;
+  deepNames.forEach((name,stage)=>{
+    const boss=stage===9,skills=boss?['ancient-bite','echo-swarm','sea-lord','black-hole','first-rebirth','final-breath']:[];
+    levels.push(Object.assign({},deepBalance,{
+      id:181+stage,world:18,name,underwater:true,deepSea:true,oxygenDrainMultiplier:1.5,balanceStatus:'provisional-playtest',
+      target:deepBalance.targets[stage],spawnInterval:deepBalance.intervals[stage],maxAlive:deepBalance.caps[stage],
+      types:stage<3?['gulper']:stage<6?['gulper','ghostShark']:['gulper','ghostShark','glowBug'],hazardTypes:[],
+      layout:boss?'deep-sea-arena':'deep-sea',abilitySpawnEvery:0,
+      boss,bossArchetype:boss?'leviathan':null,bossHealth:boss?deepSeaConfig.boss.health:0,
+      bossAbilities:skills.slice(),bossSkills:skills.slice(),story:deepStories[stage],tutorial:deepStories[stage],recovery:false,
+      ...(boss?{bossName:'Leviathan Chúa · Chúa Tể Đáy Biển'}:{})
+    }));
+  });
+
+  // Pearls and passing turtles are interactions and hazards, never enemies
+  // that must be killed for a stage to advance.
+  const finalNames=['Biển đen vĩnh hằng','Viên ngọc trong vỏ đá','Hai giây rời vỏ trai','Ánh sáng giả tạo','Chiếc đèn trước hàm răng','Lối bơi giữa miệng phun','Mộ địa hải thần','Bóng mai qua xác tàu','Trước ngôi mộ Kraken','Kraken'];
+  const finalStories=[
+    'Sau Hơi Thở Cuối Cùng, người giữ đèn được Tự Do Đại Dương: bơi cả ngang và dọc. Oxy tầng đáy hao gấp đôi tầng nông, thay cho hệ số một rưỡi. Phím cấp oxy giữ riêng.',
+    'Cua canh đáy biển bằng hai càng. Trai Ngọc mở vỏ giữ viên ngọc soi sáng; chạm để nhận oxy rồi rời vùng vỏ trước khi nó đóng sau hai giây.',
+    'Mười giây sau khi bị lấy, ngọc tái tạo đúng một viên. Ba sao biển soi chung tám bước quanh bạn, không cộng thành hai mươi bốn; đừng bỏ qua cảnh báo miệng phun.',
+    'Đèn Cá Cần Câu co về hàm khi bạn đến gần. Nó là một sinh vật có thân và hitbox thật, không phải ngọc trai hoặc hòm tiếp tế an toàn.',
+    'Bọ Phát Sáng xuất hiện thường hơn, giữ nguyên cơ chế của tầng sâu. Giữa những nguồn sáng, tìm khoảng nước có thể bơi qua để tránh càng cua và cú cắn của cá.',
+    'Miệng phun nổi bọt báo trước cột nước. Trúng mất một máu và choáng một giây; tránh vùng cột đang sáng, thu ngọc hoặc cấp oxy khi đã an toàn.',
+    'Mực Ống Khổng Lồ quật xúc tu gây một máu, khi bị đánh sẽ phun mực rồi bơi trốn sang vị trí khác trong sân. Đám mực này không tắt ánh sáng sao biển.',
+    'Rùa Biển Khổng Lồ bơi ngang qua, chỉ cắn nếu bạn tới gần miệng. Giữ khoảng cách và để nó rời đi; rùa không truy đuổi như cá mập.',
+    'Xác tàu và những dải xúc tu đánh dấu lãnh địa cuối. Giữ khiên, oxy và nguồn sáng trước Kraken; chuẩn bị cho cột nước mạnh lên khi boss còn nửa máu.',
+    'Kraken vươn Vòi Giác Hút, ném xác tàu và che ánh sao trong mười giây Bóng Đen. Nửa máu làm miệng phun mạnh gấp đôi; Hóa Thạch năm giây hồi một phần tư máu tối đa rồi gọi Mega London và Leviathan theo cấu hình trận cuối.'
+  ];
+  const finalBalance=finalSeaConfig.campaign;
+  finalNames.forEach((name,stage)=>{
+    const boss=stage===9,skills=boss?['suction-tentacle','shipwreck-throw','black-ink','ocean-echo','fossil-summons']:[];
+    levels.push(Object.assign({},finalBalance,{
+      id:191+stage,world:19,name,underwater:true,finalSea:true,oxygenDrainMultiplier:2,balanceStatus:'provisional-playtest',
+      target:finalBalance.targets[stage],spawnInterval:finalBalance.intervals[stage],maxAlive:finalBalance.caps[stage],
+      types:stage<3?['seaCrab']:stage<6?['seaCrab','anglerFish','glowBug']:['seaCrab','anglerFish','glowBug','giantSquid'],
+      hazardTypes:stage<6?['pearlClam']:['pearlClam','seaTurtle'],layout:boss?'final-sea-arena':'final-sea',abilitySpawnEvery:0,
+      boss,bossArchetype:boss?'kraken':null,bossHealth:boss?finalSeaConfig.boss.health:0,
+      bossAbilities:skills.slice(),bossSkills:skills.slice(),story:finalStories[stage],tutorial:finalStories[stage],recovery:false,
+      ...(boss?{bossName:'Kraken · Chúa Tể Tận Cùng Đại Dương'}:{})
     }));
   });
 

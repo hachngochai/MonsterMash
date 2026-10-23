@@ -122,7 +122,7 @@
       'Liên Trảo báo trước rồi lao tới cào 3 nhát. Mỗi nhát trúng mất 1 HP và 1 khiên dự trữ nếu có; bật khiên để chặn HP và dùng 1 lượt đỡ. Bất Tử vẫn bảo vệ HP.',
       'Ở nửa máu, boss tạo một bản sao có thanh máu riêng 60 HP. Boss gốc có 120 HP; phải hạ cả hai mới thắng, bản sao không nhân đôi tiếp.',
       'Câm Lặng khóa sát thương vũ khí trong 3 giây; bạn vẫn bơi và cấp oxy được. Chiêu lặp lại mỗi 15 giây ở dạng thường và 10 giây khi Song Sinh. Rời vùng hút của lốc nước: chỉ khi chạm lõi mới mất 2 HP và một nửa oxy hiện có.'
-    ],reward:'Hạ boss 160 hoàn thành Tầng Biển Nông và mở đường xuống Tầng Trung Đầu Tiên, màn 161–170. Màn 160 chưa cấp thêm vũ khí hoặc kỹ năng. Tiến độ được lưu; các chỉ số oxy và máu trong đợt này là cân bằng chơi thử.'},
+    ],reward:'Hạ đủ hai bản thể boss 160 mở Hóa Ngư Nhân: R hoặc nút Ngư Nhân biến hình trong 10 giây, một lần mỗi lượt vào màn; thử lại có lượt mới. Chỉ dùng dưới nước. Khi biến hình không hao oxy, không ngạt và miễn mọi đòn hút oxy của boss; không tự hồi đầy oxy. Miễn HP quái thường nhưng vẫn chịu khống chế và sát thương boss. Quyền mở khóa được lưu vĩnh viễn.'},
     {start:161,title:'Ánh điện trong tầng nước thẳm',boss:'Sứa Ma Khổng Lồ · Màn 170',learn:[
       'Giữ nguyên cách bơi, oxy và tiếp tế của Tầng Biển Nông. ↑ hoặc nút OXY dùng bình dự trữ để cấp oxy, không nhảy. Oxy vẫn giảm khi bạn bị choáng; hết oxy vẫn khóa vũ khí và bắt đầu đếm ngạt 5 giây.',
       'Màn 161–163 có cá ngựa giữ nguyên đạn nước cao áp và cá mập con liên tục bơi tới cắn. Né vùng miệng khi hàm mở; cá mập không có chiêu lao xuyên màn hình hoặc gây choáng.',
@@ -133,7 +133,37 @@
       'Laze Plasma mỗi 8 giây: mắt boss sáng trước khi bắn chùm xanh tím dài nửa sân. Trúng mất 2 HP, không bị choáng hoặc trừ oxy trực tiếp. Né khỏi đường báo trước khi laze phát ra.',
       'Còn 25% HP, boss tạo đúng một ảo ảnh giống hệt, có thanh máu riêng bằng boss lúc triệu hồi và không ra chiêu. Hai thực thể báo sáng 0,8 giây rồi đổi vị trí mỗi 6 giây; chỉ cần hạ boss thật để thắng.',
       'Các chiêu trừ phần trăm đều tính theo oxy hiện có. Khiên đang bật chặn sát thương, choáng và hao oxy của đòn trúng, đổi lại mất 1 lượt đỡ. Bạn vẫn có thể cấp oxy trong lúc choáng.'
-    ],reward:'Hạ boss 170 hoàn thành Tầng Trung Đầu Tiên và lưu tiến độ. Vùng 171–200 chưa mở; mốc này chưa cấp thêm vũ khí hoặc kỹ năng. Những thông số chưa được quy định của quái mới và ảo ảnh được tách trong cấu hình chơi thử.'}
+    ],reward:'Hạ boss thật màn 170 mở Cầu Chớp trong danh sách F. Giữ bắn để nối tối đa 5 mục tiêu hợp lệ trong tầm; mỗi HP thực mất tiêu đúng 1 đạn, kể cả đạn lẻ. Không tính sát thương thừa hoặc tốn đạn khi địch miễn nhiễm. Cầu đánh được boss nhưng không xuyên phòng thủ; Hắc Hóa chỉ cường hóa một tia. Chỉ Song Rìu giữ quyền Lăn Chém.'},
+    {start:171,title:'Giữa vùng săn mồi cổ đại',boss:'Mega London · Màn 180',learn:[
+      'Giữ nguyên cách bơi và oxy. Cá Mập Đầu Búa hạ đầu báo trước cú húc mỗi 2 giây; trúng mất 1 HP, không choáng hoặc trừ oxy. Từ màn 174 có Cá Đuối Điện: mỗi 10 giây báo điện rồi gây 1 HP và choáng 1 giây nếu trúng.',
+      'Từ màn 177, một Cá Kiếm lao ngang sau dấu báo ở mép sân. Mỗi đợt 5 giây chỉ có một con, đi đúng một hướng rồi rời sân. Bắn hạ, bật khiên hoặc dùng Ngư Nhân để xử lý; chỉ khi cầm Song Rìu mới có Lăn Chém. Nhân vật vẫn bơi ngang theo điều khiển cũ.',
+      'Hóa Ngư Nhân dùng một lần mỗi lượt vào màn và kéo dài 10 giây: dừng hao oxy, ngăn ngạt cùng mọi đòn hút oxy của boss; chỉ miễn HP quái thường, vẫn chịu choáng và HP boss. Cầu Chớp nối tối đa 5 mục tiêu; đạn tiêu đúng HP thực mất, không trừ khi miễn nhiễm.'
+    ],fight:[
+      'Cắn Âm Thanh mỗi 15 giây khóa vị trí, há hàm rồi lao tới. Mũi hàm trúng gây 3 HP; khiên đang bật chặn theo cơ chế hiện có.',
+      'Sát Thủ Biển Khơi mỗi 10 giây: boss lặn khuất đúng 3 giây rồi cắn từ dưới lên, gây 3 HP khi trúng. Quan sát dấu nước báo phía dưới; lúc ẩn không có hitbox vô hình.',
+      'Âm Vang Xung Kích gầm 3 giây trong nửa sân. Trúng gây choáng và Hoảng Loạn 3 giây, mỗi giây trừ 10% oxy hiện có, không gây HP trực tiếp. Rời vùng báo hoặc dùng khiên; Ngư Nhân chặn phần hao oxy.',
+      'HP về 0 chưa thắng ngay: Hung Thần Trỗi Dậy làm boss bất khả xâm phạm đúng 5 giây, không hồi máu. Ngừng tốn đạn vào boss miễn nhiễm, dùng khiên và sống qua cơn cuồng nộ. Không tự tăng thời gian hoặc hồi khiên.'
+    ],reward:'Vượt qua năm giây cuồng nộ và hạ Mega London mở Tam Tinh Hải Đăng: ba sao biển nhỏ theo người chơi, cùng soi một vùng 8 bước dưới nước, không cộng thành 24 bước. Chúng không gây sát thương hoặc choáng. Quyền mở khóa được lưu vĩnh viễn; tiến độ 180 đã hoàn thành nhận tự động.'},
+    {start:181,title:'Hơi thở giữa miền vô quang',boss:'Leviathan Chúa · Màn 190',learn:[
+      'Oxy tại màn 181–190 hao bằng 1,5 lần tầng nông, dung lượng bình và hệ thống tiếp tế giữ nguyên. ↑ vẫn cấp oxy. Ngư Nhân dừng hao oxy 10 giây, không miễn đòn boss hoặc tự hóa giải trạng thái nuốt.',
+      'Màn 181–183 có Gulper hút mỗi 5 giây trong 4 bước, gây 1 HP khi chạm vùng miệng. Từ 184 thêm Cá Mập Ma phát hiện bạn trong 6 bước. Hai loài dùng cùng đơn vị bước; rời đường hàm và dòng hút đã báo.',
+      'Từ 187 thêm Bọ Phát Sáng. Lõi sáng nhấp nháy trước một vụ nổ, mỗi con chỉ nổ một lần. Giữ khoảng nước quanh người và ba sao biển, thu hòm oxy trước khi cạn.'
+    ],fight:[
+      'Táp cơ bản mỗi 10 giây, độc lập với năm kỹ năng. Âm Vang Bầy Đàn hồi 20 giây: siêu âm và rung trong 3 giây rồi gọi đúng 2 Leviathan Con, mỗi con có một phần tư HP tối đa boss theo cấu hình thử.',
+      'Lãnh Chúa Biển Khơi hồi 15 giây: tiếng gầm gây choáng không trừ HP riêng, rồi boss lao cắn; trúng hàm mất 1 HP. Hố Đen hút trong nửa sân, khi vào miệng sẽ bị nuốt 5 giây, khóa vũ khí rồi nhả gây 3 HP. Bật khiên hợp lệ trước khi nuốt để chặn cả chuỗi.',
+      'Cạn HP lần đầu: Điên Loạn hồi đúng 25% HP tối đa một lần, gọi đúng hai đợt con trong 5 giây rồi tiếp tục chiến đấu. Không có chiến thắng ở lần cạn máu này.',
+      'Cạn HP lần hai: Hơi Thở Cuối Cùng kéo dài 5 giây. Quan sát dấu báo và bật khiên đúng lúc để chặn đòn nuốt kết liễu. Ngư Nhân và miễn HP không thay cho khiên. Chỉ sau khi thử thách được giải quyết mới thắng.'
+    ],reward:'Hạ Leviathan sau Hơi Thở Cuối Cùng mở Tự Do Đại Dương: bơi lên/xuống và chéo trong không gian 2D dưới biển. Phím cấp oxy vẫn riêng. PC dùng phím bơi dọc trong Cài đặt; điện thoại có điều khiển lên/xuống. Quyền mở khóa lưu vĩnh viễn, tương thích với Ngư Nhân và các vũ khí cũ.'},
+    {start:191,title:'Ba ngọn sao tại đáy biển',boss:'Kraken · Màn 200',learn:[
+      'Oxy màn 191–200 hao gấp 2 lần tầng nông, thay hệ số 1,5 của tầng trước; không cộng thành x3. Bơi dọc chỉ mở sau Leviathan; phím ↑ tiếp tục cấp oxy. Bơi lên/xuống bằng phím đã đặt trong Cài đặt hoặc nút cảm ứng.',
+      '191–193 có Cua Biển và Trai Ngọc. Chạm ngọc để nhận oxy, rời vỏ trước lúc đóng sau 2 giây. Ngọc tái tạo 10 giây tính từ lúc lấy, không phải sau lúc đóng. Từ 194 thêm Cá Cần Câu thu đèn rồi cắn, cùng Bọ Phát Sáng xuất hiện thường hơn.',
+      'Từ 197 có Mực Ống quật xúc tu 1 HP và phun mực bơi trốn sau khi bị đánh; mực này không tắt sao biển. Rùa bơi ngang chỉ cắn khi bạn quá gần miệng. Quan sát miệng phun: cột nước gây 1 HP và choáng 1 giây, mỗi đợt chỉ trúng một lần.'
+    ],fight:[
+      'Vòi Giác Hút hồi 10 giây: vùng xúc tu trúng gây 1 HP, choáng và hao oxy theo cấu hình thử. Ném Xác Tàu hồi 15 giây, tầm một phần ba sân; chỉ va chạm thật mới gây 1 HP, không thêm sát thương mảnh vỡ.',
+      'Bóng Đen tắt ánh sáng Tam Tinh trong đúng 10 giây; sao biển vẫn tồn tại và theo bạn. Hết mực, vùng sáng 8 bước trở lại. HUD và cảnh báo nguy hiểm vẫn nhìn được.',
+      'Tại 50% HP, Vọng Âm Biển Khơi kích hoạt một lần: miệng phun hoạt động thường hơn và tăng từ 1 lên 2 HP, choáng vẫn 1 giây. Tiếng gầm không gây thêm HP hoặc tăng hệ số oxy.',
+      'Hóa Thạch giữ Kraken trong đá 5 giây và hồi 25% HP tối đa, không vượt trần; kết thúc gọi Mega London và Leviathan theo quy tắc triệu hồi của trận này. Hai hung thần không cấp lại thưởng hoặc mở màn thắng riêng. Những chỉ số chưa chốt được đánh dấu là cấu hình chơi thử.'
+    ],reward:'Hoàn thành điều kiện trận Kraken để xem hành trình nổi lên mặt biển và trở về đất liền. Tiến độ màn 200 cùng toàn bộ phần thưởng được lưu; oxy, nuốt, choáng và hiệu ứng boss được dọn. Không tự thêm phần thưởng boss 200.'}
   ].map((g,index)=>({...g,index:index+1,end:g.start+9,learn:g.start>=101&&g.start<=141?['Trong màn 101–150, hạ mỗi 5 quái thường hoặc bắn trúng boss đủ 10 viên nhận 1 khiên, giữ tối đa 3. Hai bộ đếm riêng biệt. Đạn hụt, bị chặn/phản lại và đòn cận chiến không tính vào mốc bắn boss. Bắn đúng hình chiếu Nộ trong mê cung vẫn được tính.',...g.learn]:g.learn}));
   const forLevel=id=>guides.find(g=>id>=g.start&&id<=g.end)||guides[0];
   const normalizeSeen=value=>Array.isArray(value)?[...new Set(value.filter(id=>guides.some(g=>g.start===id)))].sort((a,b)=>a-b):[];
@@ -167,6 +197,7 @@
     const keys=MM.KeyBindings,bindings=keys?.normalize(g.settings.keyBindings);
     const underwater=guide.start>=151;
     g.ui['tutorial-controls'].textContent=bindings?`PC: ${keys.label(bindings.left)} / ${keys.label(bindings.right)} di chuyển · ${keys.label(bindings.jump)} ${underwater?'cấp oxy':'nhảy'} · ${keys.label(bindings.shootLeft)} / ${keys.label(bindings.shootRight)} bắn · ${keys.label(bindings.shield)} khiên. Mobile: ${underwater?'nút OXY hoặc vuốt lên để cấp oxy; dùng nút hoặc vuốt ngang để bơi.':'dùng nút hoặc vuốt.'}`:underwater?'PC: ↑ cấp oxy. Mobile: nút OXY hoặc vuốt lên để cấp oxy; dùng nút hoặc vuốt ngang để bơi. Các phím PC có thể đổi trong Cài đặt.':'Dùng nút hoặc vuốt trên điện thoại; các phím PC có thể đổi trong Cài đặt.';
+    if(underwater&&MM.SaveManager?.unlocked(g,190))g.ui['tutorial-controls'].textContent=`Bơi ngang: ${bindings?keys.label(bindings.left)+' / '+keys.label(bindings.right):'← / →'}. Bơi dọc: ${bindings?keys.label(bindings.aimHigh)+' / '+keys.label(bindings.aimGround):'W / S'}. ${bindings?keys.label(bindings.jump):'↑'} cấp oxy; ${bindings?keys.label(bindings.shield):'Space'} khiên. Mobile: vuốt ngang/dọc giữ hướng hoặc nút bơi; nút OXY và KHIÊN hoạt động riêng.`;
     g.ui['tutorial-begin'].textContent='Sẵn sàng · Bắt đầu màn '+g.level.id+' →';
     g.screen='briefing';g.clearInputs();g.updateUI();dialog.showModal();dialog.scrollTop=0;return true;
   }

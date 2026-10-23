@@ -8,7 +8,7 @@ const test = require('node:test');
 
 function fresh(level = 1, difficulty = 'normal') {
   const context = vm.createContext({});
-  for (const file of ['abyss-config.js','underwater-config.js','middle-sea-config.js','campaign.js', 'game.js']) {
+  for (const file of ['abyss-config.js','underwater-config.js','middle-sea-config.js','predator-sea-config.js','deep-sea-config.js','final-sea-config.js','campaign.js', 'game.js']) {
     vm.runInContext(fs.readFileSync(path.join(__dirname, '../js', file), 'utf8'), context, { filename: file });
   }
   const game = new context.MM.Game({ headless: true, storage: { getItem() { return null; }, setItem() {} }, random: () => .5 });

@@ -471,6 +471,7 @@
     for (const enemy of game.enemies.slice()) {
       if (!enemy.boss || !alive(enemy) || (enemy.petrifiedTime || 0) > EPSILON) continue;
       if (!enemy.skillTimers) setup(game, enemy);
+      if (![10,20,30,40,50].includes(enemy.skillLevel)) continue;
       if (enemy.phase !== 'active') continue;
       enemy.hardenedTime = Math.max(0, (enemy.hardenedTime || 0) - dt);
       if (enemy.pendingSkill) {

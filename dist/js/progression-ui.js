@@ -6,7 +6,7 @@
   const descriptions = {
     gun:'1 đạn / phát',bones:'3 xương · 3 đạn / lượt',club:'Cận chiến · 3 sát thương',
     bow:'5 mũi tên · 5 đạn / lượt',spear:'Đâm gần / ném xa',axes:'Cận chiến · nhấn đúp hướng để Lăn Chém',
-    hammer:'Cận chiến · búa chiến Minotaur',scythe:'Chém + sóng xa · G hoán đổi với quái thường'
+    hammer:'Cận chiến · búa chiến Minotaur',scythe:'Chém + sóng xa · G hoán đổi với quái thường',lightningOrb:'Giữ bắn · tối đa 5 mục tiêu · 1 HP thực mất = 1 đạn'
   };
   function node(game,id) { return game.ui?.[id] || root.document?.getElementById(id); }
   function state(game) {
@@ -53,6 +53,9 @@
     node(game,'scythe-swap')?.addEventListener('click',event=>{
       event.preventDefault();event.stopPropagation();MM.WeaponManager?.tryScytheSwap(game);sync(game);game.canvas?.focus({preventScroll:true});
     });
+    node(game,'merfolk-button')?.addEventListener('click',event=>{
+      event.preventDefault();event.stopPropagation();MM.MerfolkTransformation?.activate(game);sync(game);game.canvas?.focus({preventScroll:true});
+    });
     node(game,'weapon-confirm')?.addEventListener('click',()=>{MM.InputManager?.select(game);sync(game);});
     node(game,'weapon-cancel')?.addEventListener('click',()=>{MM.InputManager?.close(game);sync(game);});
     node(game,'weapon-picker')?.addEventListener('keydown',event=>{
@@ -73,12 +76,24 @@
     const label=W.names?.[weapon]||names[weapon]||weapon;
     const weaponButton=node(game,'weapon-button');
     if(weaponButton) {
-      weaponButton.hidden=![10,60,90,100,120,140].some(level=>MM.SaveManager?.unlocked(game,level));
+      weaponButton.hidden=![10,60,90,100,120,140,170].some(level=>MM.SaveManager?.unlocked(game,level));
       text(weaponButton,label+' ↔');weaponButton.disabled=game.screen!=='playing'||suppressed||available.length<2;
       weaponButton.title=MM.SaveManager?.unlocked(game,60)?'Nhấn để đổi nhanh · giữ để chọn vũ khí':'Nhấn để đổi vũ khí';
       weaponButton.setAttribute('aria-label','Vũ khí: '+label+'. '+weaponButton.title);
     }
-    const manual=MM.MapManager?.manualAim(game)===true;
+    const free=MM.UnderwaterMode?.freeSwim(game)===true;
+    const manual=MM.MapManager?.manualAim(game)===true&&!free;
+    const swimControls=node(game,'swim-controls');if(swimControls)swimControls.hidden=!free||game.screen!=='playing';
+    const merfolk=node(game,'merfolk-button');
+    if(merfolk){
+      merfolk.hidden=!MM.UnderwaterMode?.active(game)||!MM.SaveManager?.unlocked(game,160);
+      const remaining=game.merfolk?.remaining||0,used=game.merfolk?.used;
+      const key=MM.KeyBindings?.label(MM.KeyBindings.normalize(game.settings.keyBindings).merfolk)||'R';
+      text(merfolk,remaining>0?'Ngư Nhân · '+(Math.ceil(remaining*10)/10).toFixed(1)+'s':used?'Ngư Nhân · Đã dùng':'Ngư Nhân · '+key);
+      merfolk.disabled=game.screen!=='playing'||!!game.weaponPicker?.open||!!used;
+      merfolk.classList.toggle('merfolk-active',remaining>0);
+      merfolk.title='10 giây miễn hao oxy và HP quái thường; Boss vẫn gây sát thương · một lượt mỗi màn';
+    }
     const swap=node(game,'scythe-swap');
     if(swap) {
       swap.hidden=weapon!=='scythe'||suppressed;

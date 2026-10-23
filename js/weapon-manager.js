@@ -2,9 +2,9 @@
 (function (root) {
   'use strict';
   const MM = root.MM = root.MM || {};
-  const ORDER = ['gun', 'bones', 'club', 'bow', 'spear', 'axes', 'hammer', 'scythe'];
-  const UNLOCK = {gun:0, bones:10, club:60, bow:90, spear:90, axes:100,hammer:120,scythe:140};
-  const NAMES = {gun:'Súng', bones:'Xương Phân Ba', club:'Chùy Golem', bow:'Cung Hắc Ám', spear:'Giáo Bạch Kim', axes:'Song Rìu',hammer:'Búa Minotaur',scythe:'Lưỡi Hái Cổ Điểu'};
+  const ORDER = ['gun', 'bones', 'club', 'bow', 'spear', 'axes', 'hammer', 'scythe', 'lightningOrb'];
+  const UNLOCK = {gun:0, bones:10, club:60, bow:90, spear:90, axes:100,hammer:120,scythe:140,lightningOrb:170};
+  const NAMES = {gun:'Súng', bones:'Xương Phân Ba', club:'Chùy Golem', bow:'Cung Hắc Ám', spear:'Giáo Bạch Kim', axes:'Song Rìu',hammer:'Búa Minotaur',scythe:'Lưỡi Hái Cổ Điểu',lightningOrb:'Cầu Chớp'};
   const RAD = Math.PI / 180;
   const suppressed = g => MM.MapManager?.suppressed ? MM.MapManager.suppressed(g) : g.level?.id === 70;
   const enabled = g => MM.MapManager?.skillsEnabled ? MM.MapManager.skillsEnabled(g) : !suppressed(g);
@@ -31,6 +31,7 @@
       g.rollSlashCooldown = 0;
       g.weaponAttack = null;
       g.scytheSwapCooldown = 0;
+      MM.LightningOrbWeapon?.reset(g);
     },
     available(g) { return suppressed(g) ? ['gun'] : ORDER.filter(id => unlocked(g, UNLOCK[id])); },
     current(g) {
@@ -41,6 +42,7 @@
       if (suppressed(g) || !this.available(g).includes(id)) return false;
       if (g.rollSlash?.time > 0) return false;
       progression(g).equipped = id;
+      MM.LightningOrbWeapon?.stop(g);
       g.player.weaponMode = id === 'gun' ? 'normal' : id;
       g.weaponAttack = null;
       persist(g);
@@ -70,6 +72,10 @@
       if (id === 'bow') return {kind:id, equipped:id, name:NAMES[id], count:5, cost:5, damage:1, cooldown:.9, speed:900, range:700, spread:[-12, -6, 0, 6, 12]};
       if (id === 'club') return {kind:id, equipped:id, name:NAMES[id], cost:0, damage:3, cooldown:.75, range:95, melee:true};
       if (id === 'axes') return {kind:id, equipped:id, name:NAMES[id], cost:0, damage:2, cooldown:.55, range:80, melee:true};
+      if (id === 'lightningOrb') {
+        const c=MM.PredatorSeaConfig?.rewards?.lightningOrb||MM.LightningOrbWeapon?.config||{};
+        return {kind:id,equipped:id,name:NAMES[id],cost:0,damage:c.damage??1,cooldown:c.tickInterval??.35,range:c.range??360,channel:true};
+      }
       if(id==='hammer'||id==='scythe')return {kind:id,equipped:id,name:NAMES[id],cost:0,melee:true,...MM.AbyssConfig.weapons[id]};
       const target = meleeTargets(g, dir, Infinity)[0];
       const stab = !!target && edgeGap(p, target) <= 40;
@@ -78,6 +84,7 @@
     },
     fire(g, direction) {
       const p = g.player, dir = direction < 0 ? -1 : 1;
+      if(this.current(g)==='lightningOrb')return MM.LightningOrbWeapon?.fire(g,dir)===true;
       if (g.screen !== 'playing' || g.weaponPicker?.open || p.shotTimer > .001 || p.stunTime > 0
         || p.petrifyTime > 0 || p.rollTime > 0 || g.rollSlash?.time > 0) return false;
       if(MM.UnderwaterMode&&!MM.UnderwaterMode.canAttack(g))return false;
@@ -192,6 +199,7 @@
       return true;
     },
     update(g, dt) {
+      MM.LightningOrbWeapon?.update(g,dt,g.fireIntent||0);
       if (g.screen !== 'playing' || g.weaponPicker?.open) return;
       g.scytheSwapCooldown=Math.max(0,(g.scytheSwapCooldown||0)-dt);
       g.rollSlashCooldown = Math.max(0, (g.rollSlashCooldown || 0) - dt);

@@ -10,20 +10,23 @@ const context = vm.createContext({});
 vm.runInContext(fs.readFileSync(path.join(__dirname, '../js/abyss-config.js'), 'utf8'), context);
 vm.runInContext(fs.readFileSync(path.join(__dirname, '../js/underwater-config.js'), 'utf8'), context);
 vm.runInContext(fs.readFileSync(path.join(__dirname, '../js/middle-sea-config.js'), 'utf8'), context);
+vm.runInContext(fs.readFileSync(path.join(__dirname, '../js/predator-sea-config.js'), 'utf8'), context);
+vm.runInContext(fs.readFileSync(path.join(__dirname, '../js/deep-sea-config.js'), 'utf8'), context);
+vm.runInContext(fs.readFileSync(path.join(__dirname, '../js/final-sea-config.js'), 'utf8'), context);
 vm.runInContext(fs.readFileSync(path.join(__dirname, '../js/campaign.js'), 'utf8'), context);
 const campaign = context.MM.Campaign;
 
-test('campaign has 170 sequential levels and seventeen boss milestones', () => {
-  assert.equal(campaign.worlds.length, 17);
-  assert.equal(campaign.levels.length, 170);
-  assert.equal(campaign.levels.filter(level => level.boss).length, 17);
+test('campaign has 200 sequential levels and twenty boss milestones', () => {
+  assert.equal(campaign.worlds.length, 20);
+  assert.equal(campaign.levels.length, 200);
+  assert.equal(campaign.levels.filter(level => level.boss).length, 20);
   campaign.levels.forEach((level, index) => {
     assert.equal(level.id, index + 1);
     assert.equal(level.world, Math.floor(index / 10));
     assert.equal(level.boss, level.id % 10 === 0);
     assert.ok(level.name && level.story);
     assert.ok(level.target >= 10 && level.target <= 46);
-    assert.ok(level.spawnInterval >= 0.9 && level.spawnInterval <= (level.underwater?2.6:2.4));
+    assert.ok(level.spawnInterval >= 0.9 && level.spawnInterval <= (level.finalSea?2.8:level.underwater?2.6:2.4));
     assert.ok(level.maxAlive >= 3 && level.maxAlive <= 7);
     assert.ok(level.types.length > 0);
     level.types.forEach(type => assert.ok(campaign.enemyTypes[type], type));
@@ -40,8 +43,8 @@ test('campaign has 170 sequential levels and seventeen boss milestones', () => {
 
 test('saved level ids clamp safely, including invalid or obsolete saves', () => {
   assert.equal(campaign.getLevel(-50).id, 1);
-  assert.equal(campaign.getLevel(500).id, 170);
-  assert.equal(campaign.getLevel(Infinity).id, 170);
+  assert.equal(campaign.getLevel(500).id, 200);
+  assert.equal(campaign.getLevel(Infinity).id, 200);
   assert.equal(campaign.getLevel(-Infinity).id, 1);
   assert.equal(campaign.getLevel(undefined).id, 1);
   assert.equal(campaign.getLevel('broken').id, 1);
@@ -50,7 +53,7 @@ test('saved level ids clamp safely, including invalid or obsolete saves', () => 
 });
 
 test('new enemies arrive gradually and recovery levels reduce pressure', () => {
-  const firstAppearances = { skeleton: 1, zombie: 3, spider: 12, ghost: 22, greenZombie: 30, vampire: 42, golem: 51, miniGolem: 61, werewolf: 62, miniKingKong: 71, wolfPup: 74, fireDragon:81, windDragon:81, iceDragon:84, earthDragon:84, lightningDragon:87, lionMan:91, medusa:91, goatman:91, minotaurCalf:101,parasite:113,littleTurtle:121,abyssCrow:131,lanternSkeleton:136,clayGuard:141,ancientHand:144,tombSpirit:146,piranha:151,pufferfish:154,seahorse:157,babyShark:161 };
+  const firstAppearances = { skeleton: 1, zombie: 3, spider: 12, ghost: 22, greenZombie: 30, vampire: 42, golem: 51, miniGolem: 61, werewolf: 62, miniKingKong: 71, wolfPup: 74, fireDragon:81, windDragon:81, iceDragon:84, earthDragon:84, lightningDragon:87, lionMan:91, medusa:91, goatman:91, minotaurCalf:101,parasite:113,littleTurtle:121,abyssCrow:131,lanternSkeleton:136,clayGuard:141,ancientHand:144,tombSpirit:146,piranha:151,pufferfish:154,seahorse:157,babyShark:161,hammerhead:171,electricRay:174,gulper:181,ghostShark:184,glowBug:187,seaCrab:191,anglerFish:194,giantSquid:197 };
   Object.entries(firstAppearances).forEach(([type, id]) => {
     assert.equal(campaign.levels.find(level => level.types.includes(type)).id, id);
   });

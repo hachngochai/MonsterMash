@@ -387,6 +387,7 @@
     polygon(c,[[0,-22],[4,-16],[0,-11],[-4,-16]],'#b14e62','#ffb6a4',.8);c.restore();
   }
   function drawRewardWeapon(c, player, weapon, game, t, effects) {
+    if(window.MM?.OceanVisuals?.drawWeapon(c,player,weapon,game,t,effects))return;
     if(window.MM?.AbyssRenderer?.drawWeapon(c,player,weapon,game,t,effects))return;
     const dir=player.dir||1,attack=game?.weaponAttack,active=attack&&attack.time>0;
     const progress=active?1-attack.time/Math.max(.01,attack.duration):0;
@@ -449,7 +450,9 @@
     const sniper = weapon==='gun' && player.weaponMode === 'sniper', highAim = player.weaponMode === 'highAim';
     const outline = '#101923', skin = '#d8b47d', empty = (sniper ? player.ammo < 5 : player.ammo === 0) && !(player.shotTimer > .001);
     // Combat boots and articulated legs under the original square camo body.
-    if(swimming){
+    if(swimming&&window.MM?.OceanVisuals?.drawTail(c,player,t,effects)){
+      // The upper body and equipped weapon remain the hunter's original art.
+    }else if(swimming){
       for(const side of [-1,1]){c.save();c.translate(side*8,-13);c.rotate(side*stride*.07);
         rounded(c,-4,-1,8,13,2,side<0?'#283e3a':'#35493d',outline,2);
         polygon(c,[[-5,9],[6,9],[10,16],[-7,16]],'#247986',outline,1.5);line(c,-3,12,5,13,'#86dce1',1);c.restore();}
@@ -2304,14 +2307,14 @@
       const split = boss.splitTriggered || boss.draculaClone;
       const owner = boss.draculaClone ? 'II' : 'I';
       const heirNames={lion:'SƯ TỬ VƯƠNG',medusa:'MEDUSA QUEEN',goatman:'GOATMAN HUY HOÀNG'};
-      const name = boss.mythicCrowned ? heirNames[boss.archetype]||'VƯƠNG THÚ' : boss.dragonForm==='knight' ? 'KỊ SĨ RỒNG' : split ? 'DRACULA ' + owner : (game.level.bossName || 'KẺ GIỮ CỔNG').toUpperCase();
+      const name = boss.finalSeaSummon ? (boss.archetype==='megaLondon'?'MEGA LONDON · TRIỆU HỒI':'LEVIATHAN · TRIỆU HỒI') : boss.mythicCrowned ? heirNames[boss.archetype]||'VƯƠNG THÚ' : boss.dragonForm==='knight' ? 'KỊ SĨ RỒNG' : split ? 'DRACULA ' + owner : (game.level.bossName || 'KẺ GIỮ CỔNG').toUpperCase();
       c.save(); c.textAlign = 'center'; c.font = `600 11px ${font}`; c.fillStyle = '#eadbc2';
       c.fillText(name, centre, top + 31);
       if (!boss.intangible || boss.wolfState === 'transform' || boss.kongState === 'vine-rise' || boss.dragonState==='knight-rise' || boss.mythicState==='rise') {
         const visibleHealth = boss.kongFinalTriggered ? 0 : boss.health;
         rounded(c, x, top + 42, width, 5, 2, '#071018bb');
         if (visibleHealth > 0) rounded(c, x, top + 42, width * Math.max(.01, visibleHealth / boss.maxHealth), 5, 2, boss.bloodMoon ? '#f28d78' : attackRate > 1.3 ? '#d28b72' : '#d9a174');
-        c.font = `400 9px ${font}`; c.fillStyle = '#b7c4ba'; c.fillText(`${visibleHealth} / ${boss.maxHealth}`, centre, top + 63);
+        c.font = `400 9px ${font}`; c.fillStyle = '#b7c4ba'; c.fillText(`${Math.round(visibleHealth*100)/100} / ${boss.maxHealth}`, centre, top + 63);
       } else { c.font = `600 10px ${font}`; c.fillStyle = '#b7d5d1'; c.fillText('ĐÃ BIẾN MẤT', centre, top + 56); }
       c.font = `600 10px ${font}`; c.fillStyle = attackRate > 1.3 ? '#dfa180' : '#9ea99b';
       c.fillText(`NHỊP TẤN CÔNG ×${attackRate.toFixed(2)}`, centre, top + 79);
@@ -2396,6 +2399,7 @@
     drawHunter(c, { x: 477, y: GROUND, w: 45, h: 64, dir: 1, vx: 0 }, t, effects);
   }
   function draw(c, game) {
+    if(window.MM?.ChapterTransition?.draw(c,game))return;
     const world = Math.max(0, Math.min(palettes.length - 1, game.level && Number.isFinite(game.level.world) ? Math.trunc(game.level.world) : 0));
     const t = game.time || 0, settings = game.settings || {}, effects = settings.effects !== false && !settings.reducedMotion;
     const scenery = window.MM?.Campaign?.worlds?.[world]?.scenery;
@@ -2467,8 +2471,10 @@
       abyss?.drawEffects(c,game,true);
       water?.drawEffects(c,game,t,true);
       abyss?.drawLighting(c,game);
+      window.MM?.OceanVisuals?.drawEffects(c,game,t);
+      window.MM?.OceanVisuals?.drawLighting(c,game,t);
       drawFloats(c, game.floats);
-      drawBossHUD(c, (game.enemies || []).filter(e => e.boss && e.health > 0 && !e.middleSeaTwin), game);
+      drawBossHUD(c, (game.enemies || []).filter(e => e.boss && !e.dead && (e.health > 0 || e.predatorRage || e.deepFinal || e.krakenStone) && !e.middleSeaTwin), game);
     }
     if (game.flash > 0 && effects && !abyssScene) { c.globalAlpha = Math.min(.19, game.flash); rect(c, 0, 0, W, H, '#d2eeec'); c.globalAlpha = 1; }
     c.restore();
@@ -2480,5 +2486,5 @@
     c.restore();
   }
   window.MM = window.MM || {};
-  window.MM.Renderer = { draw, drawPortrait, palettes, width: W, height: H, groundY: GROUND };
+  window.MM.Renderer = { draw, drawPortrait, drawHunter, palettes, width: W, height: H, groundY: GROUND };
 })();

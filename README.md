@@ -1,8 +1,18 @@
 # Monster Mash — The Midnight Hunt
 
-Rebuild 11 (v4.2.0) của Monster Mash của KIO: 170 màn, 4 cốt truyện, Canvas 2D và bản đồ Three.js đóng gói trong repo. Không cần CDN hoặc cài package. Tiến độ màn, kỹ năng, vũ khí, kỷ lục và cài đặt lưu vĩnh viễn bằng localStorage trên trình duyệt hiện tại.
+Rebuild 12 (v4.3.0) của Monster Mash của KIO: 200 màn, 4 cốt truyện, Canvas 2D và bản đồ Three.js đóng gói trong repo. Không cần CDN hoặc cài package. Tiến độ màn, kỹ năng, vũ khí, kỷ lục và cài đặt lưu vĩnh viễn bằng localStorage trên trình duyệt hiện tại.
 
-## Bóng Ma Điện Quang · v4.2.0
+## Hải Vực hoàn chỉnh · v4.3.0
+
+Hải Vực Quên Lãng đã mở đủ 151–200: năm tầng biển, Mega London, Leviathan Chúa và trận cuối Kraken. Ngư Nhân sau boss 160 bảo vệ oxy trong 10 giây; Cầu Chớp sau 170 chỉ tiêu đạn theo HP thực mất; boss 180 mở ba sao biển soi 8 bước; boss 190 mở bơi tự do W/S. ↑ vẫn cấp oxy; điện thoại có nút bơi và vuốt dọc giữ hướng. Tiến độ và phần thưởng cũ được giữ nguyên.
+
+Chuyển cảnh 50→51 tiến vào rừng; 100→101 cầm đuốc vào hang; 150→151 nhảy xuống xoáy biển. Đoạn kết 200 đưa người chơi từ đáy biển trở lại đất liền. Có thể bỏ qua bằng nút trên màn hoặc Enter/Esc/Space; không chạy combat hay hao oxy trong chuyển cảnh.
+
+[Chơi bản chính](https://hachngochai.github.io/MonsterMash/?v=4.3.0) · [Bản test mở toàn bộ](https://hachngochai.github.io/MonsterMash/?test=all&v=4.3.0) · [Phòng thử 171–200 và chuyển cảnh](tests/ocean-depths-preview.html) · [Cấu hình và điều kiện thắng](docs/deep-final-sea.md).
+
+Các chỉ số chưa được quy định là **cân bằng chơi thử**, tách trong config. Hóa Thạch của Kraken dùng cấu hình đã duyệt: một lần tại 25% HP, hồi 25% HP tối đa trong 5s, vẫn nhận sát thương; gọi Mega London và Leviathan mỗi con 25% HP gốc, chỉ cắn cơ bản, phải hạ đủ ba. Không có phần thưởng 200 tự thêm.
+
+## Lịch sử · Bóng Ma Điện Quang v4.2.0
 
 Màn 161–170 mở Tầng Trung Đầu Tiên với Cá Mập Con, Sứa Điện bất tử và Cá Ngựa giữ nguyên. Sứa là chướng ngại riêng, không tính vào số quái phải hạ. Boss Sứa Ma Khổng Lồ có Tê Tái, Tập Tính Bầy Đàn, Laze Plasma và Ảo Giác. Bản sao chỉ đánh lạc hướng; hạ boss thật là thắng. Tạo hình mới theo bản vẽ người dùng cung cấp.
 
@@ -24,7 +34,7 @@ Kiểm tra phóng lớn tại [phòng thử Cổ Thần](tests/deity-preview.htm
 
 ## Bản test công khai · v4.0.5
 
-[Mở và chia sẻ bản test](https://hachngochai.github.io/MonsterMash/?test=all&v=4.2.0). Ai có link đều chơi được trên PC hoặc điện thoại, không cần tài khoản. Mỗi người chơi trên thiết bị riêng.
+[Mở và chia sẻ bản test](https://hachngochai.github.io/MonsterMash/?test=all&v=4.3.0). Ai có link đều chơi được trên PC hoặc điện thoại, không cần tài khoản. Mỗi người chơi trên thiết bị riêng.
 
 Link `?test=all` mở đủ 170 màn và toàn bộ phần thưởng, vũ khí, kỹ năng để thử. Badge **BẢN TEST** giúp nhận biết. Độ khó, sát thương, giới hạn đạn và cơ chế boss giữ nguyên. Màn 70 vẫn dùng quy tắc riêng của Trăng Máu.
 
@@ -163,7 +173,7 @@ Kiểm tra tự động bảo vệ cơ chế và tiến trình; cân bằng cu�
 
 ## Hướng dẫn theo chặng
 
-Mục 05 trong Cách chơi gồm 15 chặng (1–10 đến 141–150). Lần đầu bắt đầu màn 1, 11, 21…141 sẽ mở hướng dẫn chặng đó, tạm dừng giao chiến đến khi đóng hướng dẫn hoặc nhấn Sẵn sàng. Các chặng đã đọc được lưu cùng tiến độ; thử lại không mở lặp. Có thể xem lại từng mục trong Cách chơi. Bản localhost mở toàn bộ phần thưởng để test, không ghi vào save thật; dùng `?test=off` để kiểm tra tiến trình bình thường.
+Mục 05 trong Cách chơi gồm 20 chặng (1–10 đến 191–200). Lần đầu bắt đầu màn 1, 11, 21…191 sẽ mở hướng dẫn chặng đó, tạm dừng giao chiến đến khi đóng hướng dẫn hoặc nhấn Sẵn sàng. Các chặng đã đọc được lưu cùng tiến độ; thử lại không mở lặp. Có thể xem lại từng mục trong Cách chơi. Bản localhost mở toàn bộ phần thưởng để test, không ghi vào save thật; dùng `?test=off` để kiểm tra tiến trình bình thường.
 
 ## Tiếp tế khiên tại Vực Sâu Cổ Đại · v4.0.2
 

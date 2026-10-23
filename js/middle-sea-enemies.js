@@ -25,9 +25,9 @@
     const p=g.player;if(g.screen!=='playing'||p.rollTime>0||p.invulnerable>EPS)return false;
     const blocked=p.shieldTime>0&&p.shieldHits>0,before=p.stunTime;
     g.applyCombatEffect?.({kind:spec.kind||'middle-electric',damage:spec.damage||0,stun:spec.stun||0,
-      stunLimit:spec.stunLimit||2});
+      stunLimit:spec.stunLimit||2,owner:spec.owner,sourceBoss:spec.sourceBoss});
     if(p.stunTime>before){p.electricStunGrace=Math.max(p.electricStunGrace||0,cfg().jellyfish.postStunGrace);p.stunStyle='electric';}
-    if(spec.oxygenFraction>0&&(!blocked||!cfg().boss.shieldBlocksOxygen)&&g.underwater){
+    if(spec.oxygenFraction>0&&(!blocked||!cfg().boss.shieldBlocksOxygen)&&g.underwater&&!MM.MerfolkTransformation?.protectsOxygen(g)){
       const basis=cfg().boss.oxygenBasis==='maximum'?g.underwater.maxOxygen:g.underwater.oxygen;
       g.underwater.oxygen=Math.max(0,g.underwater.oxygen-basis*spec.oxygenFraction);
       MM.UnderwaterMode?.oxygenChanged(g);
@@ -50,7 +50,7 @@
       if(e.middleTimer<=EPS){
         e.middleState='bite';e.middleTimer=c.biteLife;clearWarning(e);e.middleNextBite=e.middleClock+c.biteCooldown;
         const z={x:e.x+(e.dir||1)*(e.w*.35+c.biteRange*.2),y:e.y-e.h*.5+c.biteHeight*.5,w:c.biteRange,h:c.biteHeight};
-        if(overlap(p,z)){g.applyCombatEffect?.({kind:'shark-bite',damage:c.biteDamage});g.burst?.(z.x,z.y-z.h*.5,'#b9ebee',8,'ring');}
+        if(overlap(p,z)){g.applyCombatEffect?.({kind:'shark-bite',damage:c.biteDamage,owner:e,sourceBoss:false});g.burst?.(z.x,z.y-z.h*.5,'#b9ebee',8,'ring');}
       }
     }else{
       if(e.middleState==='bite'){e.middleTimer=Math.max(0,e.middleTimer-dt);if(e.middleTimer<=EPS)e.middleState='swim';}
@@ -67,7 +67,7 @@
   function jellyfish(g,e,dt){
     const c=cfg().jellyfish;e.vx=0;e.vy=-c.riseSpeed;e.y+=e.vy*dt;e.middlePulse=Math.sin(e.middleClock*c.pulseRate);
     if(!e.middleContactUsed&&overlap(g.player,e)){
-      const accepted=applyElectric(g,{kind:'jelly-contact',stun:e.summonedJelly?c.summonedStun:c.stun,
+      const accepted=applyElectric(g,{kind:'jelly-contact',owner:e.summonOwner||e,sourceBoss:!!e.summonedJelly,stun:e.summonedJelly?c.summonedStun:c.stun,
         oxygenFraction:e.summonedJelly?c.summonedOxygenFraction:0});
       if(accepted)e.middleContactUsed=true;
     }

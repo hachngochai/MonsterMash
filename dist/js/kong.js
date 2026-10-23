@@ -114,11 +114,12 @@
     game.kongZones.push(e.kongZone); game.player.weaponMode='normal';
     game.sound?.play('roar'); game.updateUI?.();
   }
-  function hit(game,e,damage=1) {
+  function hit(game,e,damage=1,attack={}) {
     if(!isKong(e))return null;
     if(game.screen!=='playing'||!alive(e)||e.intangible||e.kongFinalTriggered)return false;
     if(!e.kongState)setup(game,e);
-    e.health=Math.max(0,e.health-Math.max(1,Math.trunc(damage)||1));
+    if(attack.damageReceipt&&MM.DamageReceipt)MM.DamageReceipt.subtract(e,damage,attack);
+    else e.health=Math.max(0,e.health-Math.max(1,Math.trunc(damage)||1));
     if(e.boss&&!e.vineTriggered&&e.health<=e.maxHealth/2)beginVine(game,e);
     else if(e.boss&&e.vinePhase&&e.health<=0)beginFinal(game,e);
     return true;

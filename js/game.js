@@ -117,6 +117,11 @@
     }
     persist() { if(this.progression)this.save.progression=this.progression;if(this.testMode)return;try { this.storage?.setItem(SAVE_KEY,JSON.stringify(this.save)); } catch { /* Game remains playable without localStorage. */ } }
     start(id = this.save.resume, options = {}) {
+      const crossing={50:'forest',100:'cave',150:'whirlpool'}[this.level.id];
+      if(!options.skipCinematic&&options.carry&&this.screen==='won'&&id===this.level.id+1&&crossing&&this.canvas&&MM.ChapterTransition){
+        MM.ChapterTransition.begin(this,crossing,()=>this.start(id,{...options,skipCinematic:true}));return;
+      }
+      this.cinematic=null;this.endingOnLand=false;if(this.ui?.['cinematic-skip'])this.ui['cinematic-skip'].hidden=true;
       MM.Tutorial?.cancel(this);
       MM.AbyssCombat?.reset(this);
       const {carry = false, retry = false} = options;
@@ -160,6 +165,7 @@
       MM.Tutorial?.onStart(this,options);
     }
     goHome() {
+      this.cinematic=null;this.endingOnLand=false;if(this.ui?.['cinematic-skip'])this.ui['cinematic-skip'].hidden=true;
       MM.UnderwaterMode?.stop(this);
       MM.Tutorial?.cancel(this);
       MM.AbyssCombat?.reset(this);
@@ -177,6 +183,7 @@
       this.updateUI();
     }
     clearInputs() {
+      this.fireIntent=0;this.swimVertical=0;MM.LightningOrbWeapon?.stop(this);
       this.keys.clear(); this.pointers.clear(); this.padInputs.clear();
       this.player.vx = 0; this.player.jumpBuffer = 0;
       this.moveTapDir=0;this.moveTapTime=-Infinity;
@@ -185,6 +192,7 @@
       if(!this.headless)document.querySelectorAll('[data-control].held').forEach(button=>button.classList.remove('held'));
     }
     keyDown(event) {
+      if(this.cinematic){if(['Escape','Enter','Space'].includes(event.code)){event.preventDefault?.();if(!event.repeat)MM.ChapterTransition?.skip(this);}return;}
       if(MM.KeyBindings?.capture(this,event))return;
       if(MM.KeyBindings){event=MM.KeyBindings.translate(this,event);if(!event)return;}
       const code = event.code;
@@ -193,10 +201,11 @@
       if (!this.headless && document.querySelector('dialog[open]')) return;
       if (['Escape','KeyP'].includes(code)) { event.preventDefault?.(); if (!event.repeat) this.togglePause(); return; }
       if (this.screen !== 'playing') return;
+      if(code==='KeyR'){event.preventDefault?.();if(!event.repeat)MM.MerfolkTransformation?.activate(this);return;}
       if (['ArrowLeft','ArrowRight','ArrowUp','KeyW','KeyA','KeyD','KeyJ','KeyL','Space'].includes(code)) event.preventDefault?.();
       if(!event.repeat&&!this.keys.has(code)&&['ArrowLeft','ArrowRight'].includes(code))this.moveTap(code==='ArrowLeft'?-1:1,{source:'keyboard',timeStamp:event.timeStamp});
       this.keys.add(code); this.sound.unlock();
-      if (!event.repeat && ['ArrowUp','KeyW'].includes(code)) this.verticalAction('up');
+      if (!event.repeat && (code==='ArrowUp'||code==='KeyW'&&!MM.UnderwaterMode?.freeSwim(this))) this.verticalAction('up');
       if (!event.repeat && code==='ArrowDown' && MM.AbyssCombat?.inputDirection(this)<0) this.verticalAction('down');
       if (!event.repeat && code === 'Space') this.shieldAction();
       if (!event.repeat && ['KeyA','KeyJ','KeyD','KeyL'].includes(code)) this.shoot(['KeyA','KeyJ'].includes(code) ? -1 : 1);
@@ -241,8 +250,12 @@
       // Pixel thresholds work on both narrow mobile screens and large desktops.
       if (pointer.mode === 'pending' && Math.max(Math.abs(dx),Math.abs(dy)) >= 22) {
         if (Math.abs(dx) > Math.abs(dy)*1.15) { pointer.mode = 'move'; pointer.move = Math.sign(dx); this.moveTap(pointer.move,{source:pointer.mouse?'mouse':'touch',timeStamp:event.timeStamp}); }
-        else if (Math.abs(dy) > Math.abs(dx)*1.15) { pointer.mode = 'vertical'; this.verticalAction(dy<0?'up':'down'); }
+        else if (Math.abs(dy) > Math.abs(dx)*1.15) {
+          if(MM.UnderwaterMode?.freeSwim(this)){pointer.mode='swim';pointer.vertical=Math.sign(dy);}
+          else{pointer.mode = 'vertical'; this.verticalAction(dy<0?'up':'down');}
+        }
       } else if (pointer.mode === 'move') { pointer.move = Math.abs(dx) > 12 ? Math.sign(dx) : 0; }
+      else if(pointer.mode==='swim')pointer.vertical=Math.abs(dy)>12?Math.sign(dy):0;
     }
     pointerUp(event, cancelled = false) {
       const pointer = this.pointers.get(event.pointerId); if (!pointer) return;
@@ -411,7 +424,10 @@
       if(['lion','medusa','goatman','chimera'].includes(enemy.archetype))MM.MythicCombat?.setup(this,enemy);
       this.enemies.push(enemy);MM.AbyssCombat?.init(this,enemy);
       MM.UnderwaterEnemies?.setup(this,enemy);MM.Boss160?.setup(this,enemy);
-      MM.MiddleSeaEnemies?.setup(this,enemy);MM.Boss170?.setup(this,enemy);return enemy;
+      MM.MiddleSeaEnemies?.setup(this,enemy);MM.Boss170?.setup(this,enemy);
+      MM.PredatorSeaEnemies?.setup(this,enemy);MM.Boss180?.setup(this,enemy);
+      MM.DeepSeaEnemies?.setup(this,enemy);MM.Boss190?.setup(this,enemy);
+      MM.FinalSeaEnemies?.setup(this,enemy);MM.Boss200?.setup(this,enemy);return enemy;
     }
     configureAbility(enemy, state) {
       if(state==='bat'){this.morphToBat(enemy);return enemy;}
@@ -472,6 +488,8 @@
       this.burst(x,y,'#dfd5b0',10);enemy.abilityState='ground';enemy.tell=false;enemy.charging=false;enemy.abilityTimer=6;
     }
     updateEnemy(e,dt) {
+      if(MM.Boss200?.updateEnemy(this,e,dt)||MM.FinalSeaEnemies?.updateEnemy(this,e,dt)||MM.DeepSeaEnemies?.updateEnemy(this,e,dt)||MM.Boss190?.updateEnemy(this,e,dt))return;
+      if(MM.PredatorSeaEnemies?.updateEnemy(this,e,dt)||MM.Boss180?.updateEnemy(this,e,dt))return;
       if(MM.SkillManager?.frozen(e))return;
       if(MM.UnderwaterEnemies?.updateEnemy(this,e,dt)||MM.Boss160?.updateEnemy(this,e,dt)||MM.MiddleSeaEnemies?.updateEnemy(this,e,dt)||MM.Boss170?.updateEnemy(this,e,dt))return;
       e.age+=dt;e.hit=Math.max(0,e.hit-dt);
@@ -545,9 +563,10 @@
     }
     killEnemy(enemy) {
       if (this.screen !== 'playing' || enemy.dead || enemy.spiderling) return;
-      if(MM.Boss160?.beforeKill?.(this,enemy)===false||MM.Boss170?.beforeKill?.(this,enemy)===false||MM.MiddleSeaEnemies?.beforeKill?.(this,enemy)===false)return;
+      if(MM.Boss160?.beforeKill?.(this,enemy)===false||MM.Boss170?.beforeKill?.(this,enemy)===false||MM.MiddleSeaEnemies?.beforeKill?.(this,enemy)===false||MM.Boss180?.beforeKill?.(this,enemy)===false||MM.Boss190?.beforeKill?.(this,enemy)===false||MM.Boss200?.beforeKill?.(this,enemy)===false||MM.FinalSeaEnemies?.beforeKill?.(this,enemy)===false)return;
       if(MM.AbyssCombat?.beforeKill?.(this,enemy)===false)return;
-      enemy.dead = true; enemy.health = 0;MM.AbyssCombat?.onKill(this,enemy);MM.Boss160?.onKill(this,enemy);MM.Boss170?.onKill(this,enemy);
+      if(enemy.archetype==='kraken')this.endingBoss={...enemy,dead:false,health:1,phase:'active',krakenState:'defeated',krakenStone:false};
+      enemy.dead = true; enemy.health = 0;MM.AbyssCombat?.onKill(this,enemy);MM.Boss160?.onKill(this,enemy);MM.Boss170?.onKill(this,enemy);MM.Boss180?.onKill(this,enemy);MM.Boss190?.onKill(this,enemy);MM.Boss200?.onKill(this,enemy);
       this.totalKills++; this.score += enemy.score || 100;
       if(enemy.archetype==='golem')MM.GolemCombat?.cleanup(this,enemy);
       if(enemy.archetype==='werewolf')MM.WolfCombat?.cleanup(this,enemy);
@@ -555,9 +574,9 @@
       if(enemy.archetype==='dragon')MM.DragonCombat?.cleanup(this,enemy);
       if(['lion','medusa','goatman','chimera'].includes(enemy.archetype))MM.MythicCombat?.cleanup(this,enemy);
       if (enemy.boss) {
-        this.bossDefeated = !this.enemies.some(other=>other!==enemy&&other.boss&&!other.dead&&other.health>0);
+        this.bossDefeated = !this.enemies.some(other=>other!==enemy&&other.boss&&!other.dead&&(other.health>0||other.predatorRage||other.deepFinal||other.deepRebirthTime>0||other.krakenStone));
         MM.BossCombat?.cleanup(this,enemy);
-      } else if(!enemy.minion)this.levelKills++;
+      } else if(!enemy.minion&&!enemy.predatorSeaHazard&&!enemy.finalSeaHazard)this.levelKills++;
       MM.SkillManager?.onKill(this,enemy);MM.BossManager?.onDefeated(this,enemy);
       this.burst(enemy.x,enemy.y-enemy.h/2,enemy.boss?'#ffd391':'#bbc4a5',enemy.boss?36:14);
       this.floating(enemy.x,enemy.y-enemy.h-10,'+'+(enemy.score||100)); this.sound.play('kill');
@@ -603,7 +622,7 @@
       if(this.screen!=='playing'||p.rollTime>0||(p.invulnerable>0&&!spec.forceHit))return false;
       const immortal=p.immortalTime>0;
       const rawDamage=Number.isFinite(spec.damage)?spec.damage:0;
-      const damage=immortal?0:spec.exactDamage?Math.max(0,rawDamage):clamp(Math.trunc(rawDamage),0,3);
+      const damage=immortal||MM.MerfolkTransformation?.protectsHP(this,spec)?0:spec.exactDamage?Math.max(0,rawDamage):clamp(Math.trunc(rawDamage),0,3);
       if(p.shieldTime>0&&p.shieldHits>0){
         p.shieldHits--;if(p.shieldHits===0)p.shieldTime=0;p.invulnerable=.45;
         this.burst(p.x,p.y-28,'#91e3d1',10,'ring');this.sound.play('shield');
@@ -668,6 +687,7 @@
     }
     update(dt) {
       dt = clamp(Number.isFinite(dt) ? dt : 0,0,.05);
+      if(this.cinematic){MM.ChapterTransition?.update(this,dt);return;}
       MM.InputManager?.update(this,dt);
       MM.ProgressionUI?.sync(this);
       MM.UnderwaterMode?.syncUI(this);
@@ -684,20 +704,24 @@
       MM.SkillManager?.update(this,dt);
       MM.AbyssCombat?.update(this,dt);if(this.screen!=='playing')return;
       let move = (this.keys.has('ArrowRight')?1:0)-(this.keys.has('ArrowLeft')?1:0);
+      let vertical=(this.keys.has('KeyS')?1:0)-(this.keys.has('KeyW')?1:0);
       let fire = this.keys.has('KeyA')||this.keys.has('KeyJ') ? -1 : this.keys.has('KeyD')||this.keys.has('KeyL') ? 1 : 0;
       this.pointers.forEach(pointer => {
         pointer.age += dt;
         if (pointer.mode === 'move') move = pointer.move;
+        else if(pointer.mode==='swim')vertical=pointer.vertical||0;
         else if (pointer.mode === 'pending' && (pointer.mouse || pointer.age > .28)) { fire = pointer.worldX<W/2 ? -1 : 1; pointer.shot = true; }
       });
       let padMove=0, movingWithPad=false;
       this.padInputs.forEach(action => {
         if(action==='left'||action==='right'){movingWithPad=true;padMove+=action==='left'?-1:1;}
+        if(action==='swim-up'||action==='swim-down')vertical=action==='swim-up'?-1:1;
         if(action==='fire-left'||action==='fire-right')fire=action==='fire-left'?-1:1;
       });
       if(movingWithPad)move=clamp(padMove,-1,1);
       move*=MM.AbyssCombat?.inputDirection(this)||1;
-      if(p.stunTime>0||p.petrifyTime>0){move=0;fire=0;p.vx=0;p.jumpBuffer=0;}
+      if(p.stunTime>0||p.petrifyTime>0||p.swallowedTime>0){move=0;vertical=0;fire=0;p.vx=0;p.jumpBuffer=0;}
+      this.swimVertical=vertical;
       if(MM.UnderwaterMode?.active(this))MM.UnderwaterMode.swim(this,move,dt);
       else{
       const speed=285, acceleration=2100;
@@ -714,11 +738,12 @@
       else if(gravity<0&&p.y<=ceiling){p.y=ceiling;p.vy=0;p.grounded=true;}
       if(this.level.id>=101)p.y=clamp(p.y,ceiling,GROUND);
       }
+      this.fireIntent=fire;
       if (fire) this.shoot(fire);
       MM.WeaponManager?.update(this,dt);
       this.updateAmmo(dt);
       this.spawnTimer -= dt;
-      const alive = this.enemies.filter(e=>!e.boss&&!e.minion&&!e.middleSeaHazard).length;
+      const alive = this.enemies.filter(e=>!e.boss&&!e.minion&&!e.middleSeaHazard&&!e.predatorSeaHazard&&!e.finalSeaHazard).length;
       if (this.spawnTimer<=0 && this.regularSpawned<this.level.target && alive<this.level.maxAlive && this.restTimer<=0) {
         const ordinal=this.regularSpawned+1;
         let type=this.level.types[Math.floor(this.random()*this.level.types.length)];
@@ -753,6 +778,12 @@
       if(this.screen==='playing')MM.Boss160?.update(this,dt);
       if(this.screen==='playing')MM.MiddleSeaEnemies?.update(this,dt);
       if(this.screen==='playing')MM.Boss170?.update(this,dt);
+      if(this.screen==='playing')MM.PredatorSeaEnemies?.update(this,dt);
+      if(this.screen==='playing')MM.Boss180?.update(this,dt);
+      if(this.screen==='playing')MM.DeepSeaEnemies?.update(this,dt);
+      if(this.screen==='playing')MM.Boss190?.update?.(this,dt);
+      if(this.screen==='playing')MM.FinalSeaEnemies?.update(this,dt);
+      if(this.screen==='playing')MM.Boss200?.update(this,dt);
       if(this.player.weaponMode!=='normal')this.updateAmmoUI();
       if(this.screen!=='playing')return;
       for(const shot of this.enemyShots){
@@ -798,6 +829,12 @@
       this.persist();
       MM.AbyssCombat?.reset(this);
       MM.UnderwaterMode?.stop(this);
+      if(won&&this.level.id===200&&this.canvas&&MM.ChapterTransition){
+        MM.ChapterTransition.begin(this,'ending',()=>{
+          this.endingOnLand=true;this.player.swimming=false;this.player.merfolkTime=0;this.screen='won';
+          if(!this.headless){this.showResult();this.buildMap();}this.updateUI();
+        });return;
+      }
       if(!this.headless){this.ui['stage-banner'].hidden=true;this.ui['toast'].hidden=true;this.showResult();this.buildMap();}
       this.updateUI();
     }
@@ -806,15 +843,16 @@
       if(this.screen!=='playing'||!e||e.dead||e.health<=0||e.intangible||e.bulletUntargetable||e.phase!=='active')return false;
       if(MM.UnderwaterMode&&!MM.UnderwaterMode.canAttack(this))return false;
       const bossTarget=e.emotionProjection?e.projectionOwner:e.boss?e:null;
-      const damage=Math.max(1,Number.isFinite(amount)?amount:1);
+      const damage=Math.max(attack.damageReceipt?0:1,Number.isFinite(amount)?amount:1);
+      if(attack.damageReceipt&&(damage<=0||Number.isFinite(attack.damageBudget)&&attack.damageBudget<=0))return false;
       if(MM.BossCombat?.hit(this,e)===false){this.burst(e.x,e.y-e.h*.5,'#a7edab',4);return false;}
       let handled=false;
-      for(const combat of [MM.AbyssCombat,MM.WolfCombat,MM.KongCombat,MM.DragonCombat,MM.MythicCombat,MM.Boss160,MM.MiddleSeaEnemies,MM.Boss170]){
+      for(const combat of [MM.AbyssCombat,MM.WolfCombat,MM.KongCombat,MM.DragonCombat,MM.MythicCombat,MM.Boss160,MM.MiddleSeaEnemies,MM.Boss170,MM.Boss180,MM.DeepSeaEnemies,MM.Boss190,MM.FinalSeaEnemies,MM.Boss200]){
         const result=combat?.hit(this,e,damage,attack);
         if(result===false){this.burst(e.x,e.y-e.h*.55,'#d6c7ed',5);return false;}
         if(result===true)handled=true;
       }
-      if(!handled)e.health-=damage;
+      if(!handled){if(attack.damageReceipt&&MM.DamageReceipt)MM.DamageReceipt.subtract(e,damage,attack);else e.health-=damage;}
       MM.BossCombat?.afterDamage?.(this,e);
       // Accepted projectiles count once, including the hit that triggers a
       // form change and valid Rage-projection hits on the deity's shared HP.
@@ -948,6 +986,7 @@
       if(root.matchMedia?.('(pointer:coarse)').matches)this.ui['control-mode'].textContent='GESTURES & CẢM ỨNG';
       MM.ProgressionUI?.bind(this);
       MM.UnderwaterMode?.bind(this);
+      this.ui['cinematic-skip']?.addEventListener('click',()=>MM.ChapterTransition?.skip(this));
       MM.StoryUI?.bind(this);
       MM.KeyBindings?.bind(this);
       MM.Tutorial?.bind(this);

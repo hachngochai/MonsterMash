@@ -4,7 +4,7 @@ const original={campaignSize:150,resume:61,completed:[1,10,20,30,40,50],best:123
   progression:{version:1,rewards:[10,20,30,40,50],equipped:'bones',lifeKills:7},settings:{difficulty:'hard',sound:true}};
 function fixture(search='',hostname='hachngochai.github.io'){
   const scope=vm.createContext({URLSearchParams,location:{hostname,search}});
-  for(const name of ['abyss-config','underwater-config','middle-sea-config','campaign','bosses','golem','wolves','kong','dragons','mythic','abyss-combat','save-manager','boss-manager','map-manager','skill-manager','weapon-manager','input-manager','key-bindings','tutorial','game'])
+  for(const name of ['abyss-config','underwater-config','middle-sea-config','predator-sea-config','deep-sea-config','final-sea-config','campaign','bosses','golem','wolves','kong','dragons','mythic','abyss-combat','save-manager','boss-manager','map-manager','skill-manager','weapon-manager','input-manager','key-bindings','tutorial','game'])
     vm.runInContext(fs.readFileSync('js/'+name+'.js','utf8'),scope);
   let bytes=JSON.stringify(original),writes=0;
   const storage={getItem:()=>bytes,setItem(k,v){writes++;bytes=v;}};
@@ -16,7 +16,7 @@ test('shared public test link unlocks all weapons and skills regardless of versi
   for(const search of ['?test=all','?v=4.0.5&test=all','?test=all&v=4.0.5']){
     const f=fixture(search),g=f.game();assert.equal(g.testMode,true);
     assert.deepEqual(Array.from(g.progression.rewards),Array.from(f.MM.SaveManager.milestones));
-    assert.deepEqual(Array.from(f.MM.WeaponManager.available(g)),['gun','bones','club','bow','spear','axes','hammer','scythe']);
+    assert.deepEqual(Array.from(f.MM.WeaponManager.available(g)),['gun','bones','club','bow','spear','axes','hammer','scythe','lightningOrb']);
     assert.equal(g.progression.equipped,'gun');assert.equal(g.progression.lifeKills,0);
     assert.deepEqual(Array.from(g.save.completed),original.completed,'unlocked test inventory does not fake ordinary map victories');
     assert.equal(f.writes(),0);
@@ -48,7 +48,7 @@ test('public test map changes, equipment, settings and wins never touch the real
 
 test('public test works for new visitors without storage access or existing progress',()=>{
   const f=fixture('?test=all');const g=new f.MM.Game({headless:true,storage:{getItem(){throw Error('disabled');},setItem(){throw Error('must not write');}}});
-  assert.equal(g.testMode,true);assert.equal(g.save.resume,1);assert.equal(g.progression.rewards.length,15);
+  assert.equal(g.testMode,true);assert.equal(g.save.resume,1);assert.equal(g.progression.rewards.length,19);
   g.start(142);g.persist();assert.equal(g.screen,'playing');
 });
 

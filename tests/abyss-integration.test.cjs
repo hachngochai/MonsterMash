@@ -2,7 +2,7 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 function fixture(id=150,save={}){
  const scope=vm.createContext({});
- for(const name of ['abyss-config','underwater-config','middle-sea-config','campaign','bosses','golem','wolves','kong','dragons','mythic','abyss-combat','save-manager','boss-manager','map-manager','skill-manager','weapon-manager','input-manager','key-bindings','game'])vm.runInContext(fs.readFileSync('js/'+name+'.js','utf8'),scope);
+ for(const name of ['abyss-config','underwater-config','middle-sea-config','predator-sea-config','deep-sea-config','final-sea-config','campaign','bosses','golem','wolves','kong','dragons','mythic','abyss-combat','save-manager','boss-manager','map-manager','skill-manager','weapon-manager','input-manager','key-bindings','game'])vm.runInContext(fs.readFileSync('js/'+name+'.js','utf8'),scope);
  let text=JSON.stringify(save);const storage={getItem:()=>text,setItem:(k,v)=>{text=v;}};
  const MM=scope.MM,g=new MM.Game({headless:true,storage,random:()=>.5});g.start(id);g.spawnTimer=g.ammoTimer=1e6;g.level.hazardTypes=[];
  return {MM,g,storage,scope};

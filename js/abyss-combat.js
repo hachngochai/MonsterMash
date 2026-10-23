@@ -232,7 +232,9 @@
     if(e.emotionProjection) {
       const owner=e.projectionOwner;
       if(!alive(owner)||owner.abyssGuarded||e.emotion!=='rage')return false;
-      owner.health=Math.max(0,owner.health-damage);owner.hit=.12;
+      if(attack.damageReceipt&&MM.DamageReceipt)MM.DamageReceipt.subtract(owner,damage,attack);
+      else owner.health=Math.max(0,owner.health-damage);
+      owner.hit=.12;
       if(owner.health<=0)g.killEnemy?.(owner);
       return true;
     }
@@ -240,7 +242,9 @@
     if(e.playerShadow) {
       if(e.shadowImmortal>0 || e.shadowRollTime>0)return false;
       if(e.shadowShieldTime>0 && e.shadowShieldHits>0) {e.shadowShieldHits--;g.burst?.(e.x,e.y-e.h*.5,'#d5a4dc',8,'ring');return false;}
-      e.health=Math.max(0,e.health-damage);return true;
+      if(attack.damageReceipt&&MM.DamageReceipt)MM.DamageReceipt.subtract(e,damage,attack);
+      else e.health=Math.max(0,e.health-damage);
+      return true;
     }
     if(kind(e)==='mirrorTurtle') {
       const revealing=['bow','spear'].includes(attack.weaponId || attack.kind) || attack.area===true || attack.melee===true;
@@ -256,9 +260,12 @@
         g.burst?.(e.x,e.y-e.h*.5,'#c9f8ff',10,'ring');g.sound?.play('shield');
         return false;
       }
-      e.health=Math.max(0,e.health-damage*fixed().turtleDamageRatio);return true;
+      if(attack.damageReceipt&&MM.DamageReceipt)MM.DamageReceipt.subtract(e,damage*fixed().turtleDamageRatio,attack);
+      else e.health=Math.max(0,e.health-damage*fixed().turtleDamageRatio);
+      return true;
     }
-    e.health=Math.max(0,e.health-damage);
+    if(attack.damageReceipt&&MM.DamageReceipt)MM.DamageReceipt.subtract(e,damage,attack);
+    else e.health=Math.max(0,e.health-damage);
     if(kind(e)==='parasite' && e.health>0 && e.frenzyTime<=EPS && e.lastFrenzyAttack!==attack &&
       (e.abyssClock || 0)+EPS>=(e.nextParasiteFrenzyAt ?? 0)) {
       e.lastFrenzyAttack=attack;e.frenzyTime=fixed().parasiteFrenzy;e.abyssState='frenzy';

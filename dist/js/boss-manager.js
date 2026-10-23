@@ -17,7 +17,11 @@
     120:{name:'Búa Minotaur',weapons:['hammer']},
     130:{name:'Phát Quang Vũ Khí',skills:['weaponGlow']},
     140:{name:'Lưỡi Hái Cổ Điểu',weapons:['scythe']},
-    150:{name:'Vực Sâu Cổ Đại đã khai phá',milestoneOnly:true}
+    150:{name:'Vực Sâu Cổ Đại đã khai phá',milestoneOnly:true},
+    160:{name:'Hóa Ngư Nhân',skills:['merfolk']},
+    170:{name:'Cầu Chớp',weapons:['lightningOrb']},
+    180:{name:'Tam Tinh Hải Đăng',skills:['starfish']},
+    190:{name:'Tự Do Đại Dương',skills:['freeSwim']}
   });
 
   function onDefeated(game, enemy) {

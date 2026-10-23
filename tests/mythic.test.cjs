@@ -3,7 +3,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
 
 function fresh(type='boss',difficulty='normal') {
   const context=vm.createContext({});
-  for(const file of ['abyss-config','underwater-config','middle-sea-config','campaign','bosses','golem','wolves','kong','mythic','game'])vm.runInContext(fs.readFileSync(path.join(__dirname,`../js/${file}.js`),'utf8'),context,{filename:file});
+  for(const file of ['abyss-config','underwater-config','middle-sea-config','predator-sea-config','deep-sea-config','final-sea-config','campaign','bosses','golem','wolves','kong','mythic','game'])vm.runInContext(fs.readFileSync(path.join(__dirname,`../js/${file}.js`),'utf8'),context,{filename:file});
   const game=new context.MM.Game({headless:true,random:()=>.5,storage:{getItem(){return null;},setItem(){}}});
   game.settings.difficulty=difficulty;game.settings.effects=false;game.start(type==='boss'?100:91);
   game.spawnTimer=game.ammoTimer=10000;game.player.health=game.player.maxHealth=100;game.player.invulnerable=0;

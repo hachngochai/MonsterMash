@@ -149,12 +149,13 @@
     game.floating?.(enemy.x, enemy.y - enemy.h - 12, 'TRĂNG MÁU · SÚNG NGẮM', '#ff9ba6');
     game.updateUI?.();
   }
-  function hit(game, enemy, damage = 1) {
+  function hit(game, enemy, damage = 1, attack = {}) {
     if (!isWolf(enemy)) return null;
     if (game.screen !== 'playing' || !alive(enemy) || enemy.intangible || enemy.wolfState === 'transform' || enemy.howling) return false;
     if (!enemy.wolfState) setup(game, enemy);
     const amount = Number.isFinite(damage) ? Math.max(1, Math.trunc(damage)) : 1;
-    enemy.health = Math.max(0, enemy.health - amount);
+    if(attack.damageReceipt&&MM.DamageReceipt)MM.DamageReceipt.subtract(enemy,damage,attack);
+    else enemy.health = Math.max(0, enemy.health - amount);
     if (enemy.boss && !enemy.bloodPhaseTriggered && enemy.health <= enemy.maxHealth / 2) transform(game, enemy);
     return true;
   }
