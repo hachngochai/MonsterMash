@@ -7,8 +7,8 @@ function fixture(){
   save:{completed:[50,100,150]},underwater:{oxygen:23},score:123,levelTime:17,time:23,clearInputs(){clearCount++;}};
  return {MM:scope.MM,g,scope,clearCount:()=>clearCount};
 }
-function context(){const calls=[],target={globalAlpha:1,globalCompositeOperation:'source-over'};
- const c=new Proxy(target,{get(obj,key){if(key in obj)return obj[key];if(String(key).startsWith('create'))return ()=>({addColorStop(){}});return (...args)=>calls.push([key,...args]);},set(obj,key,value){obj[key]=value;return true;}});return {c,calls};}
+function context(){const calls=[],textRuns=[],target={globalAlpha:1,globalCompositeOperation:'source-over'};
+ const c=new Proxy(target,{get(obj,key){if(key in obj)return obj[key];if(String(key).startsWith('create'))return ()=>({addColorStop(){}});return (...args)=>{calls.push([key,...args]);if(key==='fillText')textRuns.push({text:args[0],font:obj.font,baseline:obj.textBaseline,spacing:obj.letterSpacing,kerning:obj.fontKerning});};},set(obj,key,value){obj[key]=value;return true;}});return {c,calls,textRuns};}
 function gameFixture(level){
  const scope=vm.createContext({});
  for(const name of ['abyss-config','underwater-config','middle-sea-config','predator-sea-config','deep-sea-config','final-sea-config','campaign','bosses','golem','wolves','kong','dragons','mythic','abyss-combat','underwater','underwater-enemies','boss160','middle-sea-enemies','boss170','predator-sea-enemies','boss-180','deep-sea-enemies','boss190','final-sea-enemies','boss200','save-manager','boss-manager','map-manager','skill-manager','weapon-manager','input-manager','key-bindings','merfolk','lightning-orb','chapter-transition','game'])
@@ -42,6 +42,25 @@ test('drawing every passage and ending phase only paints actor copies and never 
  for(const kind of ['forest','cave','whirlpool','ending']){MM.ChapterTransition.begin(g,kind,()=>{});for(const fraction of [0,.15,.4,.6,.85,.99]){g.cinematic.time=g.cinematic.duration*fraction;const before=JSON.stringify(g);assert.equal(MM.ChapterTransition.draw(c,g),true);assert.equal(JSON.stringify(g),before);}MM.ChapterTransition.skip(g);}
  assert.ok(actors.length>12);assert.ok(actors.every(actor=>actor!==g.player&&actor!==g.endingBoss));assert.equal(g.endingBoss.dead,true);assert.equal(g.endingBoss.health,0);assert.ok(calls.some(([key])=>key==='fillText'));
  assert.equal(MM.ChapterTransition.draw(c,g),false);
+});
+
+test('all chapter titles use the shared Vietnamese typography, normalized complete words and a consistent baseline',()=>{
+ const {g,MM}=fixture(),{c,textRuns}=context();
+ MM.Typography={sans:'"Shared Vietnamese Sans", Arial, sans-serif',serif:'"Shared Vietnamese Serif", Georgia, serif'};
+ c.letterSpacing='3px';c.fontKerning='none';
+ for(const [kind,phase]of[['forest',.4],['cave',.4],['whirlpool',.4],['ending',.1],['ending',.5],['ending',.9]]){
+  MM.ChapterTransition.begin(g,kind,()=>{});g.cinematic.time=g.cinematic.duration*phase;textRuns.length=0;
+  const before=JSON.stringify(g);MM.ChapterTransition.draw(c,g);assert.equal(JSON.stringify(g),before);assert.equal(textRuns.length,3);
+  assert.equal(textRuns[0].font,`600 11px ${MM.Typography.sans}`);assert.equal(textRuns[1].font,`700 29px ${MM.Typography.serif}`);assert.equal(textRuns[2].font,`400 13px ${MM.Typography.sans}`);
+  for(const run of textRuns){assert.equal(run.baseline,'alphabetic');assert.equal(run.spacing,'0px');assert.equal(run.kerning,'normal');assert.equal(run.text,run.text.normalize('NFC'));assert.ok(!/[\uFFFD]/u.test(run.text));assert.ok(run.text.length>12);}
+  MM.ChapterTransition.skip(g);
+ }
+});
+
+test('standalone transition previews use Vietnamese-complete Noto fallbacks when Typography has not loaded yet',()=>{
+ const {g,MM}=fixture(),{c,textRuns}=context();MM.ChapterTransition.begin(g,'forest',()=>{});g.cinematic.time=2;MM.ChapterTransition.draw(c,g);
+ assert.equal(textRuns[0].font,'600 11px "Noto Sans", Arial, sans-serif');assert.equal(textRuns[1].font,'700 29px "Noto Serif", Georgia, serif');assert.equal(textRuns[2].font,'400 13px "Noto Sans", Arial, sans-serif');
+ assert.equal(textRuns[1].text,'Lời Nguyền Cổ Thú');assert.equal(textRuns[2].text,'Ánh đèn dẫn lối vào khu rừng chưa từng ngủ.');
 });
 test('the real Game freezes combat and oxygen during each chapter passage and starts the next map only once',()=>{
  for(const [from,kind] of [[50,'forest'],[100,'cave'],[150,'whirlpool']]){const {g,writes}=gameFixture(from);g.screen='won';g.player.ammo=7;g.levelTime=12;const oxy=g.underwater.oxygen,time=g.time;

@@ -306,9 +306,25 @@
       const abyss=this.level.id>=101&&this.level.id<=150,goal=abyss?5:10;
       return {abyss,goal,count:(abyss?this.abyssShieldKills||0:this.totalKills)%goal};
     }
-    recordAbyssBossHit(boss,attack) {
-      if(this.level.id<101||this.level.id>150||!boss?.boss||attack.melee||attack.rollSlash||attack.reflected||attack.reflection)return false;
-      if(!['normal','highAim','sniper','gun','bones','bow','spear'].includes(attack.kind||attack.weaponId)||this.abyssBossProjectiles.has(attack))return false;
+    bossShieldRule(boss) {
+      if(boss?.archetype==='kong'&&boss.vinePhase)return 'kong';
+      if(boss?.archetype==='dragon'&&boss.dragonForm==='knight')return 'knight';
+      if(boss?.encounter&&(boss.archetype==='chimera'||boss.chimeraForm))return 'chimera';
+      return null;
+    }
+    bossShieldProgress() {
+      const boss=this.enemies.find(e=>e.boss&&!e.dead&&!e.retired&&(e.health>0||e.predatorRage||e.deepFinal||e.deepRebirthTime>0||e.krakenStone));
+      if(!boss)return null;
+      const special=this.bossShieldRule(boss),goal=special==='kong'?5:10;
+      const total=special==='kong'?boss.highAimShots||0:special==='knight'?boss.knightHits||0:special==='chimera'?boss.encounter.damage||0:this.abyssBossHits||0;
+      return {count:total%goal,goal,special,unit:special==='chimera'?'máu':special==='kong'?'phát tầm cao':'phát trúng',full:this.shieldCount>=3};
+    }
+    recordBossHit(boss,attack={},special=this.bossShieldRule(boss),actualDamage=attack.damageReceipt?.damage) {
+      // Keep the authored five-shot Kong and damage-based Chimera rewards,
+      // and the knight's existing ten-hit reward, without granting twice.
+      if(!boss?.boss||special||attack.melee||attack.rollSlash||attack.reflected||attack.reflection)return false;
+      if(!['normal','highAim','sniper','gun','bones','bow','spear','scytheWave','lightningOrb'].includes(attack.kind||attack.weaponId)||this.abyssBossProjectiles.has(attack))return false;
+      if(Number.isFinite(actualDamage)&&actualDamage<=0)return false;
       this.abyssBossProjectiles.add(attack);this.abyssBossHits++;
       if(this.abyssBossHits%10===0){
         if(this.shieldCount<3){this.shieldCount++;this.toast('✦ +1 khiên · 10 phát bắn trúng boss');this.sound.play('shield');this.floating(this.player.x,this.player.y-this.player.h-12,'+1 KHIÊN','#b7e7d4');}
@@ -316,6 +332,8 @@
       }
       this.updateUI();return true;
     }
+    // Preserve the old public hook/counter for previews and older integrations.
+    recordAbyssBossHit(boss,attack) { return this.recordBossHit(boss,attack); }
     activateShield() {
       if (this.screen !== 'playing' || this.player.shieldTime > 0) return false;
       if (this.shieldCount <= 0) { const progress=this.shieldProgress();this.toast(`Còn ${progress.goal-progress.count} ${progress.abyss?'quái thường':'địch'} để có khiên`); return false; }
@@ -843,6 +861,7 @@
       if(this.screen!=='playing'||!e||e.dead||e.health<=0||e.intangible||e.bulletUntargetable||e.phase!=='active')return false;
       if(MM.UnderwaterMode&&!MM.UnderwaterMode.canAttack(this))return false;
       const bossTarget=e.emotionProjection?e.projectionOwner:e.boss?e:null;
+      const bossShieldRule=this.bossShieldRule(bossTarget),receiptBefore=attack.damageReceipt?.damage||0;
       const damage=Math.max(attack.damageReceipt?0:1,Number.isFinite(amount)?amount:1);
       if(attack.damageReceipt&&(damage<=0||Number.isFinite(attack.damageBudget)&&attack.damageBudget<=0))return false;
       if(MM.BossCombat?.hit(this,e)===false){this.burst(e.x,e.y-e.h*.5,'#a7edab',4);return false;}
@@ -856,7 +875,7 @@
       MM.BossCombat?.afterDamage?.(this,e);
       // Accepted projectiles count once, including the hit that triggers a
       // form change and valid Rage-projection hits on the deity's shared HP.
-      this.recordAbyssBossHit(bossTarget,attack);
+      this.recordBossHit(bossTarget,attack,bossShieldRule,attack.damageReceipt?attack.damageReceipt.damage-receiptBefore:undefined);
       e.hit=.12;if(!e.vinePhase&&!e.airborne&&!e.mythicAir)e.x=clamp(e.x+(attack.dir||this.player.dir)*(e.boss?2:7),18,W-18);
       this.burst(e.x,Number.isFinite(attack.y)?attack.y:e.y-e.h*.5,'#ffdaa0',5);
       if(e.health<=0)this.killEnemy(e);
@@ -895,10 +914,10 @@
       // Combat still updates every frame. Rebuild the stable DOM HUD only
       // when its visible values change, rather than recreating heart SVGs
       // and atlas labels sixty times per second on phones.
-      const hudPlayer=this.player;
+      const hudPlayer=this.player,hudBossCharge=this.bossShieldProgress();
       const hudSignature=[this.screen,this.level.id,this.levelKills,this.bossSpawned,this.bossDefeated,
         hudPlayer.health,hudPlayer.maxHealth,hudPlayer.ammo,hudPlayer.maxAmmo,hudPlayer.weaponMode,
-        Math.ceil((hudPlayer.shotTimer||0)*10),this.aimMode,this.shieldCount,this.shieldProgress().count,this.abyssBossHits%10,this.score,
+        Math.ceil((hudPlayer.shotTimer||0)*10),this.aimMode,this.shieldCount,this.shieldProgress().count,this.abyssBossHits%10,hudBossCharge?.count,hudBossCharge?.goal,hudBossCharge?.special,this.score,
         this.save.best,this.save.resume,this.save.completed.join(','),this.settings.controls,
         this.settings.effects,this.settings.reducedMotion,this.settings.sound,this.progression?.equipped,
         this.progression?.rewards?.join(','),this.weaponPicker?.open,this.selectedStory].join('|');
@@ -917,7 +936,7 @@
       this.updateAmmoUI();
       const shieldCharge=this.shieldProgress(),shieldEnemy=shieldCharge.abyss?'quái thường':'địch';
       this.ui['shield-count'].textContent=this.shieldCount;this.ui['shield-button'].classList.toggle('ready',this.shieldCount>0);this.ui['charge-label'].textContent=this.shieldCount>0?`${this.shieldCount} khiên sẵn sàng · ${shieldCharge.count}/${shieldCharge.goal} ${shieldEnemy} tích khiên`:`${shieldCharge.count}/${shieldCharge.goal} ${shieldEnemy} · Hạ ${shieldCharge.goal} ${shieldEnemy} để nhận khiên`;
-      if(shieldCharge.abyss&&this.level.boss)this.ui['charge-label'].textContent+=` · Boss ${this.abyssBossHits%10}/10 phát trúng`;
+      if(hudBossCharge)this.ui['charge-label'].textContent+=` · Boss ${hudBossCharge.count}/${hudBossCharge.goal} ${hudBossCharge.unit} · ${hudBossCharge.full?'Kho khiên đầy (3/3)':'+1 khiên'}`;
       this.ui['pad-shield-count'].textContent=this.shieldCount;
       document.querySelector('[data-control="shield"]').classList.toggle('ready',this.shieldCount>0);
       this.ui['fullscreen-button'].disabled=!['home','playing'].includes(this.screen)&&!document.fullscreenElement;

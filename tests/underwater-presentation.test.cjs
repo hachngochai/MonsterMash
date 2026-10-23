@@ -113,6 +113,6 @@ test('new warnings follow simulation geometry, include real shipwreck art, and n
  g.finalSea={vents:[{x:155,y:438,w:60,h:330,phase:'warning'},{x:805,y:438,w:60,h:330,phase:'active',damage:2}],inkClouds:[{x:650,y:265,radius:80,life:1,total:2.5}]};
  const before=JSON.stringify(g);R.drawEffects(ctx,g,2,false);R.drawEffects(ctx,g,2,true);R.drawMandatoryWarnings(ctx,g,2);assert.equal(JSON.stringify(g),before);assert.equal(depth(),0);
  assert.ok(calls.some(call=>call[0]==='fillText'&&call[1].includes('CÁ KIẾM TỪ TRÁI')));assert.ok(calls.some(call=>call[0]==='strokeRect'&&call[1]===125&&call[2]===108&&call[3]===60&&call[4]===330));
- assert.ok(calls.some(call=>call[0]==='bezierCurveTo'));assert.ok(calls.every(call=>call.slice(1).every(value=>typeof value!=='number'||Number.isFinite(value))));
+ assert.ok(calls.some(call=>call[0]==='ellipse'),'physical tentacle cups remain visible');assert.ok(calls.every(call=>call.slice(1).every(value=>typeof value!=='number'||Number.isFinite(value))));
  g.level.id=170;calls.length=0;assert.equal(R.drawMandatoryWarnings(ctx,g,2),false);assert.equal(calls.length,0);
 });

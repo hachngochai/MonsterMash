@@ -13,6 +13,7 @@
   const background={image:null,ready:false};
   const backgrounds={shallow:background,middle:{image:null,ready:false},predator:{image:null,ready:false},deep:{image:null,ready:false},final:{image:null,ready:false}};
   const poses=new WeakMap();
+  const armPoses=new WeakMap();
   const script=typeof document!=='undefined'?document.currentScript?.src:null;
   const base=script&&typeof URL==='function'?new URL('../assets/',script).href:'assets/';
   const version=script&&typeof URL==='function'?new URL(script).search:'';
@@ -241,9 +242,44 @@
     const target=clamp((e.vy||0)/400,-.12,.12)+(e.waterState==='claw-dash'?.05:0);
     p.tilt+=(target-p.tilt)*blend;return p;
   }
+  // The source art already has an open mouth. Rotate its lower jaw about the
+  // cheek instead of stretching the whole face or drawing a second neon mouth.
+  // These are paint coordinates only; collision geometry stays in simulation.
+  const jawProfiles={babyShark:{hingeX:.59,hingeY:.57,rest:.15,strength:.44},
+    megaLondon:{hingeX:.6,hingeY:.57,rest:.18,strength:.55},
+    leviathan:{hingeX:.6,hingeY:.58,rest:.16,strength:.56},
+    leviathanChild:{hingeX:.6,hingeY:.58,rest:.16,strength:.56},
+    ghostShark:{hingeX:.6,hingeY:.57,rest:.17,strength:.53},
+    anglerFish:{hingeX:.61,hingeY:.56,rest:.16,strength:.51},
+    seaTurtle:{hingeX:.7,hingeY:.57,rest:.08,strength:.28}};
+  const easeBite=n=>{const v=clamp(n,0,1);return v*v*(3-2*v);};
+  function bitePose(e){
+    const type=kind(e),profile=jawProfiles[type];
+    if(!profile)return null;
+    let state='',timer,progress=0,config={},duration=.6;
+    if(e.finalSeaSummon){state=e.krakenState||'';timer=e.krakenTimer;progress=e.krakenProgress||0;config=MM.FinalSeaConfig?.boss||{};duration=state.includes('warning')?config.legacyBiteWarning:config.legacyBiteDuration;}
+    else if(e.predatorState){state=e.predatorState;timer=e.predatorTimer;progress=e.predatorProgress||0;config=MM.PredatorSeaConfig?.boss||{};duration=state.includes('warning')?config.biteWarning:state==='emerge-bite'?config.emergeDuration:config.biteDuration;}
+    else if(e.deepBossState){state=e.deepBossState;timer=e.deepBossTimer;progress=e.deepBossProgress||0;config=MM.DeepSeaConfig?.boss||{};duration=state==='lord-warning'?config.lordWarning:state.includes('warning')?config.biteWarning:config.biteDuration;}
+    else if(e.deepState){state=e.deepState;timer=e.deepTimer;progress=e.deepProgress||0;config=MM.DeepSeaConfig?.ghostShark||{};duration=state.includes('warning')?config.warning:config.biteDuration;}
+    else if(e.finalState){state=e.finalState;timer=e.finalTimer;progress=e.finalProgress||0;config=MM.FinalSeaConfig?.[type==='seaTurtle'?'turtle':'angler']||{};duration=state.includes('warning')?config.warning:config.dashTime||config.active;}
+    else if(e.middleState){state=e.middleState;timer=e.middleTimer;progress=e.middleProgress||0;config=MM.MiddleSeaConfig?.shark||{};duration=state.includes('warning')?config.biteWarning:config.biteLife;}
+    const warning=/^(bite|lord)-warning$/.test(state),active=['bite','bite-dash','emerge-bite'].includes(state);
+    // Several old actors retain their final warning progress during the bite.
+    // Their actual remaining timer is the authoritative, continuous phase.
+    const p=clamp(Number.isFinite(timer)&&duration>0?1-timer/duration:progress,0,1);
+    let angle=-profile.rest,closure=0;
+    if(warning)angle=-profile.rest*(1-easeBite(p));
+    else if(active){
+      if(p<.16)angle=0;
+      else if(p<.5){closure=easeBite((p-.16)/.34);angle=-profile.strength*closure;}
+      else{closure=1-easeBite((p-.5)/.5);angle=-profile.rest-(profile.strength-profile.rest)*closure;}
+    }
+    return {profile,state,warning,active,progress:p,angle,closure};
+  }
   function spriteSurface(c,image,crop,width,height,type,e,t){
-    const us=[0,.2,.4,.65,1],vs=jelly(type)||tentacled(type)?[0,.25,.45,.65,.83,1]:[0,.35,.65,1],x=-width*.5,y=-height*.5;
-    const fast=['dash','claw-dash'].includes(e.waterState)||['ram','bite-dash','emerge-bite','pass'].includes(e.predatorState)||e.deepBossState==='bite'||e.krakenState==='bite',phase=t*(fast?19:type==='seahorse'?6:8);
+    const bite=bitePose(e),jaw=bite?.profile;
+    const us=jaw?[0,.36,jaw.hingeX,.8,1]:[0,.2,.4,.65,1],vs=jaw?[0,.34,jaw.hingeY,1]:jelly(type)||tentacled(type)?[0,.25,.45,.65,.83,1]:[0,.35,.65,1],x=-width*.5,y=-height*.5;
+    const fast=['dash','claw-dash'].includes(e.waterState)||['ram','bite-dash','emerge-bite','pass'].includes(e.predatorState)||e.deepBossState==='bite'||e.krakenState==='bite',phase=t*(jaw?5.6:fast?19:type==='seahorse'?6:8);
     const swing=Math.sin(phase),claw=e.waterState==='claw-combo'?Math.sin(t*16+(e.waterClawIndex||0)*1.8):Math.sin(t*2)*.18;
     const rows=vs.map(v=>us.map(u=>{
       const tail=Math.pow(clamp((.43-u)/.43,0,1),2),low=clamp((v-.52)/.48,0,1);
@@ -253,10 +289,7 @@
         const hand=low*clamp((u-.25)/.3,0,1);
         du+=claw*.027*hand*(u<.65?1:-1);dv+=claw*.02*hand;
       }
-      if(type==='babyShark'){
-        const open=e.middleState==='bite-warning'?.4+.6*clamp(e.middleProgress||0,0,1):e.middleState==='bite'?Math.max(0,1-(e.middleProgress||0)):0;
-        dv+=open*.055*low*clamp((u-.55)/.45,0,1);du+=swing*.008*tail;
-      }
+      if(type==='babyShark')du+=swing*.008*tail;
       if(jelly(type)){
         // One shared surface bends the complete art; no detached rectangular limbs.
         const lower=clamp((v-.38)/.62,0,1),pulse=Math.sin(t*2.4);
@@ -271,11 +304,19 @@
         else if(type==='pearlClam'){du=0;dv=Math.sin(t*1.8)*.004*Math.sin(v*Math.PI);}
         else if(type==='glowBug'){du=Math.sin(t*8+v*8)*.025*flank;dv=Math.sin(t*8+u*7)*.025*lower;}
         else if(type==='seaTurtle'){du+=Math.sin(t*4.5+u*5)*.015*lower;dv+=Math.sin(t*4.5+u*5)*.036*lower*flank;}
-        else{
+        else if(!jaw){
           const attackState=e.predatorState||e.deepBossState||e.deepState||e.finalState||e.krakenState||'';
           const bite=attackState.includes('bite')||attackState==='ram',open=bite?clamp(e.predatorProgress??e.deepBossProgress??e.deepProgress??e.finalProgress??e.krakenProgress??.5,0,1):0;
           dv+=Math.sin(open*Math.PI)*.06*lower*clamp((u-.5)*2,0,1);
         }
+      }
+      if(jaw&&u>jaw.hingeX&&v>jaw.hingeY){
+        // One connected grid shares the hinge edge with the skull. The lower
+        // lip/teeth move as a jaw; the eye, snout and rear body remain rigid.
+        const weight=easeBite((u-jaw.hingeX)/(1-jaw.hingeX))*easeBite((v-jaw.hingeY)/(1-jaw.hingeY));
+        const angle=bite.angle*weight,px=(u-jaw.hingeX)*width,py=(v-jaw.hingeY)*height;
+        du+=(px*Math.cos(angle)-py*Math.sin(angle)-px)/width;
+        dv+=(px*Math.sin(angle)+py*Math.cos(angle)-py)/height;
       }
       return {sx:x+u*width,sy:y+v*height,dx:x+(u+du)*width,dy:y+(v+dv)*height};
     }));
@@ -509,20 +550,38 @@
     }c.restore();
   }
   function mouthEffect(c,e,t,animated){
-    const state=e.finalSeaSummon?e.krakenState:e.predatorState||e.deepBossState||e.deepState||e.finalState||'',warning=state.includes('warning'),biting=['bite','bite-dash','emerge-bite','ram'].includes(state);
-    if(!biting&&!warning)return;
-    if(!/bite|ram|lord/.test(state))return;
-    const vertical=state==='emerge-bite',angle=vertical?-Math.PI/2:e.predatorAttackAngle??(e.dir<0?Math.PI:0),dir=e.dir||1;
-    const x=e.x+(vertical?0:dir*e.w*.42),y=e.y-e.h*.5+(vertical?-e.h*.43:0),size=Math.max(18,Math.min(e.w*.22,70));
-    c.save();c.translate(x,y);if(vertical)c.rotate(-Math.PI*.5);else c.scale(dir,1);
+    const pose=bitePose(e),state=pose?.state||(e.finalSeaSummon?e.krakenState:e.predatorState||e.deepBossState||e.deepState||e.finalState||''),warning=/^(bite|ram|lord)-warning$/.test(state),biting=['bite','bite-dash','emerge-bite','ram'].includes(state);
+    if(!animated||!biting&&!warning)return;
+    const vertical=state==='emerge-bite',dir=e.dir<0?-1:1;
+    const angle=vertical?-Math.PI/2:e.finalSeaSummon?e.krakenAngle??(dir<0?Math.PI:0):e.predatorAttackAngle??e.deepBossAngle??e.finalAngle??(dir<0?Math.PI:0);
+    const x=e.x+(vertical?0:dir*e.w*.42),y=e.y-e.h*.5+(vertical?-e.h*.43:e.h*.05),size=Math.max(14,Math.min(e.w*.19,62)),progress=pose?.progress??clamp(e.predatorProgress||0,0,1);
+    c.save();c.translate(x,y);c.rotate(angle);
     if(warning){
-      line(c,[[size*.2,-size*.6],[size*.6,-size*.75],[size,-size*.55]],'#ffd3a8',1.5);
-      line(c,[[size*.2,size*.6],[size*.6,size*.75],[size,size*.55]],'#ffd3a899',1.2);
+      // Water is drawn toward the open jaws while the cheek winds up. Small,
+      // uneven bubbles replace the detached, perfectly symmetric neon arcs.
+      c.globalAlpha*=.42;
+      for(let i=0;i<4;i++){
+        const travel=(progress+i*.23)%1,px=size*(.2+(1-travel)*.85),py=(i-1.5)*size*.2;
+        ellipse(c,px,py,1.1+(i%2)*.65,1.3+(i%2)*.65,null,'#b8d6db',.65);
+      }
     }else{
-      const progress=clamp(e.predatorProgress??e.deepBossProgress??e.deepProgress??e.finalProgress??e.krakenProgress??.3,0,1),fade=Math.sin(Math.PI*clamp(progress,.08,.92));
-      c.globalAlpha*=fade;c.globalCompositeOperation='screen';
-      for(const side of [-1,1]){c.beginPath();c.moveTo(-size*.45,side*size*.5);c.quadraticCurveTo(size*.5,side*size*.9,size*1.05,side*size*.08);c.strokeStyle='#c5f4fc88';c.lineWidth=3;c.stroke();}
-      if(animated)for(let i=0;i<5;i++){const phase=(t*39+i*7)%22;ellipse(c,size*.5+phase,(i-2)*size*.23,1.3+i%2,1.3+i%2,null,'#d3f6f9aa',1);}
+      const closure=pose?.closure??Math.sin(progress*Math.PI);
+      if(closure>.02){
+        c.globalAlpha*=clamp(closure,0,1)*.42;
+        // A brief squeeze of water leaves the actual mouth at the closing
+        // phase. The wake is narrow and directional, never a second hitbox.
+        for(const side of [-1,1])for(let i=0;i<2;i++){
+          const rear=-size*(.15+i*.2),spread=side*size*(.11+i*.12),reach=size*(.35+closure*.3);
+          c.beginPath();c.moveTo(rear,spread*.4);c.bezierCurveTo(size*.05,spread,reach*.65,spread*1.4,reach,spread*1.2);
+          c.strokeStyle=i?'#8fbcc766':'#c1dce288';c.lineWidth=i?.7:1.1;c.stroke();
+        }
+        const burst=easeBite((progress-.25)/.45);
+        for(let i=0;i<7;i++){
+          const seed=i*2.399963,spread=size*(.12+burst*(.25+(i%3)*.09));
+          const px=size*.25+burst*size*.45+Math.cos(seed)*spread*.6,py=Math.sin(seed)*spread;
+          ellipse(c,px,py,1+(i%3)*.45,1.2+(i%3)*.45,null,'#c6e5e6',.75);
+        }
+      }
     }c.restore();
   }
   function drawVent(c,z,t,animated){
@@ -540,21 +599,102 @@
     }
     poly(c,[[x-w*.55,y+5],[x-w*.4,y-9],[x-w*.15,y-14],[x+w*.08,y-8],[x+w*.3,y-17],[x+w*.53,y+5]],'#263b43','#639ca5',1.5);c.restore();
   }
-  function drawTentacle(c,z,t,animated){
-    const warning=z.phase==='warning';
-    if(warning){dangerBox(c,z.x,z.y,z.w,z.h,'#d1a4e7',false);caption(c,'VÒI GIÁC HÚT · NÉ VÒNG QUẤN',z.x,z.y-z.h*.5-9,'#e7c7f4');}
-    else{
-      const ox=z.originX??z.x-120,oy=z.originY??z.y,dx=z.x-ox,dy=z.y-oy;
-      c.save();c.beginPath();c.moveTo(ox,oy);c.bezierCurveTo(ox+dx*.15,oy+dy*.7+25,z.x-dx*.2,z.y-28,z.x,z.y);
-      c.strokeStyle='#183744';c.lineWidth=25;c.lineCap='round';c.stroke();c.strokeStyle='#755d8e';c.lineWidth=18;c.stroke();
-      // A live wrap is confined to the simulation's actual target box.
-      const rx=z.w*.42,ry=z.h*.42;ellipse(c,z.x,z.y,rx,ry,null,'#8f79a5',11);ellipse(c,z.x,z.y,rx,ry,null,'#d8b1cf',2);
-      for(let i=0;i<9;i++){const angle=i*TAU/9+(animated?t*.22:0);ellipse(c,z.x+Math.cos(angle)*rx,z.y+Math.sin(angle)*ry,3.6,2.7,'#d4b8cc','#785d82',1);}
-      glow(c,z.x,z.y,Math.max(z.w,z.h)*.5,'#b0a0f3',.13);c.restore();
+  const easeArm=n=>{n=clamp(n,0,1);return n*n*(3-2*n);};
+  // Render-owned memory carries only the final coiled pose into its recoil.
+  // Combat keeps the original target box, damage and warning/active durations.
+  function armFrame(g,e,t){
+    const kraken=kind(e)==='kraken',state=kraken?e.krakenState:e.finalState;
+    const z=kraken?e.krakenTentacle:null,warning=state===(kraken?'suction-warning':'tentacle-warning'),active=state===(kraken?'suction':'tentacle');
+    const previous=armPoses.get(e);
+    if((warning||active)&&(!kraken||z&&!z.expired)){
+      const config=MM.FinalSeaConfig?.[kraken?'boss':'squid'],total=warning?(kraken?config?.suctionWarning:config?.warning):(kraken?config?.suctionLife:config?.active);
+      const timer=kraken?e.krakenTimer:e.finalTimer,progress=clamp(1-(Number.isFinite(timer)?timer:total||1)/(total||1),0,1);
+      const targetX=kraken?z.x:e.finalTargetX,targetY=kraken?z.y:e.finalTargetY;
+      if(!Number.isFinite(targetX)||!Number.isFinite(targetY))return null;
+      const dir=Math.sign(targetX-e.x)||e.dir||1;
+      const frame={owner:e,phase:warning?'warning':'active',progress,x:targetX,y:targetY,
+        w:kraken?z.w:config?.tentacleWidth||95,h:kraken?z.h:config?.tentacleHeight||75,
+        originX:e.x+dir*e.w*(kraken?.08:.04),originY:e.y-e.h*(kraken?.39:.46),kraken,lastSeen:t};
+      armPoses.set(e,frame);return frame;
+    }
+    if(previous&&e.health>0&&!e.dead&&!e.retired&&state!=='flee'&&state!=='fossil'){
+      const elapsed=Math.max(0,t-previous.lastSeen);
+      if(elapsed<.42)return {...previous,phase:'recoil',progress:elapsed/.42};
+    }
+    armPoses.delete(e);return null;
+  }
+  function armGeometry(z,t,animated){
+    const ox=z.originX??z.x-120,oy=z.originY??z.y,dx=z.x-ox,dy=z.y-oy,dir=Math.sign(dx)||1;
+    const warning=z.phase==='warning',recoil=z.phase==='recoil',p=clamp(z.progress??(warning?0:.4),0,1);
+    const reach=warning?.1+.9*easeArm(p/.93):recoil?1-easeArm(p):1;
+    const squeeze=warning?0:recoil?0:Math.sin(p*Math.PI),rx=z.w*(.34-squeeze*.035),ry=z.h*(.32-squeeze*.035);
+    const entryX=z.x-dir*rx,entryY=z.y+ry*.12,bend=(z.kraken?58:28)*(1-.25*squeeze);
+    const controls=[[ox,oy],[ox+dx*.18,oy+dy*.38+bend],[entryX-dx*.18,entryY-bend],[entryX,entryY]];
+    const full=[],segments=34;
+    for(let i=0;i<=segments;i++){
+      const u=i/segments,v=1-u,[a,b,c,d]=controls;
+      full.push({x:v*v*v*a[0]+3*v*v*u*b[0]+3*v*u*u*c[0]+u*u*u*d[0],y:v*v*v*a[1]+3*v*v*u*b[1]+3*v*u*u*c[1]+u*u*u*d[1]});
+    }
+    // A single continuous spiral grows out of the same arm, never a floating ring.
+    const start=dir>0?Math.PI:0;
+    for(let i=1;i<=26;i++){
+      const u=i/26,angle=start+dir*u*Math.PI*(z.kraken?1.62:1.38),r=1-u*.63;
+      full.push({x:z.x+Math.cos(angle)*rx*r,y:z.y+Math.sin(angle)*ry*r+ry*.12*(1-u)});
+    }
+    const f=(full.length-1)*reach,index=Math.floor(f),points=full.slice(0,index+1);
+    if(index<full.length-1){const a=full[index],b=full[index+1];points.push({x:a.x+(b.x-a.x)*(f-index),y:a.y+(b.y-a.y)*(f-index)});}
+    const base=z.kraken?23:10.5;
+    return points.map((point,i)=>{
+      const before=points[Math.max(0,i-1)],after=points[Math.min(points.length-1,i+1)],len=Math.max(.01,Math.hypot(after.x-before.x,after.y-before.y)),s=i/(points.length-1);
+      const nx=-(after.y-before.y)/len,ny=(after.x-before.x)/len;
+      const wave=animated?Math.sin(s*8-t*6)*Math.sin(s*Math.PI)*Math.sin(p*Math.PI)*(warning?3:1.3):0;
+      return {x:point.x+nx*wave,y:point.y+ny*wave,nx,ny,r:(base*Math.pow(1-s,.78)+.7)*(1+.055*Math.sin(s*23))};
+    });
+  }
+  function drawArm(c,z,t,animated,foreground=false){
+    const points=armGeometry(z,t,animated),start=foreground?Math.max(1,Math.floor(points.length*.63)):0;
+    if(points.length<2)return;
+    const dark=z.kraken?'#101a32':'#181a35',skin=z.kraken?'#273b5c':'#3b305e',light=z.kraken?'#425977':'#6c4e91';
+    const flesh=z.kraken?'#952d48':'#694088',rim=z.kraken?'#df7778':'#b78ddd';
+    c.save();c.lineJoin='round';
+    const edge=(p,side,factor=1)=>[p.x+p.nx*p.r*side*factor,p.y+p.ny*p.r*side*factor];
+    // The silhouette tapers continuously; layered facets give it a heavy plated
+    // back and a softer sucker-bearing underside matching the supplied sprites.
+    const outline=[...points.map(p=>edge(p,1)),...points.slice().reverse().map(p=>edge(p,-1))];
+    if(!foreground)poly(c,outline,dark,'#0a1426',2);
+    for(let i=start;i<points.length-1;i++){
+      const a=points[i],b=points[i+1];
+      poly(c,[edge(a,-.95),edge(b,-.95),edge(b,.24),edge(a,.24)],skin,null);
+      poly(c,[edge(a,.24),edge(b,.24),edge(b,.92),edge(a,.92)],flesh,null);
+      if(i%4===0){poly(c,[edge(a,-.92),edge(b,-.85),edge(a,-.28)],light,null);line(c,[edge(a,-.95),edge(a,-.2)],'#0b1d3255',.7);}
+    }
+    // Cups follow the tangent, shrink towards the tip and have recessed centres.
+    for(let i=Math.max(start,3);i<points.length-3;i+=3){
+      const p=points[i],r=p.r*.31;
+      if(r<1.2)continue;c.save();c.translate(p.x+p.nx*p.r*.53,p.y+p.ny*p.r*.53);c.rotate(Math.atan2(p.ny,p.nx));
+      ellipse(c,0,1,r*.7,r*1.1,dark);ellipse(c,0,0,r*.8,r*1.12,flesh,rim,Math.max(.6,r*.15));ellipse(c,-r*.1,.2,r*.32,r*.65,z.kraken?'#401c39':'#302e5e');
+      line(c,[[-r*.5,-r*.55],[-r*.12,-r*.85],[r*.3,-r*.7]],z.kraken?'#ef9e8f':'#c9a5e8',.7);c.restore();
+    }
+    if(animated&&z.phase==='active'){
+      const tip=points[points.length-1],fade=Math.sin(clamp(z.progress||0,0,1)*Math.PI);
+      c.globalAlpha*=fade*.65;
+      for(let i=0;i<6;i++){const a=i*2.4+t*.4,d=8+(z.progress||0)*29;ellipse(c,tip.x+Math.cos(a)*d,tip.y+Math.sin(a)*d*.65,1+i%2,1.5+i%2,null,'#bddeec',.9);}
+    }
+    c.restore();
+  }
+  function drawTentacleWarning(c,z){
+    if(z.phase==='recoil')return;
+    if(z.phase==='warning'){
+      dangerBox(c,z.x,z.y,z.w,z.h,z.kraken?'#e3a4b8':'#c6a9e3',false);
+      if(z.kraken!==false)caption(c,'VÒI GIÁC HÚT · NÉ VÙNG QUẤN',z.x,z.y-z.h*.5-9,'#e7c7db');
     }
   }
-  function drawLaterEnemyEffects(c,g,e,t,animated,foreground){
+  function drawLaterEnemyEffects(c,g,e,t,animated,foreground,telegraphOnly=false){
     const type=kind(e);if(!later(type)||e.dead||e.retired)return;
+    if(tentacled(type)&&!telegraphOnly){
+      const arm=armFrame(g,e,t);
+      if(arm){drawArm(c,arm,t,animated,foreground);if(!foreground)drawTentacleWarning(c,arm);}
+    }
     if(!foreground){
       if(type==='swordfish'&&e.phase==='warning'){
         const dir=e.predatorDirection||1,x=e.predatorWarningX??(dir>0?24:936),y=e.y-e.h*.5;
@@ -587,7 +727,6 @@
         if(e.deepFinal){dangerBox(c,g.player.x,g.player.y-g.player.h*.5,g.player.w+38,g.player.h+30,'#f0c5ec',false);caption(c,'HƠI THỞ CUỐI CÙNG · BẬT KHIÊN',480,35,'#f4d1ee');}
       }
       if(type==='seaCrab'&&e.finalState==='claw-warning')for(const side of [-1,1])dangerBox(c,e.x+side*e.w*.5,e.y-e.h*.65,MM.FinalSeaConfig?.crab?.clawWidth||48,MM.FinalSeaConfig?.crab?.clawHeight||55,'#e9bc9c',false);
-      if(type==='giantSquid'&&e.finalState==='tentacle-warning')dangerBox(c,e.finalTargetX,e.finalTargetY,MM.FinalSeaConfig?.squid?.tentacleWidth||95,MM.FinalSeaConfig?.squid?.tentacleHeight||75,'#d2b5ea',false);
       if(type==='kraken'&&e.krakenState==='ship-warning'){
         const dir=Math.sign((e.krakenTargetX??g.player.x)-e.x)||1,x=e.x+dir*e.w*.25,y=e.y-e.h*.35,range=MM.FinalSeaConfig?.boss?.shipRange||320;
         const angle=Math.atan2((e.krakenTargetY??g.player.y)-y,(e.krakenTargetX??g.player.x)-x);
@@ -599,9 +738,6 @@
       }
     }else{
       mouthEffect(c,e,t,animated);
-      if(type==='giantSquid'&&e.finalState==='tentacle'){
-        const x=e.finalTargetX,y=e.finalTargetY;c.save();c.beginPath();c.moveTo(e.x,e.y-e.h*.3);c.quadraticCurveTo(e.x+(x-e.x)*.5,y-45,x,y);c.strokeStyle='#517290';c.lineWidth=9;c.stroke();line(c,[[x-25,y-7],[x,y+6],[x+25,y-7]],'#aec7d7',2);c.restore();
-      }
     }
   }
   function drawEffects(c,g,t=g.time||0,foreground=false){
@@ -613,7 +749,7 @@
       else if(z.kind==='middle-plasma'&&foreground===(z.phase==='active'))drawPlasma(c,z,t,animated);
       else if(z.kind==='middle-shock'&&foreground===(z.phase==='active'))drawShock(c,z,t,animated);
       else if(z.kind==='predator-roar'&&foreground===(z.phase==='active'))drawRoar(c,z,t,animated);
-      else if(z.kind==='kraken-tentacle'&&foreground===(z.phase==='active'))drawTentacle(c,z,t,animated);
+      else if(z.kind==='kraken-tentacle'&&!z.owner){drawArm(c,{...z,kraken:true},t,animated,foreground);if(!foreground)drawTentacleWarning(c,z);}
     }
     for(const e of g.enemies||[])drawLaterEnemyEffects(c,g,e,t,animated,foreground);
     if(!foreground){
@@ -667,8 +803,11 @@
   function drawMandatoryWarnings(c,g,t=g.time||0){
     if(!water(g)||(g.level?.id||0)<181)return false;const animated=motion(g);c.save();
     for(const z of g.finalSea?.vents||[])if(z.phase!=='idle')drawVent(c,z,t,animated);
-    for(const z of g.waterZones||[])if(!z.expired&&z.kind==='kraken-tentacle')drawTentacle(c,z,t,animated);
-    for(const e of g.enemies||[])drawLaterEnemyEffects(c,g,e,t,animated,false);
+    for(const z of g.waterZones||[])if(!z.expired&&z.kind==='kraken-tentacle')drawTentacleWarning(c,z);
+    for(const e of g.enemies||[]){
+      if(tentacled(kind(e))){const arm=armFrame(g,e,t);if(arm)drawTentacleWarning(c,arm);}
+      drawLaterEnemyEffects(c,g,e,t,animated,false,true);
+    }
     for(const s of g.waterShots||[])if(s.life>0&&s.kind==='kraken-ship')shipwreck(c,s);
     c.restore();return true;
   }

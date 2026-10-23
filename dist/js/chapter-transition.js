@@ -23,8 +23,18 @@
  function ellipse(c,x,y,rx,ry,color,stroke,width=1){c.beginPath();c.ellipse(x,y,rx,ry,0,0,TAU);if(color){c.fillStyle=color;c.fill();}if(stroke){c.strokeStyle=stroke;c.lineWidth=width;c.stroke();}}
  function glow(c,x,y,r,color,alpha=1){c.save();c.globalAlpha*=alpha;const gradient=c.createRadialGradient(x,y,0,x,y,r);gradient.addColorStop(0,color);gradient.addColorStop(1,'#00000000');rect(c,x-r,y-r,r*2,r*2,gradient);c.restore();}
  function backdrop(c,top,bottom){const gradient=c.createLinearGradient(0,0,0,H);gradient.addColorStop(0,top);gradient.addColorStop(1,bottom);rect(c,0,0,W,H,gradient);}
- function title(c,kicker,text,sub,alpha=1){c.save();c.globalAlpha*=alpha;c.textAlign='center';c.fillStyle='#c9b887';c.font='600 11px system-ui, sans-serif';c.fillText(kicker,W*.5,62);
-  c.fillStyle='#f0e8cf';c.font='bold 29px Georgia, serif';c.fillText(text,W*.5,101);c.fillStyle='#b6c9c4';c.font='13px system-ui, sans-serif';c.fillText(sub,W*.5,128);c.restore();}
+ function title(c,kicker,text,sub,alpha=1){
+  // Use the same Vietnamese-complete families as the interface and renderer.
+  // Read them at paint time so previews also share the loaded typography.
+  const sans=MM.Typography?.sans||'"Noto Sans", Arial, sans-serif',serif=MM.Typography?.serif||'"Noto Serif", Georgia, serif';
+  const label=value=>String(value).normalize('NFC');
+  c.save();c.globalAlpha*=alpha;c.textAlign='center';c.textBaseline='alphabetic';
+  if('letterSpacing'in c)c.letterSpacing='0px';
+  if('fontKerning'in c)c.fontKerning='normal';
+  c.fillStyle='#c9b887';c.font=`600 11px ${sans}`;c.fillText(label(kicker),W*.5,62);
+  c.fillStyle='#f0e8cf';c.font=`700 29px ${serif}`;c.fillText(label(text),W*.5,101);
+  c.fillStyle='#b6c9c4';c.font=`400 13px ${sans}`;c.fillText(label(sub),W*.5,128);c.restore();
+ }
  function hunter(c,g,x,y,t,{swim=false,scale=1,vx=105,tilt=0,alpha=1}={}){
   const actor={...g.player,x,y,w:38*scale,h:54*scale,dir:1,vx,vy:0,swimming:swim,swimPhase:t*7,swimTilt:tilt,
    invulnerable:0,stunTime:0,petrifyTime:0,knockdownTime:0,burnTime:0,immortalTime:0,shieldTime:0,rollTime:0,shotTimer:0,weaponMode:'normal',merfolkTime:0};
