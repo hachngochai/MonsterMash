@@ -2094,6 +2094,49 @@ html[data-landscape="rotated"] .atlas-page-tabs button{font-size:8px;padding:4px
 html[data-landscape="rotated"] .atlas-map{touch-action:pan-x}
 @media(prefers-reduced-motion:reduce){.atlas-map,.atlas-land,.atlas-boss-mark{transition:none}}
 
+/* Each later chapter has a readable environment even when 3D is unavailable. */
+html .home-overlay.story-atlas[data-story="2"]{background:linear-gradient(145deg,#232d24f7,#141e1cf7 65%,#201d17f5)}
+html .home-overlay.story-atlas[data-story="3"]{background:linear-gradient(145deg,#242433f7,#121b29f7 70%,#1e182bf7)}
+html .home-overlay.story-atlas[data-story="4"]{background:linear-gradient(145deg,#13364af7,#0a223af7 70%,#111c34f7)}
+.atlas-map[data-atlas-view="chapter2"]{background:radial-gradient(ellipse at 47% 55%,#3c4935 0,#23352e 37%,#121d1c 72%,#101a19);border-color:#b0a37d47}
+.atlas-map[data-atlas-view="chapter3"]{background:radial-gradient(ellipse at 53% 59%,#090e20 0,#24253d 34%,#171e31 63%,#0b1524);border-color:#afa2d043}
+.atlas-map[data-atlas-view="chapter4"]{background:radial-gradient(ellipse at 30% 15%,#226d87 0,#124966 35%,#0c2d4a 67%,#081c34);border-color:#7dd0df50}
+.atlas-map:is([data-atlas-view="chapter2"],[data-atlas-view="chapter3"],[data-atlas-view="chapter4"]) .atlas-art>rect:first-of-type{fill:transparent}
+.atlas-map[data-atlas-view="chapter2"]:not(.atlas-webgl) .atlas-east{fill:#3a4939;stroke:#a6a47e;stroke-width:1.5}
+.atlas-map[data-atlas-view="chapter3"]:not(.atlas-webgl) .atlas-abyss{fill:#393344;stroke:#a89bb8;stroke-opacity:.65}
+.atlas-map[data-atlas-view="chapter4"]:not(.atlas-webgl) .atlas-ocean{fill:url(#atlas-ocean);stroke:#73bbce;stroke-width:1.2;stroke-opacity:.45;filter:none}
+.atlas-map[data-atlas-view="chapter4"] .atlas-ocean-art>g:first-of-type{stroke:#8fd4ea33}
+.atlas-map[data-atlas-view="chapter2"]::after{background:radial-gradient(ellipse at 48% 55%,#f1bb5730,transparent 26%),radial-gradient(ellipse at 24% 78%,#b4c98721,transparent 30%)}
+.atlas-map[data-atlas-view="chapter3"]::after{background:radial-gradient(ellipse at 52% 58%,#966fd52e,transparent 33%),radial-gradient(ellipse at 72% 68%,#54b9e624,transparent 25%)}
+.atlas-map[data-atlas-view="chapter4"]::after{background:radial-gradient(ellipse at 28% 22%,#7ce8f431,transparent 38%),radial-gradient(ellipse at 68% 70%,#1f78c933,transparent 35%)}
+.atlas-map[data-atlas-view="chapter3"]::before{background:linear-gradient(110deg,transparent 38%,#bf9fe8 49%,transparent 59%);opacity:.07}
+.atlas-map[data-atlas-view="chapter4"]::before{background:linear-gradient(115deg,transparent 20%,#9cebf1 29%,transparent 36%,transparent 49%,#7dcae2 54%,transparent 61%);opacity:.1}
+.atlas-cave-environment,.atlas-rift-scene,.atlas-ocean-scene,.atlas-place-label{pointer-events:none}
+.atlas-place-label text{fill:#eee0bd;stroke:#101b20;stroke-width:3px;stroke-linejoin:round;paint-order:stroke;font:600 8px var(--font-display);letter-spacing:1.1px}
+.atlas-place-label path{fill:none;stroke:#cab888;stroke-width:1;stroke-opacity:.6}
+.atlas-place-label .atlas-place-caption{fill:#bbc7b5;font:500 5.8px var(--font-body);letter-spacing:.75px;stroke-width:2.6px}
+.atlas-rift-label text{fill:#e3d0f3;stroke:#111225}
+.atlas-rift-label path{stroke:#b59bd7}
+.atlas-rift-label .atlas-place-caption{fill:#b7b4cf}
+.atlas-ocean-label text{fill:#c5f2f1;stroke:#0c2d43}
+.atlas-ocean-label path{stroke:#92d9df}
+.atlas-ocean-label .atlas-place-caption{fill:#a6cfda}
+.atlas-map[data-atlas-view="chapter2"] #atlas-trail-2{stroke:#f1d09ce6}
+.atlas-map[data-atlas-view="chapter3"] #atlas-trail-3{stroke:#e6c2f2e6;filter:drop-shadow(0 1px 2px #080c1b)}
+.atlas-map[data-atlas-view="chapter4"] #atlas-trail-4{stroke:#c0f1f3ed;filter:drop-shadow(0 1px 2px #082439)}
+.atlas-map[data-atlas-view="chapter3"] .atlas-boss-mark{background:radial-gradient(ellipse,#191526c9,transparent 74%)}
+.atlas-map[data-atlas-view="chapter4"] .atlas-boss-mark{background:radial-gradient(ellipse,#0b2b43cf,transparent 74%)}
+.atlas-map[data-atlas-view="chapter3"] .atlas-level-dot{stroke:#20203b;fill:#dfc6ee}
+.atlas-map[data-atlas-view="chapter4"] .atlas-level-dot{stroke:#123a52;fill:#a9e1e7}
+.atlas-map:is([data-atlas-view="chapter3"],[data-atlas-view="chapter4"]) .atlas-level-dot.cleared{fill:#a7dfac;stroke:#5b9165}
+.atlas-map[data-atlas-view="chapter2"] .land-east[aria-pressed="true"]{background:#2d3929ed;border-color:#c5b583}
+.atlas-map[data-atlas-view="chapter3"] .atlas-page-arrow{background:#202139e6;border-color:#9e89bd55}
+.atlas-map[data-atlas-view="chapter4"] .atlas-page-arrow{background:#0b3049e6;border-color:#7ec7da66}
+.atlas-map[data-atlas-view="chapter4"] .atlas-bridge{background:#0c3047ed;border-color:#84bfcc60}
+.atlas-map[data-atlas-view="chapter4"] .atlas-sea-name{color:#9fdbed9c}
+.atlas-map:is([data-atlas-view="chapter2"],[data-atlas-view="chapter3"],[data-atlas-view="chapter4"]) .atlas-sea-name{display:none}
+@media(max-width:700px),(max-height:650px){.atlas-place-label .atlas-place-caption{display:none}.atlas-place-label text{letter-spacing:.65px}}
+
 /* The arena always shows its complete 960 × 540 scene, including the sky.
    Thumb controls can use the spare side space on wide phone screens. */
 #canvas { width:100%;height:100%;object-fit:contain;object-position:50% 50%; }

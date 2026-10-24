@@ -142,7 +142,7 @@ test('orthographic atlas shows only the active terrain page and preserves both o
  assert.equal(first.children.length,2);assert.equal(second.children.length,2);assert.equal(abyss.children.length,2);
  assert.deepEqual(plain(first.children[0].geometry.shape.points[0]),[-424,41]);
  assert.deepEqual(plain(second.children[0].geometry.shape.points[0]),[79,56]);
- assert.equal(first.children[0].material[0].options.color,0x526445);assert.equal(second.children[0].material[0].options.color,0x3f6550);
+ assert.equal(first.children[0].material[0].options.color,0x526445);assert.equal(second.children[0].material[0].options.color,0x454b3d);
  assert.deepEqual(plain(scene.cameras[0].bounds),[-500,500,200,-200,.1,2000]);
  assert.deepEqual(plain([scene.cameras[0].left,scene.cameras[0].right,scene.cameras[0].top,scene.cameras[0].bottom]),[-550,50,220,-210]);
  const firstRenderCount=scene.renders.length;

@@ -50,16 +50,19 @@
       const page=path.dataset.atlasPage||'chapter1';
       if(!pages[page]){pages[page]=new THREE.Group();pages[page].name='atlas-'+page;land.add(pages[page]);}
       const terrain=pages[page];
+      const chapter=Number(page.slice(-1)),route=MM.Story?.trail?.(MM.Story.get(chapter)),plan=MM.AtlasTerrain&&route?MM.AtlasTerrain.plan(MM.AtlasTerrain.outline(path.getAttribute('d')),chapter,route):null;
       const values=path.getAttribute('d').match(/-?\d+(?:\.\d+)?/g).map(Number),shape=new THREE.Shape();
       for(let n=0;n<values.length;n+=2){const x=values[n]-500,y=200-values[n+1];if(n===0)shape.moveTo(x,y);else shape.lineTo(x,y);}shape.closePath();
-      const geometry=new THREE.ExtrudeGeometry(shape,{depth:32,steps:1,bevelEnabled:true,bevelThickness:2,bevelSize:2,bevelSegments:2});geometry.translate(0,0,-32);
-      const top=new THREE.MeshStandardMaterial({color:page==='chapter4'?0x28667b:page==='chapter3'?0x494255:i===0?0x526445:0x3f6550,roughness:.95,flatShading:true});
-      const side=new THREE.MeshStandardMaterial({color:page==='chapter4'?0x173d53:page==='chapter3'?0x282535:i===0?0x253528:0x213c35,roughness:1,flatShading:true});
+      if(plan?.cavity&&THREE.Path){const hole=new THREE.Path(),v=plan.cavity;hole.absellipse(v.x-500,200-v.y,v.rx,v.ry,0,Math.PI*2,false);shape.holes.push(hole);}
+      const depth=chapter===3?84:chapter===4?7:32,base=chapter===4?-34:-depth;
+      const geometry=new THREE.ExtrudeGeometry(shape,{depth,steps:1,bevelEnabled:true,bevelThickness:2,bevelSize:2,bevelSegments:2});geometry.translate(0,0,base);
+      const top=new THREE.MeshStandardMaterial({color:chapter===4?0x12344e:chapter===3?0x34313e:chapter===2?0x454b3d:0x526445,roughness:.95,flatShading:true});
+      const side=new THREE.MeshStandardMaterial({color:chapter===4?0x0b233b:chapter===3?0x151421:i===0?0x253528:0x29322b,roughness:1,flatShading:true});
       const body=new THREE.Mesh(geometry,[top,side]);body.receiveShadow=true;body.castShadow=true;terrain.add(body);
-      const shelfGeometry=new THREE.ExtrudeGeometry(shape,{depth:7,steps:1,bevelEnabled:true,bevelThickness:1,bevelSize:4,bevelSegments:1});shelfGeometry.translate(0,0,-34);
+      const shelfGeometry=new THREE.ExtrudeGeometry(shape,{depth:7,steps:1,bevelEnabled:true,bevelThickness:1,bevelSize:4,bevelSegments:1});shelfGeometry.translate(0,0,chapter===3?-89:chapter===4?-38:-34);
       terrain.add(new THREE.Mesh(shelfGeometry,new THREE.MeshStandardMaterial({color:page==='chapter4'?0x123548:page==='chapter3'?0x1c2030:0x183333,roughness:1,flatShading:true})));
-      if(MM.AtlasTerrain&&MM.Story?.trail){
-        const chapter=Number(page.slice(-1)),route=MM.Story.trail(MM.Story.get(chapter)),plan=MM.AtlasTerrain.plan(MM.AtlasTerrain.outline(path.getAttribute('d')),chapter,route),detail=MM.AtlasTerrain.build(THREE,plan);
+      if(plan){
+        const detail=MM.AtlasTerrain.build(THREE,plan);
         detail.page=page;details.push(detail);terrain.add(detail.group);
       }
     }

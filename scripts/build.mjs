@@ -11,7 +11,7 @@ sprites.push(...['baby-shark','electric-jellyfish','phantom-jellyfish'].map(name
 const managers=['save-manager','boss-manager','map-manager','skill-manager','weapon-manager','input-manager','progression-ui','story','tutorial'].map(name=>`js/${name}.js`);
 const files = ['index.html','style.css','js/typography.js','js/campaign.js','js/mobile.js','js/bosses.js','js/golem.js','js/wolves.js','js/kong.js','js/dragons.js','js/mythic.js','js/renderer.js','js/game.js','assets/favicon.svg','.nojekyll',...fonts.map(file => `assets/fonts/${file}`),...sprites.map(file=>`assets/sprites/${file}`)];
 files.push('manifest.webmanifest',...['apple-touch-icon','icon-192','icon-512'].map(name=>'assets/icons/'+name+'.png'));
-files.push('js/key-bindings.js','js/atlas-terrain.js','js/atlas-3d.js',...['three.module.js','three.core.js','LICENSE','VERSION'].map(name=>'vendor/three/'+name));
+files.push('js/key-bindings.js','js/atlas-landmarks.js','js/atlas-terrain.js','js/atlas-3d.js',...['three.module.js','three.core.js','LICENSE','VERSION'].map(name=>'vendor/three/'+name));
 files.push(...['abyss-config','abyss-combat','abyss-renderer'].map(name=>'js/'+name+'.js'));
 files.push(...['labyrinth','parasite','lake','echo','tomb'].map(name=>'assets/backgrounds/abyss/'+name+'.png'));
 files.push(...['underwater-config','underwater','underwater-enemies','boss160','underwater-renderer'].map(name=>'js/'+name+'.js'));
