@@ -2025,6 +2025,11 @@ html[data-landscape="rotated"] .atlas-edition{font-size:7px}
 .atlas-map{background:radial-gradient(ellipse at 45% 35%,#294e4b,#122c32 70%,#102329);transform:perspective(1400px) rotateX(var(--atlas-rx,0deg)) rotateY(var(--atlas-ry,0deg));transition:transform .3s ease-out}
 .atlas-map canvas.atlas-webgl-canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none;z-index:0}
 .atlas-webgl .atlas-art{z-index:1}.atlas-webgl .atlas-art>rect:first-of-type{opacity:0}.atlas-webgl .atlas-island{fill:transparent;filter:none}
+.atlas-terrain-ready .atlas-flat-scenery{opacity:0}
+.atlas-terrain-ready .atlas-art>rect:nth-of-type(2){opacity:.18}
+.atlas-terrain-ready .atlas-island{stroke-opacity:.55;stroke-width:1}
+.atlas-terrain-ready .atlas-treasure-trails{filter:drop-shadow(0 1px 1px #061311)}
+.atlas-terrain-ready .atlas-boss-mark{background:radial-gradient(ellipse,#16262a66,transparent 74%);text-shadow:0 3px 3px #071418}
 .atlas-land{z-index:4;box-shadow:0 9px 17px #071b1677,inset 0 1px 0 #e8d9a51c}.atlas-boss-marks{z-index:5}.atlas-sea-name{z-index:3}
 .atlas-map::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:2;opacity:.35;background:radial-gradient(ellipse at 20% 35%,#b5c9a31a,transparent 30%),radial-gradient(ellipse at 78% 60%,#afcab520,transparent 25%);background-size:150% 160%}
 .atlas-map::before{content:'';position:absolute;inset:0;pointer-events:none;z-index:2;opacity:.13;background:linear-gradient(120deg,transparent 35%,#fff5c4 48%,transparent 60%);background-size:300% 100%;background-position:100% 0}
@@ -2057,7 +2062,7 @@ html[data-landscape="rotated"] .atlas-edition{font-size:7px}
 .atlas-map .atlas-boss-mark.planned .atlas-mark-symbol{color:#94b1b8;text-shadow:0 2px 3px #102a35}
 .atlas-map .atlas-boss-mark.planned small{white-space:nowrap;font-size:7px;color:#b4d2d9}
 .ocean-depth-label{left:41%;top:72%;font-size:8px;letter-spacing:2px;color:#b0dfe06b}
-.bridge-next-three{left:85%;top:78%}.bridge-back-four{left:11%;top:24%}
+.bridge-next-three{left:89%;top:91%}.bridge-back-four{left:11%;top:24%}
 @media(max-height:650px),(max-width:700px){.land-ocean{min-height:48px;width:48%;left:26%}.land-ocean .atlas-land-tagline{font-size:7px}.ocean-depth-label{display:none}.atlas-page-tabs{gap:2px}.atlas-page-tabs button{padding-inline:5px}}
 .story-atlas[data-story="3"] .atlas-abyss{stroke:#d6b8e7;stroke-width:3}
 .abyss-depth-label{left:14%;top:83%;color:#d0bed278;letter-spacing:1.5px}

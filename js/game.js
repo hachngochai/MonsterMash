@@ -121,6 +121,7 @@
       if(!options.skipCinematic&&options.carry&&this.screen==='won'&&id===this.level.id+1&&crossing&&this.canvas&&MM.ChapterTransition){
         MM.ChapterTransition.begin(this,crossing,()=>this.start(id,{...options,skipCinematic:true}));return;
       }
+      MM.ChapterTransition?.clear(this);
       this.cinematic=null;this.endingOnLand=false;if(this.ui?.['cinematic-skip'])this.ui['cinematic-skip'].hidden=true;
       MM.Tutorial?.cancel(this);
       MM.AbyssCombat?.reset(this);
@@ -165,6 +166,7 @@
       MM.Tutorial?.onStart(this,options);
     }
     goHome() {
+      MM.ChapterTransition?.clear(this);
       this.cinematic=null;this.endingOnLand=false;if(this.ui?.['cinematic-skip'])this.ui['cinematic-skip'].hidden=true;
       MM.UnderwaterMode?.stop(this);
       MM.Tutorial?.cancel(this);
@@ -705,6 +707,7 @@
     }
     update(dt) {
       dt = clamp(Number.isFinite(dt) ? dt : 0,0,.05);
+      MM.ChapterTransition?.updateLanding(this,dt);
       if(this.cinematic){MM.ChapterTransition?.update(this,dt);return;}
       MM.InputManager?.update(this,dt);
       MM.ProgressionUI?.sync(this);

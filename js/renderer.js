@@ -2480,6 +2480,7 @@
     }
     if (game.flash > 0 && effects && !abyssScene) { c.globalAlpha = Math.min(.19, game.flash); rect(c, 0, 0, W, H, '#d2eeec'); c.globalAlpha = 1; }
     c.restore();
+    window.MM?.ChapterTransition?.drawLanding(c,game);
   }
   function drawPortrait(c, type = 'hunter', x = 40, y = 75, scale = 1, world = 0) {
     c.save(); c.translate(x, y); c.scale(scale, scale);

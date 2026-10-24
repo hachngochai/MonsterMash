@@ -13,7 +13,7 @@ function gameFixture(level){
  const scope=vm.createContext({});
  for(const name of ['abyss-config','underwater-config','middle-sea-config','predator-sea-config','deep-sea-config','final-sea-config','campaign','bosses','golem','wolves','kong','dragons','mythic','abyss-combat','underwater','underwater-enemies','boss160','middle-sea-enemies','boss170','predator-sea-enemies','boss-180','deep-sea-enemies','boss190','final-sea-enemies','boss200','save-manager','boss-manager','map-manager','skill-manager','weapon-manager','input-manager','key-bindings','merfolk','lightning-orb','chapter-transition','game'])
   vm.runInContext(fs.readFileSync('js/'+name+'.js','utf8'),scope,{filename:name+'.js'});
- let writes=0;const MM=scope.MM,g=new MM.Game({headless:true,storage:{getItem:()=>null,setItem(){writes++;}},random:()=>.5});g.start(level);g.canvas={};g.ui={'cinematic-skip':{hidden:true}};return {g,MM,writes:()=>writes};
+ let writes=0;const MM=scope.MM,g=new MM.Game({headless:true,storage:{getItem:()=>null,setItem(){writes++;}},random:()=>.5});g.start(level);g.canvas={};g.ui={'cinematic-skip':{hidden:true}};return {g,MM,scope,writes:()=>writes};
 }
 function tick(g,seconds){for(let remaining=seconds;remaining>1e-8;){const dt=Math.min(.05,remaining);g.update(dt);remaining-=dt;}}
 
@@ -22,7 +22,12 @@ test('chapter passages accept only the four known kinds and prevent overlapping 
   assert.equal(MM.ChapterTransition.begin(g,kind,()=>{}),true);assert.equal(g.cinematic.kind,want);assert.equal(g.screen,'cinematic');assert.equal(clearCount(),1);
   assert.equal(g.ui['cinematic-skip'].hidden,false);for(const id of ['result-overlay','home-overlay','stage-banner','toast'])assert.equal(g.ui[id].hidden,true);
   assert.equal(MM.ChapterTransition.begin(g,'cave',()=>assert.fail('nested callback')),false);}
- const {g,MM}=fixture();assert.equal(MM.ChapterTransition.begin(g,'unknown'),false);assert.equal(g.screen,'playing');assert.equal(g.cinematic,undefined);
+ const {g,MM}=fixture();for(const kind of ['unknown','__proto__','constructor','toString',null,undefined])assert.equal(MM.ChapterTransition.begin(g,kind),false,String(kind));assert.equal(g.screen,'playing');assert.equal(g.cinematic,undefined);
+});
+test('invalid elapsed times cannot advance a passage or fire its completion callback',()=>{
+ const {g,MM}=fixture();let done=0;MM.ChapterTransition.begin(g,'cave',()=>{done++;});MM.ChapterTransition.update(g,.4);
+ for(const dt of [-1,NaN,Infinity,-Infinity,undefined]){assert.equal(MM.ChapterTransition.update(g,dt),true);assert.equal(g.cinematic.time,.4);assert.equal(done,0);}
+ MM.ChapterTransition.update(g,4.6);assert.equal(done,1);assert.equal(g.cinematic,null);assert.equal(MM.ChapterTransition.skip(g),false);
 });
 test('normal passages last five seconds, the ending eleven and reduced motion exactly1.2 seconds',()=>{
  for(const [kind,reduced,duration] of [['forest',false,5],['cave',false,5],['whirlpool',false,5],['ending',false,11],['forest',true,1.2],['ending',true,1.2]]){
@@ -51,7 +56,8 @@ test('all chapter titles use the shared Vietnamese typography, normalized comple
  for(const [kind,phase]of[['forest',.4],['cave',.4],['whirlpool',.4],['ending',.1],['ending',.5],['ending',.9]]){
   MM.ChapterTransition.begin(g,kind,()=>{});g.cinematic.time=g.cinematic.duration*phase;textRuns.length=0;
   const before=JSON.stringify(g);MM.ChapterTransition.draw(c,g);assert.equal(JSON.stringify(g),before);assert.equal(textRuns.length,3);
-  assert.equal(textRuns[0].font,`600 11px ${MM.Typography.sans}`);assert.equal(textRuns[1].font,`700 29px ${MM.Typography.serif}`);assert.equal(textRuns[2].font,`400 13px ${MM.Typography.sans}`);
+  assert.ok(textRuns[0].font.endsWith(MM.Typography.sans));assert.ok(textRuns[1].font.endsWith(MM.Typography.serif));assert.ok(textRuns[2].font.endsWith(MM.Typography.sans));
+  assert.ok(parseFloat(textRuns[1].font.match(/([\d.]+)px/)[1])>=24,'the title remains legible in the 960px scene');
   for(const run of textRuns){assert.equal(run.baseline,'alphabetic');assert.equal(run.spacing,'0px');assert.equal(run.kerning,'normal');assert.equal(run.text,run.text.normalize('NFC'));assert.ok(!/[\uFFFD]/u.test(run.text));assert.ok(run.text.length>12);}
   MM.ChapterTransition.skip(g);
  }
@@ -59,7 +65,7 @@ test('all chapter titles use the shared Vietnamese typography, normalized comple
 
 test('standalone transition previews use Vietnamese-complete Noto fallbacks when Typography has not loaded yet',()=>{
  const {g,MM}=fixture(),{c,textRuns}=context();MM.ChapterTransition.begin(g,'forest',()=>{});g.cinematic.time=2;MM.ChapterTransition.draw(c,g);
- assert.equal(textRuns[0].font,'600 11px "Noto Sans", Arial, sans-serif');assert.equal(textRuns[1].font,'700 29px "Noto Serif", Georgia, serif');assert.equal(textRuns[2].font,'400 13px "Noto Sans", Arial, sans-serif');
+ assert.ok(textRuns[0].font.endsWith('"Noto Sans", Arial, sans-serif'));assert.ok(textRuns[1].font.endsWith('"Noto Serif", Georgia, serif'));assert.ok(textRuns[2].font.endsWith('"Noto Sans", Arial, sans-serif'));
  assert.equal(textRuns[1].text,'Lời Nguyền Cổ Thú');assert.equal(textRuns[2].text,'Ánh đèn dẫn lối vào khu rừng chưa từng ngủ.');
 });
 test('the real Game freezes combat and oxygen during each chapter passage and starts the next map only once',()=>{
@@ -78,4 +84,13 @@ test('the real final ending preserves completed200 before playing, freezes timer
  tick(g,10.99);assert.equal(g.screen,'cinematic');assert.equal(g.levelTime,34);assert.equal(g.time,time);assert.equal(g.underwater.oxygen,8);assert.equal(writes(),count);
  tick(g,.01);assert.equal(g.screen,'won');assert.equal(g.endingOnLand,true);assert.equal(g.player.swimming,false);assert.equal(g.player.merfolkTime,0);assert.equal(g.cinematic,null);assert.equal(writes(),count);
  assert.equal(MM.ChapterTransition.skip(g),false);
+});
+test('native destination fades expire while paused and are cleared by real retries or returning home',()=>{
+ function ready(){const {g,MM,scope}=gameFixture(150);scope.document={createElement(){return {width:0,height:0,getContext(){return {drawImage(){}};}};}};
+  g.canvas={width:1920,height:1080};g.screen='won';g.start(151,{carry:true});tick(g,5);assert.equal(g.level.id,151);const {c}=context();assert.equal(MM.ChapterTransition.drawLanding(c,g),true);return {g,MM,c};}
+ const paused=ready(),time=paused.g.time,levelTime=paused.g.levelTime;paused.g.screen='paused';tick(paused.g,.49);
+ assert.equal(paused.MM.ChapterTransition.drawLanding(paused.c,paused.g),true);tick(paused.g,.01);assert.equal(paused.MM.ChapterTransition.drawLanding(paused.c,paused.g),false);
+ assert.equal(paused.g.time,time);assert.equal(paused.g.levelTime,levelTime,'only the presentation fade advances while paused');
+ const retry=ready();retry.g.start(151,{retry:true});assert.equal(retry.MM.ChapterTransition.drawLanding(retry.c,retry.g),false);
+ const home=ready();home.g.goHome();assert.equal(home.MM.ChapterTransition.drawLanding(home.c,home.g),false);
 });

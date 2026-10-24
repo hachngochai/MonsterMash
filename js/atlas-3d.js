@@ -9,7 +9,7 @@
   let context;try{context=canvas.getContext('webgl2',{alpha:true,antialias:true,powerPreference:'low-power'});}catch{return;}
   if(!context)return;
   let renderer,scene,camera,sun,frame=0,last=0,signature='',lost=false;
-  const pages=Object.create(null);
+  const pages=Object.create(null),details=[];
   const currentPage=()=>/^chapter[1234]$/.test(map.dataset.atlasView)?map.dataset.atlasView:'chapter1';
   function syncCamera(){
     if(!camera)return;
@@ -23,7 +23,7 @@
   function resetTilt(){map.style.setProperty('--atlas-rx','0deg');map.style.setProperty('--atlas-ry','0deg');}
   function render(time=0){
     frame=0;if(!visible()||!renderer)return;
-    if(time-last>=33||time===0){last=time;sun.intensity=2.1+(motion()?Math.sin(time*.00025)*.12:0);renderer.render(scene,camera);}
+    if(time-last>=33||time===0){last=time;sun.intensity=2.1+(motion()?Math.sin(time*.00025)*.08:0);for(const detail of details)if(detail.page===currentPage())detail.update(time,motion());renderer.render(scene,camera);}
     if(motion())frame=root.requestAnimationFrame(render);
   }
   function sync(){
@@ -34,15 +34,18 @@
     if(frame)root.cancelAnimationFrame(frame);frame=0;if(visible())render();
   }
   function resize(){if(!renderer||!map.clientWidth||!map.clientHeight)return;renderer.setSize(map.clientWidth,map.clientHeight,false);if(visible())renderer.render(scene,camera);}
-  MM.Atlas3D={sync};
+  MM.Atlas3D={sync,getState:()=>({ready:!!renderer&&!lost,page:currentPage(),details:details.map(d=>({page:d.page,...d.stats}))})};
   import(moduleURL.href).then(THREE=>{
     renderer=new THREE.WebGLRenderer({canvas,context,alpha:true,antialias:true,powerPreference:'low-power'});
     renderer.setPixelRatio(Math.min(root.devicePixelRatio||1,1.5));renderer.setClearColor(0x000000,0);
+    if(renderer.shadowMap){renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;}
     scene=new THREE.Scene();camera=new THREE.OrthographicCamera(-500,500,200,-200,.1,2000);camera.position.z=1200;
     scene.add(new THREE.HemisphereLight(0xffefc2,0x112b35,2));
-    sun=new THREE.DirectionalLight(0xffdaa0,2.1);sun.position.set(-350,420,700);scene.add(sun);
+    sun=new THREE.DirectionalLight(0xffdaa0,2.1);sun.position.set(-350,420,700);sun.castShadow=true;
+    if(sun.shadow){sun.shadow.mapSize.set(1024,1024);Object.assign(sun.shadow.camera,{left:-700,right:700,top:500,bottom:-500,near:1,far:1800});sun.shadow.bias=-.0006;sun.shadow.normalBias=.6;}
+    scene.add(sun);
     const rim=new THREE.DirectionalLight(0x7bbfcb,1.1);rim.position.set(450,-220,450);scene.add(rim);
-    const land=new THREE.Group(),angle=-.28;land.rotation.x=angle;land.scale.y=1/Math.cos(angle);scene.add(land);
+    const land=new THREE.Group(),angle=-.46;land.rotation.x=angle;land.scale.y=1/Math.cos(angle);scene.add(land);
     for(const [i,path] of [...map.querySelectorAll('.atlas-island')].entries()){
       const page=path.dataset.atlasPage||'chapter1';
       if(!pages[page]){pages[page]=new THREE.Group();pages[page].name='atlas-'+page;land.add(pages[page]);}
@@ -52,11 +55,15 @@
       const geometry=new THREE.ExtrudeGeometry(shape,{depth:32,steps:1,bevelEnabled:true,bevelThickness:2,bevelSize:2,bevelSegments:2});geometry.translate(0,0,-32);
       const top=new THREE.MeshStandardMaterial({color:page==='chapter4'?0x28667b:page==='chapter3'?0x494255:i===0?0x526445:0x3f6550,roughness:.95,flatShading:true});
       const side=new THREE.MeshStandardMaterial({color:page==='chapter4'?0x173d53:page==='chapter3'?0x282535:i===0?0x253528:0x213c35,roughness:1,flatShading:true});
-      terrain.add(new THREE.Mesh(geometry,[top,side]));
+      const body=new THREE.Mesh(geometry,[top,side]);body.receiveShadow=true;body.castShadow=true;terrain.add(body);
       const shelfGeometry=new THREE.ExtrudeGeometry(shape,{depth:7,steps:1,bevelEnabled:true,bevelThickness:1,bevelSize:4,bevelSegments:1});shelfGeometry.translate(0,0,-34);
       terrain.add(new THREE.Mesh(shelfGeometry,new THREE.MeshStandardMaterial({color:page==='chapter4'?0x123548:page==='chapter3'?0x1c2030:0x183333,roughness:1,flatShading:true})));
+      if(MM.AtlasTerrain&&MM.Story?.trail){
+        const chapter=Number(page.slice(-1)),route=MM.Story.trail(MM.Story.get(chapter)),plan=MM.AtlasTerrain.plan(MM.AtlasTerrain.outline(path.getAttribute('d')),chapter,route),detail=MM.AtlasTerrain.build(THREE,plan);
+        detail.page=page;details.push(detail);terrain.add(detail.group);
+      }
     }
-    map.prepend(canvas);map.classList.add('atlas-webgl');resize();sync();
+    map.prepend(canvas);map.classList.add('atlas-webgl');resize();sync();if(details.length){map.classList.add('atlas-terrain-ready');map.setAttribute('data-atlas-render','terrain');}
     new root.ResizeObserver(resize).observe(map);
     root.document.addEventListener('visibilitychange',sync);
     root.matchMedia?.('(prefers-reduced-motion: reduce)').addEventListener?.('change',sync);
@@ -66,7 +73,7 @@
       map.style.setProperty('--atlas-rx',(-y*.6).toFixed(3)+'deg');map.style.setProperty('--atlas-ry',(x*.9).toFixed(3)+'deg');
     });
     map.addEventListener('pointerleave',resetTilt);
-    canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();lost=true;map.classList.remove('atlas-webgl');sync();});
-    canvas.addEventListener('webglcontextrestored',()=>{lost=false;map.classList.add('atlas-webgl');signature='';resize();sync();});
-  }).catch(()=>{lost=true;map.classList.remove('atlas-webgl','atlas-animated');canvas.remove();if(frame)root.cancelAnimationFrame(frame);frame=0;renderer?.dispose();renderer=null;});
+    canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();lost=true;map.classList.remove('atlas-webgl','atlas-terrain-ready');sync();});
+    canvas.addEventListener('webglcontextrestored',()=>{lost=false;map.classList.add('atlas-webgl');if(details.length)map.classList.add('atlas-terrain-ready');signature='';resize();sync();});
+  }).catch(()=>{lost=true;map.classList.remove('atlas-webgl','atlas-animated','atlas-terrain-ready');canvas.remove();if(frame)root.cancelAnimationFrame(frame);frame=0;renderer?.dispose();renderer=null;});
 })(typeof window!=='undefined'?window:globalThis);
