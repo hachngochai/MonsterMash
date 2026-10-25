@@ -1,5 +1,7 @@
 # Chuyển cảnh điện ảnh · v4.3.2
 
+**Lịch sử:** đây là prompt của bộ nền v4.3.2. Từ v4.3.5, phim dùng [bộ nền hoạt hình phân khối](block-cinematics.md); các tệp nền hiện tại đã được thay bằng bộ mới.
+
 Mode: built-in image_gen (imagegen skill); new opaque background plates, no characters or embedded text. Character, light, water, particles and camera are animated by the game.
 
 Files saved in `assets/backgrounds/transitions/`: `forest-passage.png`, `cave-passage.png`, `whirlpool-passage.png`, `shore-return.png`.

@@ -20,7 +20,7 @@ files.push(...['middle-sea-config','middle-sea-enemies','boss170'].map(name=>'js
 files.push(...["predator-sea-config", "predator-sea-enemies", "boss-180", "deep-sea-config", "deep-sea-enemies", "boss190", "final-sea-config", "final-sea-enemies", "boss200", "merfolk", "lightning-orb", "ocean-visuals", "chapter-transition"].map(name=>'js/'+name+'.js'));
 files.push(...["hammerhead", "electric-ray", "swordfish", "mega-london", "gulper", "ghost-shark", "glow-bug", "leviathan", "sea-crab", "pearl-clam", "angler-fish", "giant-squid", "sea-turtle", "kraken"].map(name=>'assets/sprites/underwater/'+name+'.png'));
 files.push(...['predator-trench','deep-chasm','kraken-grave'].map(name=>'assets/backgrounds/underwater/'+name+'.png'));
-files.push(...['forest-passage','cave-passage','whirlpool-passage','shore-return'].map(name=>'assets/backgrounds/transitions/'+name+'.png'));
+files.push(...['forest-passage','cave-passage','whirlpool-passage','shore-return','submerged-passage'].map(name=>'assets/backgrounds/transitions/'+name+'.png'));
 for (const file of [...files,...managers]) {
   if(file.endsWith('.js'))execFileSync(process.execPath,['--check',path.join(root,file)],{stdio:'inherit'});
   const target=path.join(root,'dist',file);

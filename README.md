@@ -1,12 +1,18 @@
 # Monster Mash — The Midnight Hunt
 
-Rebuild 16 (v4.3.4) của Monster Mash của KIO: 200 màn, 4 cốt truyện, Canvas 2D và bản đồ Three.js đóng gói trong repo. Không cần CDN hoặc cài package. Tiến độ màn, kỹ năng, vũ khí, kỷ lục và cài đặt lưu vĩnh viễn bằng localStorage trên trình duyệt hiện tại.
+Rebuild 17 (v4.3.5) của Monster Mash của KIO: 200 màn, 4 cốt truyện, Canvas 2D và bản đồ Three.js đóng gói trong repo. Không cần CDN hoặc cài package. Tiến độ màn, kỹ năng, vũ khí, kỷ lục và cài đặt lưu vĩnh viễn bằng localStorage trên trình duyệt hiện tại.
+
+## Bối cảnh chuyển cảnh hoạt hình · v4.3.5
+
+Rừng, hang, xoáy nước, đáy biển và bình minh dùng nền hoạt hình phân khối có đường viền và chi tiết riêng, hợp với nhân vật gốc. Cú nhảy, nước bắn và tâm xoáy dùng chung mốc để khớp hình. Phần dưới nước của phim có nền riêng, không lấy lại ảnh biển gameplay. Giữ nhân vật, boss, nền màn chơi và cơ chế chiến đấu đã có.
+
+[Chạy bốn chuyển cảnh](tests/chapter-preview.html?v=4.3.5) · [Bộ nền, nguồn tạo hình và căn chuyển động](docs/block-cinematics.md).
 
 ## Chuyển động Kỵ sĩ đầu chim · v4.3.4
 
 Dạng Kỵ sĩ ở boss140 có bước chân luân phiên, chuyển động thân/cánh và nhịp lấy đà–chém–thu lưỡi hái trên một bề mặt liên tục của sprite gốc. Nhịp bước theo quãng di chuyển thật; bắt đầu/dừng, chuyển đòn và dịch chuyển không làm hoạt ảnh giật hoặc khởi động lại. Giữ nguyên toàn bộ tạo hình, background, sát thương, tốc độ và nhịp kỹ năng. Giảm chuyển động vẫn dùng hình nguyên vẹn.
 
-[Thử Kỵ sĩ đầu chim](tests/abyss-preview.html?v=4.3.4#preview-140): chọn **Kỵ sĩ đầu chim** rồi bật **Chạy giao tranh**.
+[Thử Kỵ sĩ đầu chim](tests/abyss-preview.html?v=4.3.5#preview-140): chọn **Kỵ sĩ đầu chim** rồi bật **Chạy giao tranh**.
 
 ## Bản đồ có bối cảnh riêng · v4.3.3
 
@@ -16,7 +22,7 @@ Lời Nguyền Cổ Thú có cửa hang lớn, nhũ đá, rễ cổ thụ và đ
 
 Bốn bối cảnh chuyển cảnh mới có đường đi và mặt nước đồng bộ với chuyển động nhân vật: rừng cổ thụ nhiều lớp sương, hang đá với ánh đuốc, xoáy biển có động tác lấy đà–nhảy–bị hút xuống, và bình minh trên bờ biển. Máy quay đẩy/lia nhẹ, bóng tiếp xúc và các lớp ánh sáng/bụi/bọt nước tạo chiều sâu. Font Noto tiếng Việt thống nhất, có nền tối giữ độ tương phản trên cả cảnh bình minh.
 
-[Rạp chuyển cảnh](tests/chapter-preview.html?v=4.3.4) phát từng đoạn hoặc cả hành trình, hỗ trợ tạm dừng và kéo thước phim. Đây là bản xem riêng, không ghi tiến độ. Thời lượng trong game giữ 5 giây ở các đoạn50/100/150 và11 giây ở đoạn kết200; chế độ giảm chuyển động1,2 giây; bỏ qua và đóng băng chiến đấu/oxy vẫn giữ nguyên.
+[Rạp chuyển cảnh](tests/chapter-preview.html?v=4.3.5) phát từng đoạn hoặc cả hành trình, hỗ trợ tạm dừng và kéo thước phim. Đây là bản xem riêng, không ghi tiến độ. Thời lượng trong game giữ 5 giây ở các đoạn50/100/150 và11 giây ở đoạn kết200; chế độ giảm chuyển động1,2 giây; bỏ qua và đóng băng chiến đấu/oxy vẫn giữ nguyên.
 
 Bản đồ chọn màn dùng địa hình Three.js nổi, tán cây nhiều khối, tháp cổ, đá, thạch anh và san hô theo từng cốt truyện; nước, bờ đảo và bóng đổ chuyển động nhẹ. Các vật thể 3D tránh đường đi và mốc boss, giữ nguyên bố cục bốn vùng đất cùng thao tác vuốt. Góc nhìn cố định, chỉ nghiêng nhẹ theo chuột. Nếu WebGL không có hoặc mất ngữ cảnh, bản đồ SVG vẫn dùng được. Giới hạn 30fps và tỉ lệ điểm ảnh1,5; ngừng vẽ khi rời trang chủ.
 
@@ -38,7 +44,7 @@ Hải Vực Quên Lãng đã mở đủ 151–200: năm tầng biển, Mega Lond
 
 Chuyển cảnh 50→51 tiến vào rừng; 100→101 cầm đuốc vào hang; 150→151 nhảy xuống xoáy biển. Đoạn kết 200 đưa người chơi từ đáy biển trở lại đất liền. Có thể bỏ qua bằng nút trên màn hoặc Enter/Esc/Space; không chạy combat hay hao oxy trong chuyển cảnh.
 
-[Chơi bản chính](https://hachngochai.github.io/MonsterMash/?v=4.3.4) · [Bản test mở toàn bộ](https://hachngochai.github.io/MonsterMash/?test=all&v=4.3.4) · [Phòng thử 171–200 và chuyển cảnh](tests/ocean-depths-preview.html) · [Cấu hình và điều kiện thắng](docs/deep-final-sea.md).
+[Chơi bản chính](https://hachngochai.github.io/MonsterMash/?v=4.3.5) · [Bản test mở toàn bộ](https://hachngochai.github.io/MonsterMash/?test=all&v=4.3.5) · [Phòng thử 171–200 và chuyển cảnh](tests/ocean-depths-preview.html) · [Cấu hình và điều kiện thắng](docs/deep-final-sea.md).
 
 Các chỉ số chưa được quy định là **cân bằng chơi thử**, tách trong config. Hóa Thạch của Kraken dùng cấu hình đã duyệt: một lần tại 25% HP, hồi 25% HP tối đa trong 5s, vẫn nhận sát thương; gọi Mega London và Leviathan mỗi con 25% HP gốc, chỉ cắn cơ bản, phải hạ đủ ba. Không có phần thưởng 200 tự thêm.
 
@@ -64,7 +70,7 @@ Kiểm tra phóng lớn tại [phòng thử Cổ Thần](tests/deity-preview.htm
 
 ## Bản test công khai · v4.0.5
 
-[Mở và chia sẻ bản test](https://hachngochai.github.io/MonsterMash/?test=all&v=4.3.4). Ai có link đều chơi được trên PC hoặc điện thoại, không cần tài khoản. Mỗi người chơi trên thiết bị riêng.
+[Mở và chia sẻ bản test](https://hachngochai.github.io/MonsterMash/?test=all&v=4.3.5). Ai có link đều chơi được trên PC hoặc điện thoại, không cần tài khoản. Mỗi người chơi trên thiết bị riêng.
 
 Link `?test=all` mở đủ 200 màn và toàn bộ phần thưởng, vũ khí, kỹ năng để thử. Badge **BẢN TEST** giúp nhận biết. Độ khó, sát thương, giới hạn đạn và cơ chế boss giữ nguyên. Màn 70 vẫn dùng quy tắc riêng của Trăng Máu.
 

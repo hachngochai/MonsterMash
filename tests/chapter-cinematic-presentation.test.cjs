@@ -33,9 +33,9 @@ function actorRenderer(MM,actors){
 }
 test('each cinematic uses its own local high resolution background asset',()=>{
  const {MM}=fixture(),manifest=MM.ChapterTransition.backgroundManifest;
- const expected=['forest-passage','cave-passage','whirlpool-passage','shore-return'].map(name=>`assets/backgrounds/transitions/${name}.png`);
+ const expected=['forest-passage','cave-passage','whirlpool-passage','shore-return','submerged-passage'].map(name=>`assets/backgrounds/transitions/${name}.png`);
  const paths=Array.isArray(manifest)?Array.from(manifest):Object.values(manifest);
- assert.equal(paths.length,4);assert.equal(new Set(paths).size,4);
+ assert.equal(paths.length,5);assert.equal(new Set(paths).size,5);
  assert.deepEqual(paths.slice().sort(),expected.slice().sort());
  for(const path of paths){
   const png=fs.readFileSync(path);assert.ok(png.length>50000,path);assert.equal(png.subarray(0,8).toString('hex'),'89504e470d0a1a0a',path);
@@ -45,11 +45,46 @@ test('each cinematic uses its own local high resolution background asset',()=>{
 });
 test('the decoded backdrop is painted and is also safe when assets are unavailable',()=>{
  const {MM,g}=fixture(),R=MM.ChapterTransition;
- const images={forest:{width:1536,height:1024},cave:{width:1536,height:1024},whirlpool:{width:1536,height:1024},shore:{width:1536,height:1024}};
+ const images={forest:{width:1536,height:1024},cave:{width:1536,height:1024},whirlpool:{width:1536,height:1024},shore:{width:1536,height:1024},submerged:{width:1536,height:1024}};
  for(const [key,image]of Object.entries(images))assert.equal(R.setBackground(image,key),true);
  for(const kind of scenes){const {c,calls,depth}=canvas();R.begin(g,kind);for(const p of [.15,.5,.95]){g.cinematic.time=g.cinematic.duration*p;const before=JSON.stringify(g);R.draw(c,g);assert.equal(JSON.stringify(g),before);assert.equal(depth(),0);}
   assert.ok(calls.some(([name,image])=>name==='drawImage'&&Object.values(images).includes(image)),kind);R.skip(g);}
  const fallback=fixture();for(const kind of scenes){const {c,depth}=canvas();fallback.MM.ChapterTransition.begin(fallback.g,kind);fallback.g.cinematic.time=fallback.g.cinematic.duration*.5;assert.equal(fallback.MM.ChapterTransition.draw(c,fallback.g),true);assert.equal(depth(),0);fallback.MM.ChapterTransition.skip(fallback.g);}
+});
+
+test('both submerged passages use their cinematic plate and the original hunter even when gameplay scenery is installed',()=>{
+ for(const withGameplayScenery of [false,true]){
+  const {MM,g}=fixture(),R=MM.ChapterTransition,actors=[];
+  actorRenderer(MM,actors);
+  let gameplayPaints=0;
+  if(withGameplayScenery)MM.UnderwaterRenderer.drawBackground=()=>{gameplayPaints++;assert.fail('a decoded cinematic plate must not draw a gameplay painting');};
+  else delete MM.UnderwaterRenderer;
+  const submerged={width:1672,height:941,name:'cinematic-submerged'};
+  assert.equal(R.setBackground(submerged,'submerged'),true);
+  for(const [kind,progress]of [['whirlpool',.99],['ending',.1],['ending',.45]]){
+   R.begin(g,kind);g.cinematic.time=g.cinematic.duration*progress;
+   const before=JSON.stringify(g),first=actors.length,{c,calls,depth}=canvas();
+   assert.equal(R.draw(c,g),true);assert.equal(depth(),0);assert.equal(JSON.stringify(g),before);
+   const painted=calls.filter(([name])=>name==='drawImage');
+   assert.equal(painted.length,1,'one dedicated underwater plate is composited behind the native actor');
+   assert.equal(painted[0][1],submerged,'preview and gameplay use the same approved cinematic background');
+   const hunters=actors.slice(first).filter(({kind})=>kind==='hunter');
+   assert.equal(hunters.length,1,'the original Renderer.drawHunter remains the sole player artist');
+   assert.equal(hunters[0].actor.w,38);assert.equal(hunters[0].actor.h,54);assert.equal(hunters[0].actor.swimming,true);
+   assert.notEqual(hunters[0].actor,g.player);R.skip(g);
+  }
+  assert.equal(gameplayPaints,0);
+ }
+});
+test('a missing submerged plate keeps cinematic fallback scenery instead of loading a gameplay background',()=>{
+ const {MM,g}=fixture(),R=MM.ChapterTransition,actors=[];actorRenderer(MM,actors);
+ MM.UnderwaterRenderer.drawBackground=()=>assert.fail('the underwater cinematic fallback must not reintroduce an old gameplay painting');
+ for(const kind of ['whirlpool','ending']){
+  R.begin(g,kind);g.cinematic.time=g.cinematic.duration*(kind==='whirlpool'?.99:.3);
+  const {c,depth}=canvas(),before=JSON.stringify(g),first=actors.length;
+  assert.equal(R.draw(c,g),true);assert.equal(depth(),0);assert.equal(JSON.stringify(g),before);
+  assert.equal(actors.slice(first).filter(({kind})=>kind==='hunter').length,1);R.skip(g);
+ }
 });
 test('undecoded or non-finite backdrops cannot introduce invalid canvas geometry',()=>{
  const {MM,g}=fixture(),R=MM.ChapterTransition;

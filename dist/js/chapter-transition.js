@@ -8,10 +8,14 @@
  const kinds=new Map([[50,'forest'],[100,'cave'],[150,'whirlpool'],[200,'ending'],['forest','forest'],['cave','cave'],['whirlpool','whirlpool'],['ending','ending']]);
  const backgroundManifest=Object.freeze({
   forest:'assets/backgrounds/transitions/forest-passage.png',cave:'assets/backgrounds/transitions/cave-passage.png',
-  whirlpool:'assets/backgrounds/transitions/whirlpool-passage.png',shore:'assets/backgrounds/transitions/shore-return.png'
+  whirlpool:'assets/backgrounds/transitions/whirlpool-passage.png',shore:'assets/backgrounds/transitions/shore-return.png',
+  submerged:'assets/backgrounds/transitions/submerged-passage.png'
  });
  const art=Object.fromEntries(Object.keys(backgroundManifest).map(key=>[key,{image:null,ready:false,failed:false}]));
- const endingArt={deep:{image:null,ready:false},kraken:{image:null,ready:false}};
+ const endingArt={kraken:{image:null,ready:false}};
+ // World-space anchors measured on the cartoon plate; the same mouth owns
+ // the jump landing, currents, splash and front rim that hides the swimmer.
+ const vortexMouth=Object.freeze({x:675,y:365});
  // Native frame copies stay outside the game/save graph. Allocate only at the
  // two scene boundaries; ordinary frames just composite the retained bitmap.
  const entryFrames=new WeakMap(),landingFrames=new WeakMap(),landingDuration=.5;
@@ -52,7 +56,7 @@
   return new Promise(resolve=>{const im=new root.Image();im.decoding='async';im.onload=()=>{entry.image=im;entry.ready=true;done?.(im);resolve(true);};im.onerror=()=>{entry.failed=true;resolve(false);};im.src=rootURL+path+version;});
  }
  const allArtReady=Promise.all(Object.entries(backgroundManifest).map(([key,path])=>load(path,art[key])).concat([
-  load('assets/backgrounds/underwater/deep-chasm.png',endingArt.deep),load('assets/sprites/underwater/kraken.png',endingArt.kraken)
+  load('assets/sprites/underwater/kraken.png',endingArt.kraken)
  ]));
  function skipButton(g,hidden){const button=g.ui?.['cinematic-skip'];if(button){button.hidden=hidden;if(!hidden)button.textContent='Bỏ qua ›';}}
  function finish(g,skipped=false){
@@ -89,10 +93,11 @@
    Object.assign(a,{x:lerp(170,752,q),y:430,scale:lerp(1.35,.9,q),vx:108,alpha:1-ease((p-.91)/.09),phase:p<.82?'approach':'entrance'});
    a.camera={zoom:1.025+.08*q,x:-15*q,y:-3*q};
   }else if(kind==='whirlpool'){
+   const {x:cx,y:cy}=vortexMouth;
    if(p<.2){const u=ease(p/.2);Object.assign(a,{x:lerp(144,314,u),y:239,scale:1.27,vx:100,phase:'ledge'});}
-   else if(p<.58){const u=(p-.2)/.38;Object.assign(a,{x:lerp(314,650,ease(u)),y:239-Math.sin(u*Math.PI)*126+91*u,scale:lerp(1.27,.94,u),tilt:Math.sin(u*Math.PI)*.19,vx:0,phase:'jump'});}
-   else if(p<.85){const u=(p-.58)/.27,r=48*Math.sin(Math.PI*u)*(1-u);Object.assign(a,{x:650+Math.sin(u*TAU*1.1)*r,y:330+u*65,scale:lerp(.94,.29,ease(u)),tilt:.85*ease(u),vx:0,swim:true,phase:'descent'});}
-   else{const u=ease((p-.85)/.15);Object.assign(a,{x:650,y:lerp(395,436,u),scale:lerp(.29,.62,u),tilt:lerp(.85,.38,u),vx:40,swim:true,phase:'submerged'});}
+   else if(p<.58){const u=(p-.2)/.38;Object.assign(a,{x:lerp(314,cx,ease(u)),y:239-Math.sin(u*Math.PI)*126+(cy-239)*u,scale:lerp(1.27,.94,u),tilt:Math.sin(u*Math.PI)*.19,vx:0,phase:'jump'});}
+   else if(p<.85){const u=(p-.58)/.27,r=48*Math.sin(Math.PI*u)*(1-u);Object.assign(a,{x:cx+Math.sin(u*TAU*1.1)*r,y:cy+u*65,scale:lerp(.94,.29,ease(u)),tilt:.85*ease(u),vx:0,swim:true,phase:'descent'});}
+   else{const u=ease((p-.85)/.15);Object.assign(a,{x:cx,y:lerp(cy+65,460,u),scale:lerp(.29,.62,u),tilt:lerp(.85,.38,u),vx:40,swim:true,phase:'submerged'});}
    a.camera={zoom:1.025+.055*q,x:-7*q,y:-3*q};
   }else{
    const time=p*11;
@@ -209,9 +214,13 @@
  }
  function underwater(c,g,t,reduced,deep=false,rise=0){
   c.save();c.translate(0,rise);
-  if(!cover(c,'deep')){
-   const paintGame={...g,level:{...(g.level||{}),id:deep?181:151,underwater:true},endingOnLand:false,settings:{...g.settings,reducedMotion:reduced}};
-   if(!MM.UnderwaterRenderer?.drawBackground?.(c,paintGame,t))backdrop(c,'#176a87','#041729');
+  if(!cover(c,'submerged')){
+   backdrop(c,'#145875','#071b32');
+   for(let layer=0;layer<2;layer++)for(let i=0;i<7;i++){
+    const x=i*176-layer*80,y=180+layer*105+i%3*40,w=26+layer*15;
+    rect(c,x,y,w,H-y,layer?'#163b53':'#19506b');rect(c,x-8,y-8,w+16,18,layer?'#1c4861':'#205a74');
+   }
+   poly(c,[[0,440],[110,415],[230,463],[390,442],[540,482],[710,448],[840,410],[960,438],[960,540],[0,540]],'#123149','#0c2437',3);
   }c.restore();rect(c,0,0,W,H,deep?'#03182a44':'#135b7b20');
   if(rise>0){const top=c.createLinearGradient(0,0,0,rise+120);top.addColorStop(0,'#529ca9');top.addColorStop(1,'#07223500');rect(c,0,0,W,rise+120,top);}
   c.save();c.globalCompositeOperation='screen';const beam=c.createLinearGradient(470,0,405,H);beam.addColorStop(0,'#b5eced3b');beam.addColorStop(.7,'#88bebe0d');beam.addColorStop(1,'#88bebe00');poly(c,[[427,0],[550,0],[659,540],[260,540]],beam);c.restore();motes(c,t,reduced,true,.55,17);
@@ -219,7 +228,7 @@
  /* Spiral streamlines join a deep shaded throat. Foam travels down the wall,
   * with a real front lip that occludes the swimmer after entry. */
  function vortex(c,t,reduced,alpha=1){
-  const cx=650,cy=330,turn=reduced?.6:t*.9;c.save();c.globalAlpha*=alpha;
+  const {x:cx,y:cy}=vortexMouth,turn=reduced?.6:t*.9;c.save();c.globalAlpha*=alpha;
   const funnel=c.createRadialGradient(cx,cy+56,5,cx,cy,154);funnel.addColorStop(0,'#020d1bc9');funnel.addColorStop(.3,'#062c4380');funnel.addColorStop(.72,'#12516e1c');funnel.addColorStop(1,'#36a5bc00');ellipse(c,cx,cy+18,204,100,funnel);
   for(let b=0;b<4;b++){c.beginPath();for(let i=0;i<=108;i++){const q=i/108,a=turn+b*TAU/4+q*TAU*1.8,r=198*(1-q)+9,x=cx+Math.cos(a)*r,y=cy+Math.sin(a)*r*.4+q*q*62;i?c.lineTo(x,y):c.moveTo(x,y);}c.strokeStyle=b%2?'#88dce13d':'#4ca6c54d';c.lineWidth=b%2?1.8:3;c.lineCap='round';c.stroke();}
   for(let i=0;i<35;i++){const q=(i*.071+(reduced?0:t*.13))%1,a=i*2.399+turn+q*TAU,r=196*(1-q)+12,x=cx+Math.cos(a)*r,y=cy+Math.sin(a)*r*.4+q*q*62;c.save();c.globalAlpha*=Math.sin(q*Math.PI)*.65;c.translate(x,y);c.rotate(-Math.cos(a)*.3);ellipse(c,0,0,2+(1-q)*3.4,.6+(1-q)*.65,'#d0f5f2');c.restore();}
@@ -235,8 +244,8 @@
   c.save();camera(c,a);if(!cover(c,'whirlpool')){backdrop(c,'#223847','#154c61');poly(c,[[0,239],[130,230],[192,220],[340,239],[290,279],[0,347]],'#303d3e','#768582',1);}
   vortex(c,t,s.reducedMotion);if(p<.58)shadow(c,{...a,y:239},p<.2?.7:.2);
   if(submerge>0){c.save();c.globalAlpha=submerge;underwater(c,g,t,s.reducedMotion);c.restore();}
-  hunter(c,g,a,t);if(!s.reducedMotion)splash(c,650,336,(p-.55)/.19,1-submerge);
-  if(p>=.58&&submerge<1){c.save();c.globalAlpha=(1-submerge)*clamp((p-.58)/.08);c.beginPath();c.ellipse(650,350,90,38,0,.04,Math.PI*.96);c.strokeStyle='#b7ebe961';c.lineWidth=2;c.stroke();c.restore();}
+  hunter(c,g,a,t);if(!s.reducedMotion)splash(c,vortexMouth.x,vortexMouth.y+6,(p-.55)/.19,1-submerge);
+  if(p>=.58&&submerge<1){c.save();c.globalAlpha=(1-submerge)*clamp((p-.58)/.08);c.beginPath();c.ellipse(vortexMouth.x,vortexMouth.y+20,90,38,0,.04,Math.PI*.96);c.strokeStyle='#b7ebe961';c.lineWidth=2;c.stroke();c.restore();}
   if(p>.78)motes(c,t,s.reducedMotion,true,submerge,19);c.restore();
   title(c,'CỐT TRUYỆN IV · 151—200','Hải Vực Quên Lãng','Dòng xoáy mở đường xuống những miền ký ức dưới biển.');
  }
