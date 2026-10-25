@@ -10,6 +10,7 @@
   const flameTransitions = new WeakMap();
   const visualStates = new WeakMap();
   const facingStates = new WeakMap();
+  const knightStates = new WeakMap();
   const deityFrames = new WeakMap();
   let visualSeed = 0;
   // Each image is decoded once. Native drawings stay visible until its artwork
@@ -589,7 +590,6 @@
       {points:[[.02,.77],[.29,.77],[.30,1],[.01,1]],pivot:[.17,.78],angle:stride*.12,offset:[stride*.018,-Math.max(0,stride)*.035]},
       {points:[[.43,.77],[.70,.77],[.72,1],[.42,1]],pivot:[.55,.78],angle:-stride*.12,offset:[-stride*.018,-Math.max(0,-stride)*.035]}
     ];
-    if(key==='knight')return [{points:[[0,.25],[.30,.24],[.43,.49],[.25,.81],[0,.80]],pivot:[.43,.50],angle:Math.sin(pose.phase*.5)*.05}];
     return [];
   }
   function paintSpriteParts(c,image,source,destination,parts){
@@ -667,9 +667,12 @@
         -Math.max(0,stride*(left-right))*.028*leg];
   }
   function paintDeitySurface(c,image,frame,rect,pose,turnScale){
+    paintSpriteSurface(c,image,frame,rect,deityMeshU,deityMeshV,(u,v)=>deityVertex(u,v,pose,turnScale));
+  }
+  function paintSpriteSurface(c,image,frame,rect,columns,lines,vertex){
     const [x,y,w,h]=rect;
-    const rows=deityMeshV.map(v=>deityMeshU.map(u=>{
-      const [du,dv]=deityVertex(u,v,pose,turnScale);
+    const rows=lines.map(v=>columns.map(u=>{
+      const [du,dv]=vertex(u,v);
       return {source:[x+u*w,y+v*h],target:[x+du*w,y+dv*h]};
     }));
     const triangle=(a,b,d)=>{
@@ -702,6 +705,61 @@
       const a=rows[row][col],b=rows[row][col+1],d=rows[row+1][col],e=rows[row+1][col+1];
       triangle(a,b,d);triangle(b,e,d);
     }
+  }
+  const knightMeshU=[0,.18,.34,.49,.62,.73,.85,1];
+  const knightMeshV=[0,.2,.34,.48,.62,.75,.87,1];
+  function knightPose(e,t,pose){
+    let state=knightStates.get(e);
+    if(!state||t<state.time){
+      state={time:t,x:e.x,phase:pose.phase,move:0,swing:0,attackAt:-Infinity,skill:null,wasTell:false,combo:e.comboRemaining};
+      knightStates.set(e,state);
+    }
+    const dt=clamp(t-state.time,0,.1),distance=Math.abs(e.x-state.x);
+    // A portal is a relocation, not a walking step. Derive gait only from
+    // real travel, and keep its phase when an attack or pause stops the feet.
+    const speed=dt>0&&distance<60?distance/dt:0;
+    const targetMove=clamp(speed/115,0,1),blend=1-Math.exp(-dt*12);
+    const previousMove=state.move;
+    state.move+=(targetMove-state.move)*blend;
+    state.phase+=dt*(6.5+Math.min(speed/130,1)*2)*(previousMove+state.move)*.5;
+    if(dt>0){
+      if(state.wasTell&&e.abyssState!=='tell'&&['scythe','wave','combo'].includes(state.skill))state.attackAt=t;
+      if(e.abyssState==='combo'&&e.comboRemaining!==state.combo)state.attackAt=t;
+      const elapsed=t-state.attackAt;
+      const release=elapsed>=0&&elapsed<.42?Math.sin(elapsed/.42*Math.PI):0;
+      const prepare=e.abyssState==='tell'&&['scythe','wave','combo'].includes(e.abyssSkill)?smoothBand(0,1,e.abyssProgress||0):0;
+      state.swing+=(release*.65-prepare*.22-state.swing)*(1-Math.exp(-dt*18));
+      state.wasTell=e.abyssState==='tell';state.skill=e.abyssSkill;state.combo=e.comboRemaining;
+    }
+    state.time=t;state.x=e.x;
+    return {phase:state.phase,move:state.move,swing:state.swing,breath:Math.sin(t*2.3),
+      bob:(1-Math.cos(state.phase*2))*.55*state.move};
+  }
+  function knightVertex(u,v,pose){
+    const stride=Math.sin(pose.phase)*pose.move;
+    // Shared vertices join the hips, knees, feet and wing. Nothing is cut
+    // out of the source art, so a step cannot reveal a hole in the armour.
+    const lower=smoothBand(.7,.98,v);
+    const left=1-smoothBand(.34,.48,u),right=smoothBand(.52,.7,u)*(1-smoothBand(.85,.94,u));
+    let x=u+stride*.022*lower*(left-right);
+    let y=v-Math.max(0,stride)*.024*lower*left-Math.max(0,-stride)*.024*lower*right;
+    const wing=(1-smoothBand(.29,.47,u))*smoothBand(.28,.48,v)*(1-smoothBand(.76,.94,v));
+    x+=Math.sin(pose.phase*.55)*(.006+pose.move*.01)*wing;
+    y+=Math.sin(pose.phase*.55+.5)*.011*wing;
+    y-=pose.breath*.0025*(1-smoothBand(.75,1,v));
+    const head=smoothBand(.35,.45,u)*(1-smoothBand(.62,.69,u))*smoothBand(.28,.38,v)*(1-smoothBand(.51,.6,v));
+    y+=Math.sin(pose.phase+.4)*pose.move*.004*head;
+    // Rotate the existing scythe and wrist around the hand, with a soft
+    // shoulder blend; exclude the front foot beside the bottom of the shaft.
+    const shaft=1-smoothBand(.04,.12,Math.abs(u-(.67+v*.25)));
+    const blade=smoothBand(.51,.67,u)*(1-smoothBand(.3,.45,v));
+    const weapon=Math.max(shaft,blade),angle=pose.swing*.28+Math.sin(pose.phase+.8)*pose.move*.016+pose.breath*.006;
+    const dx=u-.77,dy=v-.65,cs=Math.cos(angle),sn=Math.sin(angle);
+    x+=(dx*cs-dy*sn-dx)*weapon;y+=(dx*sn+dy*cs-dy)*weapon;
+    return [x,y];
+  }
+  function drawKnightSprite(c,image,source,destination,pose){
+    paintSpriteSurface(c,image,source,destination,knightMeshU,knightMeshV,(u,v)=>knightVertex(u,v,pose));
   }
   function drawDeitySprite(c,image,source,destination,effects,e,pose){
     const [sx,sy,sw,sh]=source,[x,y,w,h]=destination;
@@ -760,9 +818,11 @@
     const effects=motion(g)&&!(e.petrifiedTime>0);
     const air=type==='abyssCrow'||type==='fossilRoc'&&key==='roc';
     const pose=effects?visualPose(e,t,air):{phase:0,move:0,tilt:0,bob:0};
-    const bob=effects&&e.abyssState!=='corpse'?pose.bob:0;
+    const knight=key==='knight'&&effects&&e.abyssState!=='corpse'?knightPose(e,t,pose):null;
+    const bob=effects&&e.abyssState!=='corpse'?(knight?knight.bob:pose.bob):0;
     let tilt=effects&&air?Math.sin(pose.phase*.74)*.014:pose.tilt;
     if(key==='deity')tilt*=.25;
+    if(knight)tilt+=Math.sin(knight.phase)*knight.move*.012+knight.swing*.018;
     c.save();c.translate(e.x,e.y-bob);c.scale(effects?pose.facing:(e.dir||1),1);c.rotate(tilt);
     if(e.flowerIllusion)c.globalAlpha*=.68;
     if(e.emotionProjection)c.globalAlpha*=e.emotion==='rage'?.82:.38;
@@ -785,6 +845,7 @@
     }
     const parts=effects&&e.abyssState!=='corpse'?spriteParts(key,pose):[];
     if(key==='deity')drawDeitySprite(c,image,[sx,sy,sw,sh],[-width*pivot,-height,width,height],effects,e,pose);
+    else if(knight)drawKnightSprite(c,image,[sx,sy,sw,sh],[-width*pivot,-height,width,height],knight);
     else if(parts.length)paintSpriteParts(c,image,[sx,sy,sw,sh],[-width*pivot,-height,width,height],parts);
     else c.drawImage(image,sx,sy,sw,sh,-width*pivot,-height,width,height);
     if(key==='minotaur'&&e.minotaurRage&&type==='minotaurLord')drawMinotaurRage(c,e,t,width,height,pivot,effects);
