@@ -100,7 +100,7 @@ test('atlas page selection shows exactly one story and restores either original 
 test('page includes the original two-island atlas, separate Abyss page and dependency order',()=>{
  const html=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8');
  assert.match(html,/atlas-west" data-atlas-page="chapter1"/);assert.match(html,/atlas-east" data-atlas-page="chapter2"/);assert.match(html,/atlas-abyss" data-atlas-page="chapter3"/);
- assert.equal((html.match(/data-boss-marker=/g)||[]).length,20);assert.equal((html.match(/data-story-choice=/g)||[]).length,4);
+ assert.equal((html.match(/data-boss-marker=/g)||[]).length,25);assert.equal((html.match(/data-story-choice=/g)||[]).length,5);
  for(const id of [110,120,130,140,150])assert.ok(html.includes('id="atlas-boss-'+id+'"'));
  assert.ok(html.indexOf('src="js/abyss-config.js')<html.indexOf('src="js/campaign.js'));
  assert.ok(html.indexOf('src="js/abyss-combat.js')<html.indexOf('src="js/abyss-renderer.js'));

@@ -2,8 +2,8 @@
 (function (root) {
   'use strict';
   const MM = root.MM = root.MM || {};
-  const milestones = Object.freeze([10,20,30,40,50,60,70,80,90,100,110,120,130,140,150,160,170,180,190]);
-  const weaponLevels = Object.freeze({gun:0,bones:10,club:60,bow:90,spear:90,axes:100,hammer:120,scythe:140,lightningOrb:170});
+  const milestones = Object.freeze([10,20,30,40,50,60,70,80,90,100,110,120,130,140,150,160,170,180,190,200,210,220,230,240]);
+  const weaponLevels = Object.freeze({gun:0,bones:10,club:60,bow:90,spear:90,axes:100,hammer:120,scythe:140,lightningOrb:170,easterEgg:230,dreamBook:240});
   const record = value => value && typeof value === 'object' && !Array.isArray(value);
   const milestone = value => Number.isInteger(value) && milestones.includes(value);
 

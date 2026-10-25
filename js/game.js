@@ -92,7 +92,7 @@
       this.tuning = Campaign.tuning(this.settings.difficulty); this.player = this.makePlayer();
       this.sound = new Sound(this); this.checkpoint = null; this.resultAction = null;
       MM.WeaponManager?.init(this);MM.SkillManager?.init(this);MM.InputManager?.init(this);
-      MM.UnderwaterMode?.reset(this);
+      MM.UnderwaterMode?.reset(this);MM.IslandCombat?.reset(this);MM.ResurrectionRewards?.reset(this);
       if(options.newRun===true)this.persist();
       if (!this.headless) {
         this.canvas = document.getElementById('canvas'); this.ctx = this.canvas.getContext('2d');
@@ -117,14 +117,14 @@
     }
     persist() { if(this.progression)this.save.progression=this.progression;if(this.testMode)return;try { this.storage?.setItem(SAVE_KEY,JSON.stringify(this.save)); } catch { /* Game remains playable without localStorage. */ } }
     start(id = this.save.resume, options = {}) {
-      const crossing={50:'forest',100:'cave',150:'whirlpool'}[this.level.id];
+      const crossing={50:'forest',100:'cave',150:'whirlpool',200:'island'}[this.level.id];
       if(!options.skipCinematic&&options.carry&&this.screen==='won'&&id===this.level.id+1&&crossing&&this.canvas&&MM.ChapterTransition){
         MM.ChapterTransition.begin(this,crossing,()=>this.start(id,{...options,skipCinematic:true}));return;
       }
       MM.ChapterTransition?.clear(this);
       this.cinematic=null;this.endingOnLand=false;if(this.ui?.['cinematic-skip'])this.ui['cinematic-skip'].hidden=true;
       MM.Tutorial?.cancel(this);
-      MM.AbyssCombat?.reset(this);
+      MM.AbyssCombat?.reset(this);MM.IslandCombat?.reset(this);MM.ResurrectionRewards?.reset(this);
       const {carry = false, retry = false} = options;
       const oldHealth = this.player.health, oldAmmo=this.player.ammo, wasAbyss=this.level.id>=101&&this.level.id<=150;
       const wasWater=MM.UnderwaterMode?.active(this),oldReserve=this.underwater?.reserve;
@@ -151,7 +151,7 @@
       this.levelKills = 0; this.regularSpawned = 0; this.spawnTimer = 2.2; this.levelTime = 0; this.restTimer = 0;
       this.bossSpawned = false; this.bossDefeated = false; this.shake = 0; this.flash = 0;
       this.screen = 'playing'; this.clearInputs(); this.sound.unlock();
-      MM.AbyssCombat?.reset(this);this.lastGravityDirection=1;
+      MM.AbyssCombat?.reset(this);MM.IslandCombat?.reset(this);MM.ResurrectionRewards?.reset(this);this.lastGravityDirection=1;
       MM.UnderwaterMode?.reset(this,{reserve:waterReserve});
       this.save.resume = this.level.id; this.persist();
       if (!this.headless) {
@@ -170,7 +170,7 @@
       this.cinematic=null;this.endingOnLand=false;if(this.ui?.['cinematic-skip'])this.ui['cinematic-skip'].hidden=true;
       MM.UnderwaterMode?.stop(this);
       MM.Tutorial?.cancel(this);
-      MM.AbyssCombat?.reset(this);
+      MM.AbyssCombat?.reset(this);MM.IslandCombat?.reset(this);MM.ResurrectionRewards?.reset(this);
       MM.InputManager?.close(this,false);
       this.save.best = Math.max(this.save.best,this.score); this.persist();
       this.screen = 'home'; this.clearInputs(); this.enemies = []; this.bullets = []; this.particles = []; this.pickups = []; this.floats = [];
@@ -203,7 +203,8 @@
       if (!this.headless && document.querySelector('dialog[open]')) return;
       if (['Escape','KeyP'].includes(code)) { event.preventDefault?.(); if (!event.repeat) this.togglePause(); return; }
       if (this.screen !== 'playing') return;
-      if(code==='KeyR'){event.preventDefault?.();if(!event.repeat)MM.MerfolkTransformation?.activate(this);return;}
+      if(code==='KeyR'){event.preventDefault?.();if(!event.repeat){if(this.level.island)MM.ResurrectionRewards?.activate(this);else MM.MerfolkTransformation?.activate(this);}return;}
+      if(code==='KeyE'){event.preventDefault?.();if(!event.repeat)MM.IslandCombat?.interact(this);return;}
       if (['ArrowLeft','ArrowRight','ArrowUp','KeyW','KeyA','KeyD','KeyJ','KeyL','Space'].includes(code)) event.preventDefault?.();
       if(!event.repeat&&!this.keys.has(code)&&['ArrowLeft','ArrowRight'].includes(code))this.moveTap(code==='ArrowLeft'?-1:1,{source:'keyboard',timeStamp:event.timeStamp});
       this.keys.add(code); this.sound.unlock();
@@ -304,6 +305,7 @@
       p.rollTime=p.rollDuration=.32;p.rollCooldown=.9;p.rollProgress=0;p.rollDir=dir<0?-1:1;p.dir=p.rollDir;p.vx=p.rollDir*850;p.jumpBuffer=0;
       this.burst(p.x,p.y-22,'#e5c39c',12);return true;
     }
+    maxShields() { return MM.ResurrectionRewards?.shieldCap(this)||3; }
     shieldProgress() {
       const abyss=this.level.id>=101&&this.level.id<=150,goal=abyss?5:10;
       return {abyss,goal,count:(abyss?this.abyssShieldKills||0:this.totalKills)%goal};
@@ -319,17 +321,17 @@
       if(!boss)return null;
       const special=this.bossShieldRule(boss),goal=special==='kong'?5:10;
       const total=special==='kong'?boss.highAimShots||0:special==='knight'?boss.knightHits||0:special==='chimera'?boss.encounter.damage||0:this.abyssBossHits||0;
-      return {count:total%goal,goal,special,unit:special==='chimera'?'máu':special==='kong'?'phát tầm cao':'phát trúng',full:this.shieldCount>=3};
+      return {count:total%goal,goal,special,unit:special==='chimera'?'máu':special==='kong'?'phát tầm cao':'phát trúng',full:this.shieldCount>=this.maxShields()};
     }
     recordBossHit(boss,attack={},special=this.bossShieldRule(boss),actualDamage=attack.damageReceipt?.damage) {
       // Keep the authored five-shot Kong and damage-based Chimera rewards,
       // and the knight's existing ten-hit reward, without granting twice.
       if(!boss?.boss||special||attack.melee||attack.rollSlash||attack.reflected||attack.reflection)return false;
-      if(!['normal','highAim','sniper','gun','bones','bow','spear','scytheWave','lightningOrb'].includes(attack.kind||attack.weaponId)||this.abyssBossProjectiles.has(attack))return false;
+      if(!['normal','highAim','sniper','gun','bones','bow','spear','scytheWave','lightningOrb','blessing','eggShot','cloverShot','fireball','meteor'].includes(attack.kind||attack.weaponId)||this.abyssBossProjectiles.has(attack))return false;
       if(Number.isFinite(actualDamage)&&actualDamage<=0)return false;
       this.abyssBossProjectiles.add(attack);this.abyssBossHits++;
       if(this.abyssBossHits%10===0){
-        if(this.shieldCount<3){this.shieldCount++;this.toast('✦ +1 khiên · 10 phát bắn trúng boss');this.sound.play('shield');this.floating(this.player.x,this.player.y-this.player.h-12,'+1 KHIÊN','#b7e7d4');}
+        if(this.shieldCount<this.maxShields()){this.shieldCount++;this.toast('✦ +1 khiên · 10 phát bắn trúng boss');this.sound.play('shield');this.floating(this.player.x,this.player.y-this.player.h-12,'+1 KHIÊN','#b7e7d4');}
         else this.toast('Kho khiên đã đầy · dùng Space hoặc vuốt xuống');
       }
       this.updateUI();return true;
@@ -447,7 +449,7 @@
       MM.MiddleSeaEnemies?.setup(this,enemy);MM.Boss170?.setup(this,enemy);
       MM.PredatorSeaEnemies?.setup(this,enemy);MM.Boss180?.setup(this,enemy);
       MM.DeepSeaEnemies?.setup(this,enemy);MM.Boss190?.setup(this,enemy);
-      MM.FinalSeaEnemies?.setup(this,enemy);MM.Boss200?.setup(this,enemy);return enemy;
+      MM.FinalSeaEnemies?.setup(this,enemy);MM.Boss200?.setup(this,enemy);MM.IslandCombat?.setup(this,enemy);return enemy;
     }
     configureAbility(enemy, state) {
       if(state==='bat'){this.morphToBat(enemy);return enemy;}
@@ -508,6 +510,7 @@
       this.burst(x,y,'#dfd5b0',10);enemy.abilityState='ground';enemy.tell=false;enemy.charging=false;enemy.abilityTimer=6;
     }
     updateEnemy(e,dt) {
+      if(MM.IslandCombat?.updateEnemy(this,e,dt))return;
       if(MM.Boss200?.updateEnemy(this,e,dt)||MM.FinalSeaEnemies?.updateEnemy(this,e,dt)||MM.DeepSeaEnemies?.updateEnemy(this,e,dt)||MM.Boss190?.updateEnemy(this,e,dt))return;
       if(MM.PredatorSeaEnemies?.updateEnemy(this,e,dt)||MM.Boss180?.updateEnemy(this,e,dt))return;
       if(MM.SkillManager?.frozen(e))return;
@@ -583,10 +586,11 @@
     }
     killEnemy(enemy) {
       if (this.screen !== 'playing' || enemy.dead || enemy.spiderling) return;
+      if(MM.IslandCombat?.beforeKill?.(this,enemy)===false)return;
       if(MM.Boss160?.beforeKill?.(this,enemy)===false||MM.Boss170?.beforeKill?.(this,enemy)===false||MM.MiddleSeaEnemies?.beforeKill?.(this,enemy)===false||MM.Boss180?.beforeKill?.(this,enemy)===false||MM.Boss190?.beforeKill?.(this,enemy)===false||MM.Boss200?.beforeKill?.(this,enemy)===false||MM.FinalSeaEnemies?.beforeKill?.(this,enemy)===false)return;
       if(MM.AbyssCombat?.beforeKill?.(this,enemy)===false)return;
       if(enemy.archetype==='kraken')this.endingBoss={...enemy,dead:false,health:1,phase:'active',krakenState:'defeated',krakenStone:false};
-      enemy.dead = true; enemy.health = 0;MM.AbyssCombat?.onKill(this,enemy);MM.Boss160?.onKill(this,enemy);MM.Boss170?.onKill(this,enemy);MM.Boss180?.onKill(this,enemy);MM.Boss190?.onKill(this,enemy);MM.Boss200?.onKill(this,enemy);
+      enemy.dead = true; enemy.health = 0;MM.AbyssCombat?.onKill(this,enemy);MM.Boss160?.onKill(this,enemy);MM.Boss170?.onKill(this,enemy);MM.Boss180?.onKill(this,enemy);MM.Boss190?.onKill(this,enemy);MM.Boss200?.onKill(this,enemy);MM.IslandCombat?.onKill(this,enemy);
       this.totalKills++; this.score += enemy.score || 100;
       if(enemy.archetype==='golem')MM.GolemCombat?.cleanup(this,enemy);
       if(enemy.archetype==='werewolf')MM.WolfCombat?.cleanup(this,enemy);
@@ -606,7 +610,7 @@
       // The Abyss has its own ordinary-enemy counter. Boss kills and phase
       // changes cannot complete a five-kill reward or double-award at ten.
       if (shieldProgress.abyss?regularKill&&this.abyssShieldKills%5===0:this.totalKills%10===0) {
-        if (this.shieldCount < 3) { this.shieldCount++; this.toast('✦ +1 khiên · Space hoặc vuốt xuống'); this.sound.play('shield'); }
+        if (this.shieldCount < this.maxShields()) { this.shieldCount++; this.toast('✦ +1 khiên · Space hoặc vuốt xuống'); this.sound.play('shield'); }
         else this.toast('Kho khiên đã đầy · dùng Space hoặc vuốt xuống');
       }
       // Deterministic assistance avoids unlucky stretches without healing.
@@ -615,6 +619,7 @@
       this.save.best = Math.max(this.save.best,this.score); this.updateUI(); this.checkCompletion();
     }
     hurt(enemy) {
+      if(MM.ResurrectionRewards?.protectsHP(this,enemy)){this.burst(this.player.x,this.player.y-25,'#8ce4dc',5,'ring');return;}
       const p = this.player; if ((p.invulnerable > 0 && !enemy.forceHit) || p.rollTime>0 || this.screen !== 'playing') return;
       const immortal=p.immortalTime>0;
       if(enemy.phantomStrike){
@@ -640,10 +645,10 @@
     applyCombatEffect(spec={}) {
       const p=this.player;
       if(this.screen!=='playing'||p.rollTime>0||(p.invulnerable>0&&!spec.forceHit))return false;
-      const immortal=p.immortalTime>0;
+      const immortal=p.immortalTime>0,ward=MM.ResurrectionRewards?.protectsHP(this,spec)===true;
       const rawDamage=Number.isFinite(spec.damage)?spec.damage:0;
-      const damage=immortal||MM.MerfolkTransformation?.protectsHP(this,spec)?0:spec.exactDamage?Math.max(0,rawDamage):clamp(Math.trunc(rawDamage),0,3);
-      if(p.shieldTime>0&&p.shieldHits>0){
+      const damage=immortal||ward||MM.MerfolkTransformation?.protectsHP(this,spec)?0:spec.exactDamage?Math.max(0,rawDamage):clamp(Math.trunc(rawDamage),0,3);
+      if(p.shieldTime>0&&p.shieldHits>0&&!ward){
         p.shieldHits--;if(p.shieldHits===0)p.shieldTime=0;p.invulnerable=.45;
         this.burst(p.x,p.y-28,'#91e3d1',10,'ring');this.sound.play('shield');
         const pierced=immortal?0:clamp(Number(spec.pierceShield)||0,0,3);
@@ -676,7 +681,7 @@
     drainTarget(owner) {
       if(this.screen!=='playing'||owner.dead||owner.health<=0)return;
       const p=this.player;
-      if(p.immortalTime>0){this.burst(p.x,p.y-28,'#e4d18f',8,'ring');return;}
+      if(p.immortalTime>0||MM.ResurrectionRewards?.protectsHP(this,{owner})){this.burst(p.x,p.y-28,'#e4d18f',8,'ring');return;}
       if(p.shieldTime>0&&p.shieldHits>0){
         p.shieldHits--;if(p.shieldHits===0)p.shieldTime=0;
         this.burst(p.x,p.y-28,'#91e3d1',10,'ring');this.floating(p.x,p.y-p.h-12,'KHIÊN CHẶN HÚT MÁU','#91e3d1');this.sound.play('shield');
@@ -723,6 +728,7 @@
       this.updatePlayerEffects(dt);if(this.screen!=='playing')return;
       MM.UnderwaterMode?.update(this,dt);if(this.screen!=='playing')return;
       MM.SkillManager?.update(this,dt);
+      MM.ResurrectionRewards?.update(this,dt);if(this.screen!=='playing')return;
       MM.AbyssCombat?.update(this,dt);if(this.screen!=='playing')return;
       let move = (this.keys.has('ArrowRight')?1:0)-(this.keys.has('ArrowLeft')?1:0);
       let vertical=(this.keys.has('KeyS')?1:0)-(this.keys.has('KeyW')?1:0);
@@ -742,10 +748,13 @@
       if(movingWithPad)move=clamp(padMove,-1,1);
       move*=MM.AbyssCombat?.inputDirection(this)||1;
       if(p.stunTime>0||p.petrifyTime>0||p.swallowedTime>0){move=0;vertical=0;fire=0;p.vx=0;p.jumpBuffer=0;}
+      const islandModifiers=MM.IslandCombat?.playerModifiers(this)||{speed:1};
+      if(islandModifiers.forceMove&&p.stunTime<=0&&p.petrifyTime<=0)move=islandModifiers.forceMove;
+      if(this.resurrection?.dash){move=0;fire=0;}
       this.swimVertical=vertical;
       if(MM.UnderwaterMode?.active(this))MM.UnderwaterMode.swim(this,move,dt);
       else{
-      const speed=285, acceleration=2100;
+      const speed=285*(MM.ResurrectionRewards?.movementMultiplier(this)||1)*(islandModifiers.speed||1)*(islandModifiers.forceMove?islandModifiers.fearSpeed/285:1), acceleration=2100;
       const desired=move*speed; p.vx += clamp(desired-p.vx,-acceleration*dt,acceleration*dt); if (move) p.dir=move;
       if(p.rollTime>0){p.vx=p.rollDir*850;p.dir=p.rollDir;fire=0;}
       if(this.rollSlash?.time>0){p.vx=this.rollSlash.dir*850;p.dir=this.rollSlash.dir;fire=0;p.jumpBuffer=0;}
@@ -805,6 +814,7 @@
       if(this.screen==='playing')MM.Boss190?.update?.(this,dt);
       if(this.screen==='playing')MM.FinalSeaEnemies?.update(this,dt);
       if(this.screen==='playing')MM.Boss200?.update(this,dt);
+      if(this.screen==='playing')MM.IslandCombat?.update(this,dt);
       if(this.player.weaponMode!=='normal')this.updateAmmoUI();
       if(this.screen!=='playing')return;
       for(const shot of this.enemyShots){
@@ -848,14 +858,16 @@
       this.screen=won?'won':'lost';this.clearInputs();this.save.best=Math.max(this.save.best,this.score);
       if(won){if(!this.save.completed.includes(this.level.id))this.save.completed.push(this.level.id);this.save.resume=this.level.id<Campaign.levels.length?this.level.id+1:this.level.id;this.sound.play('win');}
       this.persist();
-      MM.AbyssCombat?.reset(this);
+      MM.AbyssCombat?.reset(this);MM.IslandCombat?.reset(this);MM.ResurrectionRewards?.reset(this);
       MM.UnderwaterMode?.stop(this);
       if(won&&this.level.id===200&&this.canvas&&MM.ChapterTransition){
         MM.ChapterTransition.begin(this,'ending',()=>{
           this.endingOnLand=true;this.player.swimming=false;this.player.merfolkTime=0;this.screen='won';
+          if(MM.IslandConfig&&Campaign.levels.length>=201){MM.ChapterTransition.begin(this,'island',()=>this.start(201,{carry:true,skipCinematic:true}));return;}
           if(!this.headless){this.showResult();this.buildMap();}this.updateUI();
         });return;
       }
+      if(won&&this.level.id===250&&this.canvas&&MM.ChapterTransition){MM.ChapterTransition.begin(this,'islandVictory',()=>{this.screen='won';if(!this.headless){this.showResult();this.buildMap();}this.updateUI();});return;}
       if(!this.headless){this.ui['stage-banner'].hidden=true;this.ui['toast'].hidden=true;this.showResult();this.buildMap();}
       this.updateUI();
     }
@@ -869,7 +881,7 @@
       if(attack.damageReceipt&&(damage<=0||Number.isFinite(attack.damageBudget)&&attack.damageBudget<=0))return false;
       if(MM.BossCombat?.hit(this,e)===false){this.burst(e.x,e.y-e.h*.5,'#a7edab',4);return false;}
       let handled=false;
-      for(const combat of [MM.AbyssCombat,MM.WolfCombat,MM.KongCombat,MM.DragonCombat,MM.MythicCombat,MM.Boss160,MM.MiddleSeaEnemies,MM.Boss170,MM.Boss180,MM.DeepSeaEnemies,MM.Boss190,MM.FinalSeaEnemies,MM.Boss200]){
+      for(const combat of [MM.AbyssCombat,MM.WolfCombat,MM.KongCombat,MM.DragonCombat,MM.MythicCombat,MM.Boss160,MM.MiddleSeaEnemies,MM.Boss170,MM.Boss180,MM.DeepSeaEnemies,MM.Boss190,MM.FinalSeaEnemies,MM.Boss200,MM.IslandCombat]){
         const result=combat?.hit(this,e,damage,attack);
         if(result===false){this.burst(e.x,e.y-e.h*.55,'#d6c7ed',5);return false;}
         if(result===true)handled=true;
@@ -939,7 +951,7 @@
       this.updateAmmoUI();
       const shieldCharge=this.shieldProgress(),shieldEnemy=shieldCharge.abyss?'quái thường':'địch';
       this.ui['shield-count'].textContent=this.shieldCount;this.ui['shield-button'].classList.toggle('ready',this.shieldCount>0);this.ui['charge-label'].textContent=this.shieldCount>0?`${this.shieldCount} khiên sẵn sàng · ${shieldCharge.count}/${shieldCharge.goal} ${shieldEnemy} tích khiên`:`${shieldCharge.count}/${shieldCharge.goal} ${shieldEnemy} · Hạ ${shieldCharge.goal} ${shieldEnemy} để nhận khiên`;
-      if(hudBossCharge)this.ui['charge-label'].textContent+=` · Boss ${hudBossCharge.count}/${hudBossCharge.goal} ${hudBossCharge.unit} · ${hudBossCharge.full?'Kho khiên đầy (3/3)':'+1 khiên'}`;
+      if(hudBossCharge)this.ui['charge-label'].textContent+=` · Boss ${hudBossCharge.count}/${hudBossCharge.goal} ${hudBossCharge.unit} · ${hudBossCharge.full?'Kho khiên đầy ('+this.maxShields()+'/'+this.maxShields()+')':'+1 khiên'}`;
       this.ui['pad-shield-count'].textContent=this.shieldCount;
       document.querySelector('[data-control="shield"]').classList.toggle('ready',this.shieldCount>0);
       this.ui['fullscreen-button'].disabled=!['home','playing'].includes(this.screen)&&!document.fullscreenElement;

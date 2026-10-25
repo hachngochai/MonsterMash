@@ -61,7 +61,7 @@ test('released story endings carry the run forward and the first ocean chapter r
  g.start(170);g.screen='won';MM.StoryUI.result(g);assert.equal(g.ui['result-title'].textContent,'Keep playing');
  g.start(180);g.screen='won';MM.StoryUI.result(g);assert.equal(g.ui['result-title'].textContent,'Keep playing');
  g.start(190);g.screen='won';MM.StoryUI.result(g);assert.equal(g.ui['result-title'].textContent,'Keep playing');
- g.start(200);g.screen='won';MM.StoryUI.result(g);assert.equal(g.ui['result-description'].textContent,MM.Story.get(4).ending);assert.equal(g.ui['result-kicker'].textContent,'HOÀN THÀNH HẢI VỰC — MAP 200/200');g.resultAction();assert.equal(g.screen,'home');
+ g.start(200);g.screen='won';MM.StoryUI.result(g);assert.equal(g.ui['result-description'].textContent,MM.Story.get(4).ending);assert.equal(g.ui['result-kicker'].textContent,'HOÀN THÀNH HẢI VỰC — MÀN 151–200');g.resultAction();assert.equal(g.screen,'home');
 });
 test('new runs remain playable when browser storage is denied',()=>{
  const MM=load(),storage={getItem(){throw new Error('private');},setItem(){throw new Error('private');}};
@@ -130,6 +130,6 @@ test('ocean page follows the third story through swipe and includes the150→151
  assert.deepEqual(plain(S.crossingRoutes.at(-1)),{from:150,entrance:151,to:160,outStory:3,inStory:4,outPath:'M460 315C520 380 840 385 925 300',inPath:'M70 155C95 120 110 120 125 130Q180 105 295 195'});
  const html=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8');
  assert.match(html,/id="atlas-ocean-dots"/);assert.match(html,/data-atlas-region="ocean"/);assert.match(html,/data-route-from="150" data-route-entry="151" data-route-to="160"/);
- assert.equal((html.match(/data-story-choice=/g)||[]).length,4);assert.equal((html.match(/data-boss-marker=/g)||[]).length,20);
+ assert.equal((html.match(/data-story-choice=/g)||[]).length,5);assert.equal((html.match(/data-boss-marker=/g)||[]).length,25);
  for(const id of [190,200])assert.doesNotMatch(html,new RegExp('id="atlas-boss-'+id+'"[^>]+disabled'));
 });

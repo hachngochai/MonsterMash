@@ -1,8 +1,8 @@
 /* Translate physical bindings before the shared tap/hold and weapon input rules. */
 (function(root){
  'use strict';const MM=root.MM=root.MM||{};
- const defaults={left:'ArrowLeft',right:'ArrowRight',jump:'ArrowUp',shootLeft:'KeyA',shootRight:'KeyD',shield:'Space',weapon:'KeyF',aimHigh:'KeyW',aimGround:'KeyS',pause:'KeyP',scytheSwap:'KeyG',merfolk:'KeyR'};
- const names={left:'Đi trái',right:'Đi phải',jump:'Nhảy / cấp oxy dưới biển',shootLeft:'Bắn trái',shootRight:'Bắn phải',shield:'Khiên / bất tử',weapon:'Đổi / giữ chọn vũ khí',aimHigh:'Bắn cao / bơi lên',aimGround:'Bắn mặt đất / bơi xuống',pause:'Tạm dừng',scytheSwap:'Cổ Điểu · Hoán đổi với quái thường',merfolk:'Hóa Ngư Nhân · một lần mỗi màn'};
+ const defaults={left:'ArrowLeft',right:'ArrowRight',jump:'ArrowUp',shootLeft:'KeyA',shootRight:'KeyD',shield:'Space',weapon:'KeyF',aimHigh:'KeyW',aimGround:'KeyS',pause:'KeyP',scytheSwap:'KeyG',merfolk:'KeyR',interact:'KeyE'};
+ const names={left:'Đi trái',right:'Đi phải',jump:'Nhảy / cấp oxy dưới biển',shootLeft:'Bắn trái',shootRight:'Bắn phải',shield:'Khiên / bất tử',weapon:'Đổi / giữ chọn vũ khí',aimHigh:'Bắn cao / bơi lên',aimGround:'Bắn mặt đất / bơi xuống',pause:'Tạm dừng',scytheSwap:'Cổ Điểu · Hoán đổi với quái thường',merfolk:'Ngư Nhân / Tiểu Moai theo khu vực',interact:'Kích hoạt bệ phong ấn'};
  const valid=code=>typeof code==='string'&&/^(Key[A-Z]|Digit[0-9]|Numpad[0-9]|Arrow(Left|Right|Up|Down)|Space|ShiftLeft|ShiftRight|BracketLeft|BracketRight|Semicolon|Quote|Comma|Period|Slash|Backslash|Minus|Equal|Backquote)$/.test(code);
  const label=code=>({ArrowLeft:'←',ArrowRight:'→',ArrowUp:'↑',ArrowDown:'↓',Space:'Space',ShiftLeft:'Shift trái',ShiftRight:'Shift phải',BracketLeft:'[',BracketRight:']',Semicolon:';',Quote:"'",Comma:',',Period:'.',Slash:'/',Backslash:'\\',Minus:'−',Equal:'=',Backquote:'`'}[code]||code.replace(/^Key|^Digit/,'').replace(/^Numpad/,'Num '));
  function swap(map,action,code){const other=Object.keys(defaults).find(key=>key!==action&&map[key]===code),old=map[action];map[action]=code;if(other)map[other]=old;return other;}

@@ -4,7 +4,7 @@ function fixture(){
  const element=()=>({children:[],textContent:'',dataset:{},append(...nodes){this.children.push(...nodes);},replaceChildren(...nodes){this.children=nodes;},querySelectorAll(){return [];},open:false,showModal(){this.open=true;}});
  const document={createElement:element,createDocumentFragment:element,getElementById:()=>null};
  const context=vm.createContext({document});
- for(const name of ['abyss-config','underwater-config','middle-sea-config','predator-sea-config','deep-sea-config','final-sea-config','campaign','save-manager','tutorial','game'])vm.runInContext(fs.readFileSync(path.join(__dirname,'../js',name+'.js'),'utf8'),context);
+ for(const name of ['abyss-config','underwater-config','middle-sea-config','predator-sea-config','deep-sea-config','final-sea-config','island-config','campaign','save-manager','tutorial','game'])vm.runInContext(fs.readFileSync(path.join(__dirname,'../js',name+'.js'),'utf8'),context);
  let stored=JSON.stringify({resume:1,completed:[],progression:{version:1,rewards:[],equipped:'gun'}}),writes=0;
  const storage={getItem:()=>stored,setItem(_key,value){stored=value;writes++;}};
  const MM=context.MM,g=new MM.Game({headless:true,storage});
@@ -12,14 +12,14 @@ function fixture(){
  g.ui=Object.fromEntries(['tutorial-dialog','tutorial-kicker','tutorial-title','tutorial-content','tutorial-controls','tutorial-begin','boss-guide-sections'].map(id=>[id,element()]));
  return {MM,g,storage,read:()=>JSON.parse(stored),writes:()=>writes,element};
 }
-test('twenty guides cover 1–200 with the exact chapter starts and appropriate boss',()=>{
+test('twenty-five guides cover 1–250 with the exact chapter starts and appropriate boss',()=>{
  const {MM}=fixture(),T=MM.Tutorial;
- assert.equal(T.guides.length,20);
- for(let level=1;level<=200;level++){const guide=T.forLevel(level);assert.equal(guide.start,Math.floor((level-1)/10)*10+1);assert.equal(guide.end,guide.start+9);assert.ok(guide.learn.length&&guide.fight.length&&guide.reward);assert.ok(guide.boss.includes(String(guide.end)));}
- assert.deepEqual(Array.from(T.normalizeSeen([1,1,11,12,'21',141,151,161,171,181,191,201])),[1,11,141,151,161,171,181,191]);
+ assert.equal(T.guides.length,25);
+ for(let level=1;level<=250;level++){const guide=T.forLevel(level);assert.equal(guide.start,Math.floor((level-1)/10)*10+1);assert.equal(guide.end,guide.start+9);assert.ok(guide.learn.length&&guide.fight.length&&guide.reward);assert.ok(guide.boss.includes(String(guide.end)));}
+ assert.deepEqual(Array.from(T.normalizeSeen([1,1,11,12,'21',141,151,161,171,181,191,201])),[1,11,141,151,161,171,181,191,201]);
 });
-test('briefings open at 1,11,…191, freeze real combat and mark only the acknowledged region',()=>{
- for(let level=1;level<=191;level+=10){
+test('briefings open at 1,11,…241, freeze real combat and mark only the acknowledged region',()=>{
+ for(let level=1;level<=241;level+=10){
   const {MM,g,read}=fixture();g.start(level);g.headless=false;
   assert.equal(MM.Tutorial.onStart(g),true);assert.equal(g.screen,'briefing');
   const time=g.levelTime,spawn=g.spawnTimer,health=g.player.health;
@@ -54,7 +54,7 @@ test('the ocean briefing explains oxygen instead of jumping and keeps Abyss bonu
  assert.equal(guide.learn.some(line=>line.startsWith('Trong màn 101–150')),false);
  assert.equal(MM.Tutorial.forLevel(141).learn.some(line=>line.startsWith('Trong màn 101–150')),true);
  g.start(151);g.headless=false;assert.equal(MM.Tutorial.onStart(g),true);
- assert.equal(g.ui['tutorial-kicker'].textContent,'CHẶNG 16 / 20 · MÀN 151–160');
+ assert.equal(g.ui['tutorial-kicker'].textContent,'CHẶNG 16 / 25 · MÀN 151–160');
  assert.match(g.ui['tutorial-controls'].textContent,/↑ cấp oxy/);assert.match(g.ui['tutorial-controls'].textContent,/nút OXY/);
  assert.doesNotMatch(g.ui['tutorial-controls'].textContent,/nhảy/);
 });
@@ -65,7 +65,7 @@ test('middle-sea briefing preserves oxygen controls and explains immortal jellyf
  assert.match(text,/0,8 giây/);assert.match(text,/mỗi 6 giây/);assert.match(text,/oxy hiện có/);assert.match(text,/cấp oxy trong lúc choáng/);
  assert.equal(guide.learn.some(line=>line.startsWith('Trong màn 101–150')),false);
  g.start(161);g.headless=false;assert.equal(MM.Tutorial.onStart(g),true);
- assert.equal(g.ui['tutorial-kicker'].textContent,'CHẶNG 17 / 20 · MÀN 161–170');assert.match(g.ui['tutorial-controls'].textContent,/↑ cấp oxy/);assert.doesNotMatch(g.ui['tutorial-controls'].textContent,/nhảy/);
+ assert.equal(g.ui['tutorial-kicker'].textContent,'CHẶNG 17 / 25 · MÀN 161–170');assert.match(g.ui['tutorial-controls'].textContent,/↑ cấp oxy/);assert.doesNotMatch(g.ui['tutorial-controls'].textContent,/nhảy/);
 });
 
 test('predator briefing explains the final five seconds and both newly unlocked rewards',()=>{
@@ -73,5 +73,5 @@ test('predator briefing explains the final five seconds and both newly unlocked 
  assert.match(T.forLevel(151).reward,/R hoặc nút Ngư Nhân/);assert.match(T.forLevel(151).reward,/một lần mỗi lượt vào màn/);assert.match(T.forLevel(151).reward,/miễn mọi đòn hút oxy/);
  assert.match(T.forLevel(161).reward,/Cầu Chớp/);assert.match(T.forLevel(161).reward,/kể cả đạn lẻ/);assert.match(T.forLevel(161).reward,/Chỉ Song Rìu/);
  assert.match(text,/bất khả xâm phạm đúng 5 giây/);assert.match(text,/không hồi máu/);assert.match(text,/mỗi đợt 5 giây chỉ có một con/i);
- g.start(171);g.headless=false;assert.equal(T.onStart(g),true);assert.equal(g.ui['tutorial-kicker'].textContent,'CHẶNG 18 / 20 · MÀN 171–180');assert.match(g.ui['tutorial-controls'].textContent,/↑ cấp oxy/);
+ g.start(171);g.headless=false;assert.equal(T.onStart(g),true);assert.equal(g.ui['tutorial-kicker'].textContent,'CHẶNG 18 / 25 · MÀN 171–180');assert.match(g.ui['tutorial-controls'].textContent,/↑ cấp oxy/);
 });

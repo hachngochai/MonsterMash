@@ -49,6 +49,13 @@
     goatman: {w:57,h:81,speed:40,health:5,score:320,damage:1,ability:'axe'},
     chimera: {w:300,h:210,speed:48,health:120,score:3200,damage:2,ability:'chimera-hunt'}
   };
+  const islandConfig = root.MM && root.MM.IslandConfig;
+  if(islandConfig){
+    const names=['Mỏ Đá Cổ Đại','Khu Rừng Đã Chết','Vách Đá Người Chim','Thánh Địa Mana','Miệng Núi Lửa Thần Thánh'];
+    const colors=['#c4b386','#a9b581','#91c8d9','#83cbd7','#e5a16d'];
+    names.forEach((name,i)=>worlds.push({id:20+i,name,subtitle:'Đảo Phục Sinh · Sự thức tỉnh của các cổ thần',color:colors[i],enemy:['easterEgg','leprechaun','ghostBunny','luckyPatrick','miniMoai'][i],scenery:20+i,island:true}));
+    Object.assign(enemyTypes,islandConfig.enemies,islandConfig.bosses);
+  }
   // The new expedition reads its provisional balance from one editable module.
   // Original levels and their enemy records remain unchanged.
   const abyssConfig = root.MM && root.MM.AbyssConfig;
@@ -577,6 +584,28 @@
     }));
   });
 
+  if(islandConfig){
+    const bossKeys=['awakeningMoai','deforestedAlpha','birdman','manaSpirit','makemake'];
+    const bossNames=['Tộc Trưởng Hóa Đá','Chúa Tể Vùng Đất Chết','Người Chim Tối Cao','Phù Thủy Mana','Makemake · Thần Sáng Thế'];
+    const E='easterEgg',B='ghostBunny',P='luckyPatrick',L='leprechaun',D='drunkenWanderer',M='miniMoai';
+    const bands=[[[E,B],[E,B,M],[E,M,P],[E,B,P,M]],[[E,B,L],[E,L,D],[E,P,M],[E,B,P,L,D]],
+      [[B,P],[L,D],[B,P,L],[B,M,D]],[[M,P],[L,B,M],[P,D,M],[P,M,L,B]],[[M,L],[P,D,B],[M,P,L],[M,B,P,L,D]]];
+    const stories=[
+      'Lên bờ, người giữ đèn tiến vào mỏ đá cổ. Nhảy lại bằng ↑; R gọi Tiểu Moai sau boss210. Trứng báo nổ trước khi vỡ; thỏ ném trứng và đá khi bạn dùng cận chiến.',
+      'Rừng cọ đã chết che những đường hầm. Giữ đạn trước Leprechaun và rời vùng chai vỡ; chờ cảnh báo trước khi né cú lao của Chúa Tể Vùng Đất Chết.',
+      'Theo vách đá tới Người Chim. Patrick tung đúng một kết quả xúc xắc; cỏ ba lá có thể đánh cả quái khác. Đừng đứng trong dấu đáp của Không Kích.',
+      'Thánh Địa Mana sáng giữa những phiến đá. Ký tự Cá làm chậm, ký tự Chim làm yếu phòng thủ. Cầu Chớp và phép có thể xuyên Khiên Linh Hồn chặn đòn vật lý.',
+      'Những mỏm đá là đường sống giữa dung nham. Khi Makemake tụ Phán Xét, tới hai bệ khác nhau, nhấn E hoặc Chạm phong ấn rồi đứng trong vùng khiên cổ đại.'
+    ];
+    for(let i=0;i<50;i++){
+      const band=Math.floor(i/10),stage=i%10,boss=stage===9,group=stage<2?0:stage<5?1:stage<7?2:3,balance=islandConfig.campaign;
+      levels.push({...balance,id:201+i,world:20+band,name:boss?bossNames[band]:worlds[20+band].name+' · '+(stage+1),island:true,
+        underwater:false,target:balance.targets[i],spawnInterval:balance.intervals[i],maxAlive:balance.caps[i],types:boss?[]:bands[band][group].slice(),hazardTypes:[],
+        boss,bossArchetype:boss?bossKeys[band]:null,bossHealth:boss?islandConfig.bosses[bossKeys[band]].health:0,
+        bossAbilities:boss?[islandConfig.bosses[bossKeys[band]].ability]:[],bossSkills:boss?[islandConfig.bosses[bossKeys[band]].ability]:[],
+        bossName:boss?bossNames[band]:undefined,layout:boss?'island-arena':'island',abilitySpawnEvery:0,story:stories[band],tutorial:stories[band],recovery:stage===3,balanceStatus:'provisional-playtest'});
+    }
+  }
   const difficultySettings = {
     story: { health: 7, spawnMultiplier: 1.2, speedMultiplier: 0.86, enemyHealthMultiplier: 0.9, warningTime: 1.35, damageMultiplier: 1, ammoMultiplier: 1.35, pressureMultiplier: 0.75 },
     normal: { health: 5, spawnMultiplier: 1, speedMultiplier: 1, enemyHealthMultiplier: 1, warningTime: 1.1, damageMultiplier: 1, ammoMultiplier: 1, pressureMultiplier: 1 },
@@ -608,8 +637,8 @@
     return {
       x: side === -1 ? -50 : 1010,
       y: 438,
-      w: config.abyss || config.underwater ? stats.w : boss ? (archetype === 'golem' ? 156 : archetype === 'werewolf' ? 80 : archetype === 'kong' ? 126 : archetype === 'dragon' ? 252 : archetype === 'chimera' ? 300 : Math.max(96, stats.w * 1.85)) : stats.w,
-      h: config.abyss || config.underwater ? stats.h : boss ? (archetype === 'golem' ? 172 : archetype === 'werewolf' ? 108 : archetype === 'kong' ? 138 : archetype === 'dragon' ? 190 : archetype === 'chimera' ? 210 : Math.max(94, stats.h * 1.5)) : stats.h,
+      w: config.abyss || config.underwater || config.island ? stats.w : boss ? (archetype === 'golem' ? 156 : archetype === 'werewolf' ? 80 : archetype === 'kong' ? 126 : archetype === 'dragon' ? 252 : archetype === 'chimera' ? 300 : Math.max(96, stats.w * 1.85)) : stats.w,
+      h: config.abyss || config.underwater || config.island ? stats.h : boss ? (archetype === 'golem' ? 172 : archetype === 'werewolf' ? 108 : archetype === 'kong' ? 138 : archetype === 'dragon' ? 190 : archetype === 'chimera' ? 210 : Math.max(94, stats.h * 1.5)) : stats.h,
       dir: side === -1 ? 1 : -1,
       type: boss ? 'boss' : enemyType,
       archetype: archetype,
@@ -623,7 +652,7 @@
       maxHealth: health,
       speed: stats.speed * config.speedMultiplier * settings.speedMultiplier * (0.95 + random * 0.1) * (boss ? 0.74 : 1),
       score: boss ? 750 + config.world * 250 : stats.score,
-      damage: config.abyss || config.underwater ? stats.damage : 1,
+      damage: config.abyss || config.underwater || config.island ? stats.damage : 1,
       phase: 'warning',
       warning: settings.warningTime + (boss ? 0.45 : 0),
       age: 0,

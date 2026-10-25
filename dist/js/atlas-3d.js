@@ -10,7 +10,7 @@
   if(!context)return;
   let renderer,scene,camera,sun,frame=0,last=0,signature='',lost=false;
   const pages=Object.create(null),details=[];
-  const currentPage=()=>/^chapter[1234]$/.test(map.dataset.atlasView)?map.dataset.atlasView:'chapter1';
+  const currentPage=()=>/^chapter[12345]$/.test(map.dataset.atlasView)?map.dataset.atlasView:'chapter1';
   function syncCamera(){
     if(!camera)return;
     const view=MM.Story?.viewport(Number(currentPage().slice(-1))),fallback=view?[view.x,view.y,view.width,view.height].join(' '):'-50 -20 600 430';

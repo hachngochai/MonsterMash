@@ -2,9 +2,9 @@
 (function (root) {
   'use strict';
   const MM = root.MM = root.MM || {};
-  const ORDER = ['gun', 'bones', 'club', 'bow', 'spear', 'axes', 'hammer', 'scythe', 'lightningOrb'];
-  const UNLOCK = {gun:0, bones:10, club:60, bow:90, spear:90, axes:100,hammer:120,scythe:140,lightningOrb:170};
-  const NAMES = {gun:'Súng', bones:'Xương Phân Ba', club:'Chùy Golem', bow:'Cung Hắc Ám', spear:'Giáo Bạch Kim', axes:'Song Rìu',hammer:'Búa Minotaur',scythe:'Lưỡi Hái Cổ Điểu',lightningOrb:'Cầu Chớp'};
+  const ORDER = ['gun', 'bones', 'club', 'bow', 'spear', 'axes', 'hammer', 'scythe', 'lightningOrb','easterEgg','dreamBook'];
+  const UNLOCK = {gun:0, bones:10, club:60, bow:90, spear:90, axes:100,hammer:120,scythe:140,lightningOrb:170,easterEgg:230,dreamBook:240};
+  const NAMES = {gun:'Súng', bones:'Xương Phân Ba', club:'Chùy Golem', bow:'Cung Hắc Ám', spear:'Giáo Bạch Kim', axes:'Song Rìu',hammer:'Búa Minotaur',scythe:'Lưỡi Hái Cổ Điểu',lightningOrb:'Cầu Chớp',easterEgg:'Trứng Phục Sinh',dreamBook:'Ảo Mộng'};
   const RAD = Math.PI / 180;
   const suppressed = g => MM.MapManager?.suppressed ? MM.MapManager.suppressed(g) : g.level?.id === 70;
   const enabled = g => MM.MapManager?.skillsEnabled ? MM.MapManager.skillsEnabled(g) : !suppressed(g);
@@ -62,6 +62,7 @@
     },
     profile(g, dir = g.player.dir || 1) {
       const id = this.current(g), p = g.player;
+      if(['easterEgg','dreamBook'].includes(id))return MM.ResurrectionRewards?.profile(g,dir)||{kind:id,equipped:id,name:NAMES[id],cost:0,damage:0,cooldown:1};
       if (id === 'gun') {
         // The first encounter with aerial bosses retains its existing automatic aim.
         if (!manualAim(g)||MM.AbyssCombat?.gravityDirection(g)<0) return {...g.getWeaponProfile(dir), equipped:id, name:NAMES[id]};
@@ -84,6 +85,7 @@
     },
     fire(g, direction) {
       const p = g.player, dir = direction < 0 ? -1 : 1;
+      if(['easterEgg','dreamBook'].includes(this.current(g)))return MM.ResurrectionRewards?.fire(g,dir)===true;
       if(this.current(g)==='lightningOrb')return MM.LightningOrbWeapon?.fire(g,dir)===true;
       if (g.screen !== 'playing' || g.weaponPicker?.open || p.shotTimer > .001 || p.stunTime > 0
         || p.petrifyTime > 0 || p.rollTime > 0 || g.rollSlash?.time > 0) return false;

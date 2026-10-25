@@ -95,8 +95,8 @@
   function rewardKnightHit(game, e) {
     e.knightHits++;
     const earned = e.knightHits % 10 === 0 ? 1 : 0;
-    if (earned && game.shieldCount < 3) {
-      game.shieldCount = Math.min(3, game.shieldCount + earned);
+    if (earned && game.shieldCount < (MM.ResurrectionRewards?.shieldCap(game)||3)) {
+      game.shieldCount = Math.min(MM.ResurrectionRewards?.shieldCap(game)||3, game.shieldCount + earned);
       game.floating?.(game.player.x, game.player.y - game.player.h - 15, '+1 KHIÊN · THÁNH THƯƠNG', '#b7e7d4');
       game.sound?.play('shield'); game.updateUI?.();
     }

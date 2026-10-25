@@ -45,14 +45,15 @@ test('191–200 introduce independent pearls and passing turtles without adding 
  assert.equal(F.boss.darkDuration,10);assert.equal(F.boss.echoThreshold,.5);assert.equal(F.boss.fossilDuration,5);assert.equal(F.boss.fossilHealRatio,.25);
 });
 
-test('completed180/190 saves migrate light and swim rewards permanently, with no reward invented at200',()=>{
+test('completed ocean saves migrate light, swim and the authorized merfolk guardian reward permanently',()=>{
  const {SaveManager:S,BossManager:B}=load();
  const raw={campaignSize:180,resume:180,completed:[180,190,200,180],progression:{version:1,rewards:[160,170],equipped:'lightningOrb',lifeKills:7}};
- const migrated=S.normalize(raw);assert.deepEqual(plain(migrated.rewards),[160,170,180,190]);assert.equal(migrated.equipped,'lightningOrb');assert.equal(migrated.lifeKills,7);
+ const migrated=S.normalize(raw);assert.deepEqual(plain(migrated.rewards),[160,170,180,190,200]);assert.equal(migrated.equipped,'lightningOrb');assert.equal(migrated.lifeKills,7);
  const g={save:raw,progression:migrated,persist(){this.stored=JSON.stringify(this.save);}};S.write(g);
  const reopened=S.normalize(JSON.parse(g.stored));assert.deepEqual(plain(reopened),plain(migrated));
- for(const level of [180,190])assert.equal(S.unlocked({progression:S.normalize({resume:level})},level),false);
- assert.deepEqual(plain(B.rewards[180].skills),['starfish']);assert.deepEqual(plain(B.rewards[190].skills),['freeSwim']);assert.equal(B.rewards[200],undefined);assert.equal(S.milestones.includes(200),false);
+ for(const level of [180,190,200])assert.equal(S.unlocked({progression:S.normalize({resume:level})},level),false);
+ assert.deepEqual(plain(B.rewards[180].skills),['starfish']);assert.deepEqual(plain(B.rewards[190].skills),['freeSwim']);assert.deepEqual(plain(B.rewards[200].skills),['merfolkArmor']);assert.equal(S.milestones.includes(200),true);
+ assert.equal(B.rewards[250],undefined);assert.equal(S.milestones.includes(250),false,'the new final boss still has no invented reward');
 });
 
 test('completed older sea releases continue to the first new map; unfinished bosses and explicit replays do not jump',()=>{
@@ -67,10 +68,10 @@ test('completed older sea releases continue to the first new map; unfinished bos
 });
 
 test('new tutorial steps preserve oxygen controls and teach phase rules and permanent rewards',()=>{
- const {Tutorial:T,Story:S}=load();assert.equal(T.guides.length,20);
+ const {Tutorial:T,Story:S}=load();assert.equal(T.guides.length,25);
  const deep=T.forLevel(181),final=T.forLevel(191),deepText=[...deep.learn,...deep.fight,deep.reward].join(' '),finalText=[...final.learn,...final.fight,final.reward].join(' ');
  assert.equal(deep.start,181);assert.equal(deep.end,190);assert.equal(final.start,191);assert.equal(final.end,200);
  assert.match(deepText,/1,5 lần/);assert.match(deepText,/↑ vẫn cấp oxy/);assert.match(deepText,/25% HP tối đa/);assert.match(deepText,/lần thứ hai|Cạn HP lần hai/);assert.match(deep.reward,/Tự Do Đại Dương/);
- assert.match(finalText,/không cộng thành x3/);assert.match(finalText,/10 giây tính từ lúc lấy/);assert.match(finalText,/choáng vẫn 1 giây/);assert.match(final.reward,/Không tự thêm phần thưởng boss 200/);
+ assert.match(finalText,/không cộng thành x3/);assert.match(finalText,/10 giây tính từ lúc lấy/);assert.match(finalText,/choáng vẫn 1 giây/);assert.match(final.reward,/Tiểu Ngư Nhân|tiểu ngư nhân/);
  assert.match(T.forLevel(171).reward,/Tam Tinh Hải Đăng/);assert.match(T.forLevel(171).reward,/8 bước/);assert.match(S.get(4).ending,/Bạn đã chinh phục tận cùng đại dương/);
 });

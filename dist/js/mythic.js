@@ -62,7 +62,7 @@
     encounter.damage += amount; encounter.totalDamage += amount;
     while(encounter.damage>=10) {
       encounter.damage-=10;
-      if(g.shieldCount<3) {
+      if(g.shieldCount<(MM.ResurrectionRewards?.shieldCap(g)||3)) {
         g.shieldCount++;
         g.floating?.(g.player.x,g.player.y-g.player.h-15,'10 MÁU CHIMERA · +1 KHIÊN','#bcebd6');
         g.sound?.play('shield');

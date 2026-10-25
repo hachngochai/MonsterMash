@@ -25,6 +25,11 @@
       arcs:['Tầng Biển Nông thử thách hơi thở giữa san hô. Piranha, cá nóc và cá ngựa canh giữ đường tới Quái Ngư Song Trảo.','Tầng Trung Đầu Tiên chìm trong ánh lam và điện tím. Né sứa bất tử, vượt hàm cá mập để tìm Bóng Ma Điện Quang giữa ảo giác hoán đổi.','Giữa vách đá và xương cá khổng lồ, Cá Mập Đầu Búa, Cá Đuối Điện và Cá Kiếm dẫn lối tới Hung Thần Biển Cổ Đại. Sống qua cơn cuồng nộ cuối của Mega London để nhận Tam Tinh Hải Đăng.','Vực Sâu Vô Quang rút ngắn hơi thở. Gulper, Cá Mập Ma và Bọ Phát Sáng giữ đường đến Leviathan. Khiên phải chống được Hơi Thở Cuối Cùng trước khi chúa tể trao Tự Do Đại Dương.','Ba sao biển soi lối qua ngọc trai và xác tàu. Trong ngôi mộ cuối, Kraken đánh thức miệng phun và gọi hai hung thần cổ đại; hạ trận cuối để đưa ngọn đèn trở về đất liền.'],
       ending:'Bạn đã chinh phục tận cùng đại dương. Những bí mật dưới vực sâu cuối cùng đã được khám phá. Khi Kraken chìm xuống, ba sao biển bay quanh ngọn đèn và một luồng sáng mở lối lên mặt nước. Người giữ đèn trở về đất liền, mang nguyên những kỹ năng và ký ức của hành trình. Hải Vực Quên Lãng đã khép lại, còn ánh sáng trong tay bạn vẫn hướng về những miền đất chưa kể tên.'}
   ];
+  if(MM.IslandConfig)stories.push({id:5,start:201,end:250,name:'Đảo Phục Sinh',tagline:'Khi những cổ thần thức giấc giữa biển và dung nham.',color:'#b9c89a',
+    intro:['Sau Kraken, người giữ đèn bước lên một bờ biển xa lạ. Tiểu Ngư Nhân bay theo ánh lửa; sâu trong đảo, những tượng Moai đang mở mắt. Mỏ đá, rừng cọ đã chết và vách Người Chim giữ những dấu vết dẫn tới thánh địa Mana.',
+      'Đi qua năm miền đất, học cách phá giáp đá, đọc xúc xắc và giữ đạn trước những kẻ trộm. Tại miệng núi lửa, Makemake chờ người mang đèn với một lời phán xét. Sức mạnh bất tử không thể thay cho những bệ phong ấn cổ đại.'],
+    arcs:['Lừa Tộc Trưởng Hóa Đá lao vào vách để phá giáp và gọi được Tiểu Moai đồng hành.','Sống qua đàn chuột và phục kích dưới đất; chiến thắng mở kho năm khiên.','Theo dấu đáp của Người Chim và nhận Trứng Phục Sinh với bảy hình thái tạm thời.','Phân biệt ký tự Cá và Chim, dùng phép qua Khiên Linh Hồn để nhận sách Ảo Mộng.','Giữ lối an toàn giữa dung nham; kích hoạt hai bệ rồi đứng trong vùng phong ấn để sống qua Phán Xét.'],
+    ending:'Những vệt dung nham lắng xuống. Mặt nạ đá khép đôi mắt sáng, còn các bệ phong ấn nối lại thành một vòng bình yên. Người giữ đèn đứng giữa những tượng Moai đã thôi chiến đấu. Tiểu Ngư Nhân và những người bạn đồng hành giữ ngọn lửa trên hòn đảo vừa thức giấc.'});
   const get=id=>stories.find(s=>s.id===Number(id))||stories[0];
   const forLevel=id=>stories.find(s=>id>=s.start&&id<=s.end)||stories[0];
   const progress=(story,completed=[])=>new Set(completed.filter(id=>Number.isInteger(id)&&id>=story.start&&id<=story.end)).size;
@@ -35,11 +40,13 @@
     1:{points:[[110,140],[150,208],[260,180],[360,236],[290,320],[160,308]],controls:[[75,185],[175,145],[338,160],[370,302],[212,355]]},
     2:{points:[[600,135],[650,185],[850,165],[790,265],[620,280],[880,315]],controls:[[585,175],[730,100],[875,245],[705,225],[735,375]]},
     3:{points:[[160,130],[270,208],[440,150],[650,215],[780,302],[460,315]],controls:[[145,195],[335,105],[570,120],[820,210],[625,370]]},
-    4:{points:[[125,130],[295,195],[485,115],[735,180],[800,315],[475,330]],controls:[[180,105],[355,100],[630,75],[855,235],[660,375]]}
+    4:{points:[[125,130],[295,195],[485,115],[735,180],[800,315],[475,330]],controls:[[180,105],[355,100],[630,75],[855,235],[660,375]]},
+    5:{points:[[150,132],[260,220],[410,135],[680,180],[780,305],[470,325]],controls:[[160,210],[295,105],[570,85],[850,220],[650,370]]}
   };
   // Surface islands are half as wide as the Abyss: frame each more closely
   // without moving its terrain, exploration route or boss hit targets.
   const viewports={1:{x:-50,y:-20,width:600,height:430},2:{x:455,y:-20,width:600,height:430},3:{x:50,y:-20,width:900,height:430},4:{x:50,y:-20,width:900,height:430}};
+  viewports[5]={x:50,y:-20,width:900,height:430};
   const viewport=story=>Object.assign({},viewports[typeof story==='object'?story.id:get(story).id]);
   const crossingRoutes=[
     {from:50,entrance:51,to:60,outStory:1,inStory:2,outPath:'M160 308C170 375 345 388 460 325',inPath:'M490 125C535 104 562 133 600 135Q585 175 650 185'},
@@ -56,6 +63,7 @@
     });
     return {path,dots,bosses:route.points.slice(1)};
   }
+  if(MM.IslandConfig)crossingRoutes.push({from:200,entrance:201,to:210,outStory:4,inStory:5,outPath:'M475 330C610 390 840 375 925 295',inPath:'M70 145Q105 105 150 132Q160 210 260 220'});
   MM.Story={stories,get,forLevel,progress,nextLevel,length,milestones,trail,viewport,crossingRoutes};
   const selected=g=>get(g.selectedStory||1);
   function select(g,id){g.selectedStory=get(id).id;g.buildMap?.();g.updateUI?.();}
@@ -85,7 +93,7 @@
     }
     for(const button of document.querySelectorAll('[data-atlas-switch]'))button.setAttribute('aria-pressed',String(button.dataset.atlasSwitch===atlasPage));
     for(const region of document.querySelectorAll('[data-atlas-region]')){
-      const regionName=story.id===4?'ocean':story.id===3?'abyss':'surface';
+      const regionName=story.id===5?'island':story.id===4?'ocean':story.id===3?'abyss':'surface';
       if(region.dataset.atlasRegion===regionName)region.removeAttribute('hidden');else region.setAttribute('hidden','');
     }
     for(const button of document.querySelectorAll('[data-atlas-dot]'))button.setAttribute('aria-current',String(Number(button.dataset.atlasDot)===story.id));
@@ -128,7 +136,7 @@
   function bind(g){
     g.storyDots=[];
     for(const story of stories){
-      const dotsGroup=g.ui[story.id===4?'atlas-ocean-dots':story.id===3?'atlas-abyss-dots':'atlas-level-dots'];if(!dotsGroup)continue;
+      const dotsGroup=g.ui[story.id===5?'atlas-island-dots':story.id===4?'atlas-ocean-dots':story.id===3?'atlas-abyss-dots':'atlas-level-dots'];if(!dotsGroup)continue;
       const route=trail(story),path=g.ui['atlas-trail-'+story.id];path?.setAttribute('d',route.path);
       const view=viewport(story);
       route.bosses.forEach(([x,y],i)=>{const button=g.ui['atlas-boss-'+(story.start+9+i*10)];button?.style.setProperty('--mark-x',(x-view.x)/view.width*100+'%');button?.style.setProperty('--mark-y',(y-view.y)/view.height*100+'%');});
@@ -175,7 +183,7 @@
   function result(g){
     const story=forLevel(g.level.id);
     if(g.screen!=='won'||g.level.id!==story.end)return;
-    g.ui['result-kicker'].textContent=story.id===4?'HOÀN THÀNH HẢI VỰC — MAP 200/200':story.plannedEnd?'HOÀN THÀNH CHẶNG HIỆN TẠI':'KHÉP LẠI CỐT TRUYỆN '+String(story.id).padStart(2,'0');
+    g.ui['result-kicker'].textContent=story.id===4?'HOÀN THÀNH HẢI VỰC — MÀN 151–200':story.plannedEnd?'HOÀN THÀNH CHẶNG HIỆN TẠI':'KHÉP LẠI CỐT TRUYỆN '+String(story.id).padStart(2,'0');
     g.ui['result-title'].textContent=story.id===4?'HẢI VỰC QUÊN LÃNG':story.plannedEnd?'Tầng Trung Hải Vực · Đã vượt qua':story.name;
     g.ui['result-description'].textContent=story.ending;
     const following=stories.find(s=>s.start===story.end+1);

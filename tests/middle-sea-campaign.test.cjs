@@ -49,5 +49,5 @@ test('the fourth story keeps its middle-sea route inside the complete fifty-stag
  assert.deepEqual(plain(S.trail(story).dots.map(dot=>dot.level)),Array.from({length:50},(_,i)=>151+i).filter(id=>id%10));
  assert.equal(S.nextLevel(story,Array.from({length:10},(_,i)=>151+i)),161);
  assert.equal(S.nextLevel(story,Array.from({length:20},(_,i)=>151+i)),171,'the next released chapter follows170');
- assert.equal(T.guides.length,20);assert.equal(T.forLevel(161).start,161);assert.equal(T.forLevel(170).end,170);
+ assert.equal(T.guides.length,25);assert.equal(T.forLevel(161).start,161);assert.equal(T.forLevel(170).end,170);
 });

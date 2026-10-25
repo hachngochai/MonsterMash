@@ -11,6 +11,7 @@
   whirlpool:'assets/backgrounds/transitions/whirlpool-passage.png',shore:'assets/backgrounds/transitions/shore-return.png',
   submerged:'assets/backgrounds/transitions/submerged-passage.png'
  });
+ kinds.set('island','island');kinds.set('islandVictory','islandVictory');kinds.set(250,'islandVictory');
  const art=Object.fromEntries(Object.keys(backgroundManifest).map(key=>[key,{image:null,ready:false,failed:false}]));
  const endingArt={kraken:{image:null,ready:false}};
  // World-space anchors measured on the cartoon plate; the same mouth owns
@@ -61,7 +62,7 @@
  function skipButton(g,hidden){const button=g.ui?.['cinematic-skip'];if(button){button.hidden=hidden;if(!hidden)button.textContent='Bỏ qua ›';}}
  function finish(g,skipped=false){
   const s=g.cinematic;if(!s||s.finished)return false;
-  const from=g.level?.id,expected={forest:50,cave:100,whirlpool:150}[s.kind];
+  const from=g.level?.id,expected={forest:50,cave:100,whirlpool:150,island:200}[s.kind];
   const frame=!skipped&&from===expected?copyCanvas(g.canvas):null;
   s.finished=true;clear(g);g.cinematic=null;g.screen=s.previousScreen;g.lastTime=0;skipButton(g,true);s.done?.(g);
   // Game.start clears old visual records inside the callback. Only its actual
@@ -99,6 +100,9 @@
    else if(p<.85){const u=(p-.58)/.27,r=48*Math.sin(Math.PI*u)*(1-u);Object.assign(a,{x:cx+Math.sin(u*TAU*1.1)*r,y:cy+u*65,scale:lerp(.94,.29,ease(u)),tilt:.85*ease(u),vx:0,swim:true,phase:'descent'});}
    else{const u=ease((p-.85)/.15);Object.assign(a,{x:cx,y:lerp(cy+65,460,u),scale:lerp(.29,.62,u),tilt:lerp(.85,.38,u),vx:40,swim:true,phase:'submerged'});}
    a.camera={zoom:1.025+.055*q,x:-7*q,y:-3*q};
+  }else if(kind==='island'||kind==='islandVictory'){
+   const victory=kind==='islandVictory';Object.assign(a,{x:lerp(victory?420:670,victory?510:845,q),y:lerp(victory?438:460,438,q),scale:lerp(victory?1.2:1.32,1.05,q),vx:victory?35:75,phase:'island-walk'});
+   a.camera={zoom:1.05+.005*q,x:-4-4*q,y:-3+q};
   }else{
    const time=p*11;
    if(time<2.8){const u=ease(time/2.8);Object.assign(a,{x:lerp(365,382,u),y:lerp(414,398,u),scale:1.07,tilt:-.2,swim:true,vx:30,phase:'release'});}
@@ -272,6 +276,16 @@
   else if(boss&&MM.UnderwaterRenderer?.drawEnemy){const actor={...boss,dead:false,retired:false,health:1,phase:'active',hit:0,krakenStone:false,krakenDying:false,krakenEcho:false,x:0,y:h*.5,vx:0,vy:30,krakenClock:0};MM.UnderwaterRenderer.drawEnemy(c,{...g,settings:{...g.settings,reducedMotion:reduced},time:0},actor,0);}
   c.restore();
  }
+ function island(c,g,s,p,t){
+  const victory=s.kind==='islandVictory',a=sampleShot(s.kind,p,s.reducedMotion),mix=victory?1:ease((p-.08)/.6);
+  c.save();camera(c,a);if(!victory)shore(c,t,s.reducedMotion);
+  c.save();c.globalAlpha*=mix;
+  const scene={...g,level:{id:victory?250:201,island:true},island:{hazards:[],seals:[],platforms:[]}};
+  if(!MM.IslandRenderer?.drawBackground(c,scene)){backdrop(c,'#23434a','#6c8062');rect(c,0,438,W,102,'#697b59');for(const x of [135,370,815]){rect(c,x,275,46,160,'#778274');rect(c,x+14,300,16,80,'#a1a68b');}}
+  c.restore();shadow(c,a,.6);footsteps(c,a,t,s.reducedMotion);hunter(c,g,a,t);motes(c,t,s.reducedMotion,false,.5);
+  if(victory){glow(c,a.x,a.y-35,130,'#e3d0a02a',.8);stars(c,a,t,s.reducedMotion,.8);}
+  c.restore();title(c,victory?'BIÊN NIÊN NGỌN ĐÈN':'ĐẢO PHỤC SINH · 201—250',victory?'Các cổ thần đã yên giấc.':'Hòn đảo vừa thức giấc.',victory?'Ngọn đèn giữ lại bình minh giữa những phiến đá.':'Rời bờ biển, theo dấu Moai vào lòng đảo.');
+ }
  function ending(c,g,s,p,t){
   const elapsed=p*11,a=sampleShot('ending',p,s.reducedMotion),shoreFade=ease((elapsed-5.8)/1.35);c.save();camera(c,a);
   underwater(c,g,t,s.reducedMotion,true,s.reducedMotion?0:ease((elapsed-2.8)/3.6)*105);fallingKraken(c,g,elapsed,s.reducedMotion);
@@ -286,7 +300,7 @@
  }
  function draw(c,g){
   const s=g.cinematic;if(!s||g.screen!=='cinematic')return false;const p=clamp(s.time/s.duration),t=s.reducedMotion?0:s.time;
-  c.save();c.beginPath();c.rect(0,0,W,H);c.clip();({forest,cave,whirlpool,ending}[s.kind])(c,g,s,p,t);
+  c.save();c.beginPath();c.rect(0,0,W,H);c.clip();({forest,cave,whirlpool,ending,island,islandVictory:island}[s.kind])(c,g,s,p,t);
   const v=c.createLinearGradient(0,0,0,H);v.addColorStop(0,'#01071317');v.addColorStop(.58,'#01071300');v.addColorStop(1,'#01071373');rect(c,0,0,W,H,v);
   rect(c,0,0,W,15,'#02070dc2');rect(c,0,H-21,W,21,'#02070dc2');rect(c,29,H-12,W-58,1,'#d6dec92d');rect(c,29,H-12,(W-58)*p,1,'#e8d9b69c');
   const entry=entryFrames.get(g);

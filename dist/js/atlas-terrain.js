@@ -16,7 +16,7 @@
   for(let i=0;i<350;i++){
    const x=bounds.left+18+r()*(bounds.right-bounds.left-36),y=bounds.top+28+r()*(bounds.bottom-bounds.top-46);
    if(y<112||!clear(x,y,19,35))continue;
-   const type=chapter===4?(i%5===0?'ruin':i%3===0?'crystal':'coral'):chapter===3?(i%6===0?'ruin':i%3===0?'rock':'crystal'):chapter===2?(i%3===0?'tree':'rock'):(i%12===0?'ruin':i%5===0?'rock':'tree');
+   const type=chapter===5?(i%3===0?'moai':i%5===0?'ruin':i%2?'tree':'rock'):chapter===4?(i%5===0?'ruin':i%3===0?'crystal':'coral'):chapter===3?(i%6===0?'ruin':i%3===0?'rock':'crystal'):chapter===2?(i%3===0?'tree':'rock'):(i%12===0?'ruin':i%5===0?'rock':'tree');
    const size=.7+r()*.8,height=type==='tree'?22+size*13:type==='ruin'?24:12+size*10;
    if(objects.some(o=>Math.hypot(x-o.x,y-o.y)<(type==='tree'?13:19)))continue;
    objects.push({x,y,type,size,height,angle:r()*TAU,seed:r()});if(objects.length>=(chapter<3?60:50))break;
@@ -32,7 +32,7 @@
  function build(T,landscape){
   const group=new T.Group(),page=landscape.chapter,mats={},waves=[];
   const material=(key,color,extra={})=>mats[key]||(mats[key]=new T.MeshStandardMaterial({color,roughness:.92,flatShading:true,...extra}));
-  const palettes={1:{low:0x475b3e,high:0x7e8263,rock:0x64716a,tree:0x264b3b},2:{low:0x343d34,high:0x7b796b,rock:0x69695e,tree:0x254638},3:{low:0x282935,high:0x66566f,rock:0x575365,tree:0x604371},4:{low:0x12344e,high:0x397e8c,rock:0x386b7b,tree:0x448e96}},palette=palettes[page];
+  const palettes={1:{low:0x475b3e,high:0x7e8263,rock:0x64716a,tree:0x264b3b},2:{low:0x343d34,high:0x7b796b,rock:0x69695e,tree:0x254638},3:{low:0x282935,high:0x66566f,rock:0x575365,tree:0x604371},4:{low:0x12344e,high:0x397e8c,rock:0x386b7b,tree:0x448e96},5:{low:0x526548,high:0xa6a078,rock:0x7e8070,tree:0x477d51}},palette=palettes[page];
   const surface=new T.BufferGeometry(),positions=[],colors=[],step=10,lo=new T.Color(palette.low),hi=new T.Color(palette.high),shade=new T.Color();
   const {left,right,top,bottom}=landscape.bounds;
   function vertex(x,y){const h=landscape.heightAt(x,y);positions.push(x-500,200-y,(page===4?-27:0)+h+.3);shade.copy(lo).lerp(hi,clamp(h/25+Math.sin(x*.14+y*.3)*.025,0,.9));colors.push(shade.r,shade.g,shade.b);}
@@ -51,6 +51,10 @@
     instance('leaf',leaf,x,y,z+h*.72,s*8,s*6,h*.35,o.angle);
     instance('leaf',leafLight,x-s*4,y+s,z+h*.9,s*5.5,s*5,h*.23,o.angle+.8);
     instance('leaf',leaf,x+s*5,y-s*2,z+h*.65,s*5.2,s*4,h*.25,o.angle+2);
+   }else if(o.type==='moai'){
+    instance('box',stone,x,y,z+3*s,15*s,12*s,6*s);instance('box',stone,x,y,z+18*s,12*s,11*s,26*s);
+    instance('box',stoneLight,x,y-7*s,z+17*s,3*s,5*s,12*s);instance('box',stoneLight,x,y-6*s,z+25*s,11*s,2*s,3*s);
+    instance('box',stone,x,y-6*s,z+8*s,10*s,3*s,4*s);
    }else if(o.type==='rock'){
     rock(x,y,z,s,o.seed);rock(x+s*5,y-s*2,z,s*.65,1-o.seed);
    }else if(o.type==='crystal'){

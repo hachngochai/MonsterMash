@@ -163,7 +163,39 @@
       'Bóng Đen tắt ánh sáng Tam Tinh trong đúng 10 giây; sao biển vẫn tồn tại và theo bạn. Hết mực, vùng sáng 8 bước trở lại. HUD và cảnh báo nguy hiểm vẫn nhìn được.',
       'Tại 50% HP, Vọng Âm Biển Khơi kích hoạt một lần: miệng phun hoạt động thường hơn và tăng từ 1 lên 2 HP, choáng vẫn 1 giây. Tiếng gầm không gây thêm HP hoặc tăng hệ số oxy.',
       'Hóa Thạch giữ Kraken trong đá 5 giây và hồi 25% HP tối đa, không vượt trần; kết thúc gọi Mega London và Leviathan theo quy tắc triệu hồi của trận này. Hai hung thần không cấp lại thưởng hoặc mở màn thắng riêng. Những chỉ số chưa chốt được đánh dấu là cấu hình chơi thử.'
-    ],reward:'Hoàn thành điều kiện trận Kraken để xem hành trình nổi lên mặt biển và trở về đất liền. Tiến độ màn 200 cùng toàn bộ phần thưởng được lưu; oxy, nuốt, choáng và hiệu ứng boss được dọn. Không tự thêm phần thưởng boss 200.'}
+    ],reward:'Hạ Kraken mở Tiểu Ngư Nhân bay theo trên đầu: mỗi 10 giây tạo giáp chặn sát thương chiến đấu trong 3 giây, không tốn khiên. Sau cảnh nổi lên bờ, bạn tiến sâu vào Đảo Phục Sinh; oxy và hiệu ứng biển được dọn, phần thưởng vẫn được lưu.'},
+    {start:201,title:'Những pho tượng thức giấc',boss:'Moai Thức Tỉnh · Màn 210',learn:[
+      'Trở lại mặt đất: ↑ nhảy, oxy không còn hao. Trứng Phục Sinh báo nứt trước khi nổ; Thỏ Ma ném trứng từ xa, nhảy qua đầu khi bạn đến gần và dùng đá choáng khi bạn cầm vũ khí cận chiến.',
+      'Moai Nhỏ mọc theo dấu báo, chặn đường đạn bằng chính thân tượng nhưng không gây sát thương. Patrick tung đúng một kết quả mỗi lượt: hồi máu cho bạn, bom, tàng hình 5 giây, lấy nửa đạn, năm phi tiêu cỏ hoặc gọi Thỏ Khổng Lồ. Quan sát xúc xắc trước khi chọn đường né.'
+    ],fight:[
+      'Moai chỉ thức dậy khi bạn đến gần. Giáp đá giảm mạnh sát thương; dụ cú lao vào mép sân để phá giáp rồi tận dụng cửa sổ 8 giây.',
+      'Nhảy qua sóng địa chấn và rời đường báo của laze mắt. Tượng không gây đòn vô hình lúc đang thức dậy.'
+    ],reward:'Mở Tiểu Moai: R hoặc nút cảm ứng gọi một đồng minh có 12 HP, đánh 2 sát thương mỗi giây, tồn tại đến khi cạn HP; tối đa một con, hồi chiêu 10 giây. R dùng Tiểu Moai ở màn 201–250, vẫn Hóa Ngư Nhân ở màn 151–200.'},
+    {start:211,title:'Dấu chân giữa rừng cọ chết',boss:'Thủ Lĩnh Rừng Tàn · Màn 220',learn:[
+      'Leprechaun râu đỏ áp sát để lấy tối đa 3 đạn, không gây sát thương tiếp xúc. Kẻ Lang Thang ném chai nổ trong hai bước; không gây cháy hoặc độc. Giữ đường lui giữa các tượng Moai.'
+    ],fight:[
+      'Rời đường lao đã báo của thủ lĩnh bốn chân. Chuột đột biến có giới hạn số lượng, hãy xử lý chúng trước khi sân trở nên chật.',
+      'Boss đào xuống sẽ không có va chạm tấn công vô hình. Khi dấu đất xuất hiện phía sau, rời vị trí trước lúc boss trồi lên.'
+    ],reward:'Giới hạn khiên tăng vĩnh viễn từ 3 lên 5, áp dụng cho mọi nguồn tích khiên. Mỗi phát bắn gây sát thương thực lên boss vẫn tiến tới mốc 10 phát nhận một khiên.'},
+    {start:221,title:'Bóng cánh bên vách Orongo',boss:'Điểu Nhân · Màn 230',learn:[
+      'Thỏ Ma, Patrick, Leprechaun, Kẻ Lang Thang và Moai xuất hiện theo từng chặng. Cỏ của Patrick có thể trúng cả quái thường khác; đừng đứng trong đường bom và chai ném.'
+    ],fight:[
+      'Bóng báo trên đất khóa điểm đáp của cú bổ nhào; di chuyển ra ngoài rồi phản công. Tiếng hét gây hoảng sợ và thu hẹp tầm nhìn, không trừ HP trực tiếp.',
+      'Trứng nguyền luân phiên giữa trứng độc và bom nổ. Độc tồn tại trong vùng báo; bom chỉ nổ một lần. Bật khiên hoặc rời vùng trước lúc kích hoạt.'
+    ],reward:'Mở vũ khí Trứng Phục Sinh. Dùng trứng chọn ngẫu nhiên đều một trong bảy dạng trong 20 giây, không tốn đạn: Găng Tay, Súng Trứng, Cỏ Ba Lá, Ngọn Lửa, Gậy Tộc Trưởng, Đá Moai hoặc Ánh Sáng. Đá Moai miễn sát thương chiến đấu nhưng đi chậm; Ánh Sáng lướt cả sân bằng một lần nhấn hướng. Rời dạng thì các quyền này kết thúc.'},
+    {start:231,title:'Những phiến gỗ của Mana',boss:'Linh Hồn Mana · Màn 240',learn:[
+      'Cỏ Patrick, tường Moai và trứng Thỏ Ma có thể ép đường đi. Dùng giáp Tiểu Ngư Nhân đúng chu kỳ và gọi Tiểu Moai để có thêm khoảng trống chiến đấu.'
+    ],fight:[
+      'Phù văn cá làm chậm; phù văn chim làm yếu giáp trong thời gian ngắn. Boss dịch chuyển đến vị trí hợp lệ, có hiệu ứng báo ở điểm đi và đến.',
+      'Lá chắn vật lý chỉ chặn tối đa năm đòn hoặc bốn giây. Cầu Chớp và phép thuật vẫn đánh được; không bắn lãng phí vào khiên bằng đạn thường.'
+    ],reward:'Mở sách phép Ảo Mộng trong bảng vũ khí: gọi một bản sao 10 HP dùng vũ khí đã mở ngẫu nhiên, tồn tại tối đa 20 giây; hồi chiêu 10 giây và tối đa một bản sao. R vẫn gọi Tiểu Moai riêng, đạn của bản sao không trừ kho của bạn.'},
+    {start:241,title:'Phong ấn dưới chân núi lửa',boss:'Makemake · Màn 250',learn:[
+      'Dung nham và đá rơi đều có dấu báo. Giữ các bệ đá an toàn trong tầm di chuyển; đừng để quái thường chắn đường tới phong ấn.'
+    ],fight:[
+      'Makemake luân phiên dung nham, đá rơi, vuốt đất, gió và phù văn. Bước ra khỏi vùng cảnh báo hoặc dùng khiên cho các đòn thông thường.',
+      'Khi còn 50% HP, Phán Xét tụ lực trong 8 giây và chỉ xuất hiện một lần. Tới hai bệ khác nhau, nhấn E hoặc nút Phong Ấn để kích hoạt; sau đó đứng trong vùng sáng của một bệ đã mở.',
+      'Khiên cá nhân, giáp Ngư Nhân và dạng bất tử không thay thế phong ấn. Phải hoàn thành thử thách kể cả khi đã gây đủ sát thương kết liễu boss.'
+    ],reward:'Hạ Makemake sau Phán Xét để khép lại Đảo Phục Sinh và xem đoạn kết. Màn 250 không cấp thêm vũ khí hoặc kỹ năng; các phần thưởng đã mở vẫn được lưu vĩnh viễn.'}
   ].map((g,index)=>({...g,index:index+1,end:g.start+9,learn:g.start>=101&&g.start<=141?['Trong màn 101–150, hạ mỗi 5 quái thường hoặc bắn trúng boss đủ 10 viên nhận 1 khiên, giữ tối đa 3. Hai bộ đếm riêng biệt. Đạn hụt, bị chặn/phản lại và đòn cận chiến không tính vào mốc bắn boss. Bắn đúng hình chiếu Nộ trong mê cung vẫn được tính.',...g.learn]:g.learn}));
   const forLevel=id=>guides.find(g=>id>=g.start&&id<=g.end)||guides[0];
   const normalizeSeen=value=>Array.isArray(value)?[...new Set(value.filter(id=>guides.some(g=>g.start===id)))].sort((a,b)=>a-b):[];
@@ -195,7 +227,7 @@
     g.ui['tutorial-title'].textContent=guide.title;
     g.ui['tutorial-content'].replaceChildren(content(guide));
     const keys=MM.KeyBindings,bindings=keys?.normalize(g.settings.keyBindings);
-    const underwater=guide.start>=151;
+    const underwater=guide.start>=151&&guide.start<=200;
     g.ui['tutorial-controls'].textContent=bindings?`PC: ${keys.label(bindings.left)} / ${keys.label(bindings.right)} di chuyển · ${keys.label(bindings.jump)} ${underwater?'cấp oxy':'nhảy'} · ${keys.label(bindings.shootLeft)} / ${keys.label(bindings.shootRight)} bắn · ${keys.label(bindings.shield)} khiên. Mobile: ${underwater?'nút OXY hoặc vuốt lên để cấp oxy; dùng nút hoặc vuốt ngang để bơi.':'dùng nút hoặc vuốt.'}`:underwater?'PC: ↑ cấp oxy. Mobile: nút OXY hoặc vuốt lên để cấp oxy; dùng nút hoặc vuốt ngang để bơi. Các phím PC có thể đổi trong Cài đặt.':'Dùng nút hoặc vuốt trên điện thoại; các phím PC có thể đổi trong Cài đặt.';
     if(underwater&&MM.SaveManager?.unlocked(g,190))g.ui['tutorial-controls'].textContent=`Bơi ngang: ${bindings?keys.label(bindings.left)+' / '+keys.label(bindings.right):'← / →'}. Bơi dọc: ${bindings?keys.label(bindings.aimHigh)+' / '+keys.label(bindings.aimGround):'W / S'}. ${bindings?keys.label(bindings.jump):'↑'} cấp oxy; ${bindings?keys.label(bindings.shield):'Space'} khiên. Mobile: vuốt ngang/dọc giữ hướng hoặc nút bơi; nút OXY và KHIÊN hoạt động riêng.`;
     g.ui['tutorial-begin'].textContent='Sẵn sàng · Bắt đầu màn '+g.level.id+' →';

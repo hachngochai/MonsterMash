@@ -50,7 +50,7 @@ test('the completed ocean story exposes five X sites and45 ordinary dots',()=>{
  assert.equal(S.length(ocean),50);assert.equal(ocean.plannedEnd,undefined);assert.equal(S.nextLevel(ocean,done),171);assert.equal(S.forLevel(200).id,4);
  assert.deepEqual(plain(S.milestones(ocean,[160,170,180,190,200]).map(m=>[m.level,m.available,m.mark])),[[160,true,'O'],[170,true,'O'],[180,true,'O'],[190,true,'O'],[200,true,'O']]);
  assert.deepEqual(plain(S.trail(ocean).dots.map(dot=>dot.level)),Array.from({length:50},(_,i)=>151+i).filter(id=>id%10!==0));
- assert.equal(T.guides.length,20);assert.equal(T.forLevel(171).start,171);assert.equal(T.forLevel(180).end,180);assert.match(ocean.ending,/Kraken/);
+ assert.equal(T.guides.length,25);assert.equal(T.forLevel(171).start,171);assert.equal(T.forLevel(180).end,180);assert.match(ocean.ending,/Kraken/);
 });
 
 test('completed160/170 saves migrate permanent rewards but resume selections never grant them',()=>{
@@ -63,18 +63,18 @@ test('completed160/170 saves migrate permanent rewards but resume selections nev
   assert.deepEqual(plain(p.rewards),[160,170,180,190]);assert.equal(S.weaponUnlocked({progression:p},'lightningOrb'),true);
   assert.equal(S.normalize({completed:[160,170],progression:p}).equipped,p.equipped);
  }
- assert.equal(S.weaponUnlocked({progression:S.normalize({rewards:[160]})},'lightningOrb'),false);assert.equal(S.milestones.includes(200),false);
+ assert.equal(S.weaponUnlocked({progression:S.normalize({rewards:[160]})},'lightningOrb'),false);assert.equal(S.milestones.includes(200),true);assert.equal(S.unlocked({progression:S.normalize({resume:200})},200),false);
 });
 
-test('ocean rewards require the final boss encounter and award exactly once;200 invents no reward',()=>{
+test('ocean rewards including the authorized200 guardian require the complete encounter and award once;250 grants none',()=>{
  const {SaveManager:S,BossManager:B}=load(),make=level=>({level:{id:level},save:{completed:[]},progression:S.normalize({}),bossDefeated:false,enemies:[],writes:0,persist(){this.writes++;},toast(){}});
- assert.deepEqual(plain(B.rewards[160].skills),['merfolk']);assert.deepEqual(plain(B.rewards[170].weapons),['lightningOrb']);assert.deepEqual(plain(B.rewards[180].skills),['starfish']);assert.deepEqual(plain(B.rewards[190].skills),['freeSwim']);assert.equal(B.rewards[200],undefined);
- for(const level of [160,170,180,190]){
+ assert.deepEqual(plain(B.rewards[160].skills),['merfolk']);assert.deepEqual(plain(B.rewards[170].weapons),['lightningOrb']);assert.deepEqual(plain(B.rewards[180].skills),['starfish']);assert.deepEqual(plain(B.rewards[190].skills),['freeSwim']);assert.deepEqual(plain(B.rewards[200].skills),['merfolkArmor']);assert.equal(B.rewards[250],undefined);
+ for(const level of [160,170,180,190,200]){
   const g=make(level),boss={boss:true,dead:true,health:0},other={boss:true,dead:false,health:1};g.enemies=[boss,other];
   assert.equal(B.onDefeated(g,boss),false);g.bossDefeated=true;assert.equal(B.onDefeated(g,boss),false);
   other.dead=true;other.health=0;assert.equal(B.onDefeated(g,other),true);assert.equal(B.onDefeated(g,other),false);
   assert.equal(g.writes,1);assert.deepEqual(plain(g.save.progression.rewards),[level]);
   const reload={progression:S.normalize(JSON.parse(JSON.stringify(g.save)))};assert.equal(S.unlocked(reload,level),true);
  }
- const end=make(200);end.bossDefeated=true;assert.equal(B.onDefeated(end,{boss:true,dead:true,health:0}),false);assert.equal(end.writes,0);
+ const end=make(250);end.bossDefeated=true;assert.equal(B.onDefeated(end,{boss:true,dead:true,health:0}),false);assert.equal(end.writes,0);
 });

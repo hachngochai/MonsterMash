@@ -2174,3 +2174,12 @@ html[data-landscape="rotated"] #tutorial-dialog{width:min(720px,calc(var(--mobil
 .tutorial-actions small{font-size:10px;color:#a3b7a7}
 .tutorial-actions button{min-height:44px;margin-left:auto}
 @media(max-width:600px){.guide-topic ul{font-size:11px}.boss-guide-chapter summary{padding:12px;grid-template-columns:58px 1fr}.tutorial-actions{gap:10px}.tutorial-actions button{width:100%}}
+.atlas-map .land-island{left:29%;top:4%;width:42%;border-color:#c3ca9777;background:#334a38ed}
+.atlas-map .land-island strong{color:#dce2bb}.atlas-map .land-island[aria-pressed="true"]{border-color:#d8d7a4;background:#4c6043ed}
+.atlas-map[data-atlas-view="chapter5"]{background:radial-gradient(ellipse at 50% 20%,#326c79,#122f41);border-color:#a5c3a966}
+.atlas-map[data-atlas-view="chapter5"] .atlas-art>rect:first-of-type{fill:transparent}
+.atlas-map[data-atlas-view="chapter5"] .atlas-level-dot{fill:#eadca5;stroke:#48654d}
+.atlas-map[data-atlas-view="chapter5"] .atlas-level-dot.cleared{fill:#b6e9b5}
+.atlas-map[data-atlas-view="chapter5"] .atlas-boss-mark{background:radial-gradient(ellipse,#2c433bc9,transparent 74%)}
+.bridge-next-four{left:86%;top:84%}.bridge-back-five{left:13%;top:20%}
+@media(max-height:650px),(max-width:700px){.atlas-map .land-island{width:48%;left:26%}.land-island .atlas-land-tagline{font-size:7px}}

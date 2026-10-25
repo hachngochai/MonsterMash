@@ -21,6 +21,7 @@ files.push(...["predator-sea-config", "predator-sea-enemies", "boss-180", "deep-
 files.push(...["hammerhead", "electric-ray", "swordfish", "mega-london", "gulper", "ghost-shark", "glow-bug", "leviathan", "sea-crab", "pearl-clam", "angler-fish", "giant-squid", "sea-turtle", "kraken"].map(name=>'assets/sprites/underwater/'+name+'.png'));
 files.push(...['predator-trench','deep-chasm','kraken-grave'].map(name=>'assets/backgrounds/underwater/'+name+'.png'));
 files.push(...['forest-passage','cave-passage','whirlpool-passage','shore-return','submerged-passage'].map(name=>'assets/backgrounds/transitions/'+name+'.png'));
+files.push(...['island-config','island-combat','resurrection-rewards','island-renderer'].map(name=>'js/'+name+'.js'));
 for (const file of [...files,...managers]) {
   if(file.endsWith('.js'))execFileSync(process.execPath,['--check',path.join(root,file)],{stdio:'inherit'});
   const target=path.join(root,'dist',file);

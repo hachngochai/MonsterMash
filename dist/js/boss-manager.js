@@ -21,7 +21,12 @@
     160:{name:'Hóa Ngư Nhân',skills:['merfolk']},
     170:{name:'Cầu Chớp',weapons:['lightningOrb']},
     180:{name:'Tam Tinh Hải Đăng',skills:['starfish']},
-    190:{name:'Tự Do Đại Dương',skills:['freeSwim']}
+    190:{name:'Tự Do Đại Dương',skills:['freeSwim']},
+    200:{name:'Tiểu Ngư Nhân Hộ Vệ',skills:['merfolkArmor']},
+    210:{name:'Tiểu Moai Đồng Hành',skills:['moaiCompanion']},
+    220:{name:'Kho Khiên · 5 Khiên',skills:['fiveShields']},
+    230:{name:'Trứng Phục Sinh · Bảy Vũ Khí',weapons:['easterEgg']},
+    240:{name:'Ảo Mộng · Sách Phép',weapons:['dreamBook']}
   });
 
   function onDefeated(game, enemy) {

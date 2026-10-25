@@ -1,18 +1,26 @@
 # Monster Mash — The Midnight Hunt
 
-Rebuild 17 (v4.3.5) của Monster Mash của KIO: 200 màn, 4 cốt truyện, Canvas 2D và bản đồ Three.js đóng gói trong repo. Không cần CDN hoặc cài package. Tiến độ màn, kỹ năng, vũ khí, kỷ lục và cài đặt lưu vĩnh viễn bằng localStorage trên trình duyệt hiện tại.
+Rebuild 18 (v4.4.0) của Monster Mash của KIO: 250 màn, 5 cốt truyện, Canvas 2D và bản đồ Three.js đóng gói trong repo. Không cần CDN hoặc cài package. Tiến độ màn, kỹ năng, vũ khí, kỷ lục và cài đặt lưu vĩnh viễn bằng localStorage trên trình duyệt hiện tại.
+
+## Đảo Phục Sinh · v4.4.0
+
+Mở rộng 201–250 với sáu loài quái, năm miền đất và năm boss mới; bản đồ Three.js có trang đảo riêng cùng tuyến 200 → 201 → 210. Thêm hướng dẫn tại 201/211/221/231/241, đoạn lên bờ đi sâu vào đảo và kết thúc Makemake. Tạo hình và dữ liệu chiến dịch 1–200 được giữ nguyên.
+
+Thưởng mới: boss200 mở Tiểu Ngư Nhân tạo giáp 3s mỗi10s; boss210 mở Tiểu Moai R; boss220 tăng kho khiên lên5; boss230 mở Trứng Phục Sinh bảy dạng20s; boss240 mở sách Ảo Mộng gọi bản sao. Boss250 dùng Phán Xét: mở hai phong ấn bằng E/nút cảm ứng trong8s rồi đứng trong vùng sáng, không thể thay bằng bất tử cá nhân.
+
+[Phòng thử Đảo Phục Sinh](tests/island-preview.html?v=4.4.0) · [Xem đoạn lên đảo](tests/chapter-preview.html?v=4.4.0#island) · [Quy tắc, phần thưởng và chỉ số chơi thử đã duyệt](docs/resurrection-island.md).
 
 ## Bối cảnh chuyển cảnh hoạt hình · v4.3.5
 
 Rừng, hang, xoáy nước, đáy biển và bình minh dùng nền hoạt hình phân khối có đường viền và chi tiết riêng, hợp với nhân vật gốc. Cú nhảy, nước bắn và tâm xoáy dùng chung mốc để khớp hình. Phần dưới nước của phim có nền riêng, không lấy lại ảnh biển gameplay. Giữ nhân vật, boss, nền màn chơi và cơ chế chiến đấu đã có.
 
-[Chạy bốn chuyển cảnh](tests/chapter-preview.html?v=4.3.5) · [Bộ nền, nguồn tạo hình và căn chuyển động](docs/block-cinematics.md).
+[Chạy bốn chuyển cảnh](tests/chapter-preview.html?v=4.4.0) · [Bộ nền, nguồn tạo hình và căn chuyển động](docs/block-cinematics.md).
 
 ## Chuyển động Kỵ sĩ đầu chim · v4.3.4
 
 Dạng Kỵ sĩ ở boss140 có bước chân luân phiên, chuyển động thân/cánh và nhịp lấy đà–chém–thu lưỡi hái trên một bề mặt liên tục của sprite gốc. Nhịp bước theo quãng di chuyển thật; bắt đầu/dừng, chuyển đòn và dịch chuyển không làm hoạt ảnh giật hoặc khởi động lại. Giữ nguyên toàn bộ tạo hình, background, sát thương, tốc độ và nhịp kỹ năng. Giảm chuyển động vẫn dùng hình nguyên vẹn.
 
-[Thử Kỵ sĩ đầu chim](tests/abyss-preview.html?v=4.3.5#preview-140): chọn **Kỵ sĩ đầu chim** rồi bật **Chạy giao tranh**.
+[Thử Kỵ sĩ đầu chim](tests/abyss-preview.html?v=4.4.0#preview-140): chọn **Kỵ sĩ đầu chim** rồi bật **Chạy giao tranh**.
 
 ## Bản đồ có bối cảnh riêng · v4.3.3
 
@@ -22,7 +30,7 @@ Lời Nguyền Cổ Thú có cửa hang lớn, nhũ đá, rễ cổ thụ và đ
 
 Bốn bối cảnh chuyển cảnh mới có đường đi và mặt nước đồng bộ với chuyển động nhân vật: rừng cổ thụ nhiều lớp sương, hang đá với ánh đuốc, xoáy biển có động tác lấy đà–nhảy–bị hút xuống, và bình minh trên bờ biển. Máy quay đẩy/lia nhẹ, bóng tiếp xúc và các lớp ánh sáng/bụi/bọt nước tạo chiều sâu. Font Noto tiếng Việt thống nhất, có nền tối giữ độ tương phản trên cả cảnh bình minh.
 
-[Rạp chuyển cảnh](tests/chapter-preview.html?v=4.3.5) phát từng đoạn hoặc cả hành trình, hỗ trợ tạm dừng và kéo thước phim. Đây là bản xem riêng, không ghi tiến độ. Thời lượng trong game giữ 5 giây ở các đoạn50/100/150 và11 giây ở đoạn kết200; chế độ giảm chuyển động1,2 giây; bỏ qua và đóng băng chiến đấu/oxy vẫn giữ nguyên.
+[Rạp chuyển cảnh](tests/chapter-preview.html?v=4.4.0) phát từng đoạn hoặc cả hành trình, hỗ trợ tạm dừng và kéo thước phim. Đây là bản xem riêng, không ghi tiến độ. Thời lượng trong game giữ 5 giây ở các đoạn50/100/150 và11 giây ở đoạn kết200; chế độ giảm chuyển động1,2 giây; bỏ qua và đóng băng chiến đấu/oxy vẫn giữ nguyên.
 
 Bản đồ chọn màn dùng địa hình Three.js nổi, tán cây nhiều khối, tháp cổ, đá, thạch anh và san hô theo từng cốt truyện; nước, bờ đảo và bóng đổ chuyển động nhẹ. Các vật thể 3D tránh đường đi và mốc boss, giữ nguyên bố cục bốn vùng đất cùng thao tác vuốt. Góc nhìn cố định, chỉ nghiêng nhẹ theo chuột. Nếu WebGL không có hoặc mất ngữ cảnh, bản đồ SVG vẫn dùng được. Giới hạn 30fps và tỉ lệ điểm ảnh1,5; ngừng vẽ khi rời trang chủ.
 
@@ -34,7 +42,7 @@ Chuyển cảnh lấy khung hình thật đang chơi để hòa vào phim, rồi
 
 Xúc tu Kraken và mực vươn từ thân theo đường cong liên tục, thuôn dần tới đầu, có mặt lưng phân mảng và giác hút bám theo hướng uốn. Động tác vươn diễn ra trong thời gian cảnh báo; quấn và co về không thêm vùng sát thương. Cú cắn dùng khớp hàm trên chính tạo hình gốc, có nhịp há–ngoạm–thu, không còn hai cung sáng giả miệng. Sát thương, phạm vi và hồi chiêu giữ nguyên.
 
-Mỗi 10 phát bắn gây sát thương lên boss được cộng 1 khiên, nay áp dụng cả Hải Vực và boss Kraken triệu hồi. Cầu Chớp và sóng lưỡi hái cũng được tính; đòn miễn nhiễm, phản xạ, lăn chém và cận chiến không tính. Mỗi vật bắn chỉ tính một lần. Giữ giới hạn 3 khiên và các mốc thưởng riêng của KingKong, Kỵ Sĩ Rồng, Chimera để không cộng trùng. HUD hiện tiến độ hoặc báo kho đầy 3/3.
+Mỗi 10 phát bắn gây sát thương lên boss được cộng 1 khiên, nay áp dụng cả Hải Vực và boss Kraken triệu hồi. Cầu Chớp và sóng lưỡi hái cũng được tính; đòn miễn nhiễm, phản xạ, lăn chém và cận chiến không tính. Mỗi vật bắn chỉ tính một lần. Giữ giới hạn 3 khiên và các mốc thưởng riêng của KingKong, Kỵ Sĩ Rồng, Chimera để không cộng trùng. HUD hiện tiến độ hoặc báo kho đầy theo giới hạn hiện tại; sau boss220 giới hạn tăng từ3 lên5, áp dụng cả các mốc thưởng riêng của boss cũ.
 
 Chữ chuyển cảnh dùng chung Noto Sans/Noto Serif tiếng Việt, chuẩn hóa NFC và khoảng cách chữ. Phòng thử có nút xem ngay xúc tu Kraken/mực, cú cắn và tùy chọn xem chậm.
 
@@ -44,7 +52,7 @@ Hải Vực Quên Lãng đã mở đủ 151–200: năm tầng biển, Mega Lond
 
 Chuyển cảnh 50→51 tiến vào rừng; 100→101 cầm đuốc vào hang; 150→151 nhảy xuống xoáy biển. Đoạn kết 200 đưa người chơi từ đáy biển trở lại đất liền. Có thể bỏ qua bằng nút trên màn hoặc Enter/Esc/Space; không chạy combat hay hao oxy trong chuyển cảnh.
 
-[Chơi bản chính](https://hachngochai.github.io/MonsterMash/?v=4.3.5) · [Bản test mở toàn bộ](https://hachngochai.github.io/MonsterMash/?test=all&v=4.3.5) · [Phòng thử 171–200 và chuyển cảnh](tests/ocean-depths-preview.html) · [Cấu hình và điều kiện thắng](docs/deep-final-sea.md).
+[Chơi bản chính](https://hachngochai.github.io/MonsterMash/?v=4.4.0) · [Bản test mở toàn bộ](https://hachngochai.github.io/MonsterMash/?test=all&v=4.4.0) · [Phòng thử 171–200 và chuyển cảnh](tests/ocean-depths-preview.html) · [Cấu hình và điều kiện thắng](docs/deep-final-sea.md).
 
 Các chỉ số chưa được quy định là **cân bằng chơi thử**, tách trong config. Hóa Thạch của Kraken dùng cấu hình đã duyệt: một lần tại 25% HP, hồi 25% HP tối đa trong 5s, vẫn nhận sát thương; gọi Mega London và Leviathan mỗi con 25% HP gốc, chỉ cắn cơ bản, phải hạ đủ ba. Không có phần thưởng 200 tự thêm.
 
@@ -70,9 +78,9 @@ Kiểm tra phóng lớn tại [phòng thử Cổ Thần](tests/deity-preview.htm
 
 ## Bản test công khai · v4.0.5
 
-[Mở và chia sẻ bản test](https://hachngochai.github.io/MonsterMash/?test=all&v=4.3.5). Ai có link đều chơi được trên PC hoặc điện thoại, không cần tài khoản. Mỗi người chơi trên thiết bị riêng.
+[Mở và chia sẻ bản test](https://hachngochai.github.io/MonsterMash/?test=all&v=4.4.0). Ai có link đều chơi được trên PC hoặc điện thoại, không cần tài khoản. Mỗi người chơi trên thiết bị riêng.
 
-Link `?test=all` mở đủ 200 màn và toàn bộ phần thưởng, vũ khí, kỹ năng để thử. Badge **BẢN TEST** giúp nhận biết. Độ khó, sát thương, giới hạn đạn và cơ chế boss giữ nguyên. Màn 70 vẫn dùng quy tắc riêng của Trăng Máu.
+Link `?test=all` mở đủ 250 màn và toàn bộ phần thưởng, vũ khí, kỹ năng để thử. Badge **BẢN TEST** giúp nhận biết. Độ khó, sát thương, giới hạn đạn và cơ chế boss giữ nguyên. Màn 70 vẫn dùng quy tắc riêng của Trăng Máu.
 
 Tiến trình, trang bị, kỹ năng và cài đặt thay đổi trong bản test chỉ tồn tại trong phiên đang mở, không ghi đè save thật. Mở link chính không có `test=all` để tiếp tục hành trình đã lưu. Localhost mặc định vẫn bật test; thêm `?test=off` (có thể kèm `v`) để thử lưu tiến độ bình thường.
 

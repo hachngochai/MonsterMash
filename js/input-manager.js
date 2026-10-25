@@ -29,6 +29,7 @@
       const dir = direction < 0 ? -1 : 1;
       if (g.weaponPicker?.open) { this.navigate(g, dir); return true; }
       if (g.screen !== 'playing') return false;
+      if(MM.ResurrectionRewards?.directionTap(g,dir))return true;
       if (!g.inputState) this.init(g);
       const state = g.inputState;
       const source = options.source === 'touch' ? 'touch' : 'keyboard';

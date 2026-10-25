@@ -128,7 +128,7 @@
     if(!e?.vinePhase||e.kongFinalTriggered||!alive(e))return;
     e.highAimShots++;
     if(e.highAimShots%5===0){
-      if(game.shieldCount<3){game.shieldCount++;game.floating?.(game.player.x,game.player.y-game.player.h-15,'5 PHÁT TẦM CAO · +1 KHIÊN','#a7e6c0');game.sound?.play('shield');}
+      if(game.shieldCount<(MM.ResurrectionRewards?.shieldCap(game)||3)){game.shieldCount++;game.floating?.(game.player.x,game.player.y-game.player.h-15,'5 PHÁT TẦM CAO · +1 KHIÊN','#a7e6c0');game.sound?.play('shield');}
       game.updateUI?.();
     }
   }
