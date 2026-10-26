@@ -1,60 +1,60 @@
-<!doctype html><html lang="vi"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Đảo Phục Sinh · Phòng thử 201–250</title><link rel="stylesheet" href="../assets/fonts/fonts.css?v=4.4.0"><style>
+<!doctype html><html lang="vi"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Đảo Phục Sinh · Phòng thử 201–250</title><link rel="stylesheet" href="../assets/fonts/fonts.css?v=4.4.1"><style>
 *{box-sizing:border-box}body{margin:0;background:#112128;color:#e1dfc6;font:14px 'Noto Sans',sans-serif}main{max-width:1200px;margin:auto;padding:20px}h1{font:600 29px 'Noto Serif',serif;margin:5px 0 10px}p{color:#a8c4bd;line-height:1.6}nav,.tools{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}button,select,a{font:inherit;background:#2d463f;border:1px solid #6d8a78;border-radius:7px;padding:9px 13px;color:#e5e5c8;text-decoration:none}button{cursor:pointer}button[aria-pressed=true]{background:#797449}canvas{display:block;width:100%;max-height:68dvh;aspect-ratio:16/9;object-fit:contain;background:#10232d;border:1px solid #678a76;border-radius:10px;touch-action:none}small{color:#9cbcb1}.pad{display:flex;gap:5px;flex-wrap:wrap}.pad button{touch-action:none;min-width:60px;user-select:none}#status{min-height:24px}@media(max-width:700px){main{padding:10px}h1{font-size:23px}button,select,a{padding:8px;font-size:12px}canvas{max-height:none}}
-</style><main><h1>Đảo Phục Sinh</h1><p>Phòng thử riêng cho năm miền đất, boss và phần thưởng. Mở đủ kỹ năng để thử, không ghi tiến độ bản chính.</p><nav id="maps"></nav><div class="tools"><label>Vũ khí <select id="weapon" aria-label="Vũ khí thử"></select></label><button id="motion">Tạm dừng</button><button id="reset">Thử lại</button><button id="half">Boss còn nửa máu</button><button id="form">Trứng · dạng kế tiếp</button><label><input id="safe" type="checkbox" checked>Giữ HP để xem chiêu</label><a href="../?test=all&v=4.4.0">Vào game</a></div><canvas id="island-canvas" width="960" height="540" tabindex="0" aria-label="Sân thử Đảo Phục Sinh"></canvas><p id="status" role="status"></p><div class="pad"><button data-control="left">←</button><button data-control="right">→</button><button data-control="jump">↑ Nhảy</button><button data-control="fire-left">Bắn ←</button><button data-control="fire-right">Bắn →</button><button data-control="shield">Khiên</button><button id="summon">Tiểu Moai · R</button><button id="seal">Phong ấn · E</button></div><p>PC: ←/→ di chuyển · ↑ nhảy · A/D bắn · F vũ khí · R Tiểu Moai · E phong ấn. Phán Xét: tới hai bệ khác nhau để kích hoạt, rồi đứng trong vùng sáng; bỏ chọn giữ HP để thử điều kiện sống sót thật.</p><small>Các thông số còn thiếu dùng bộ cân bằng thử đã duyệt; tất cả nằm trong cấu hình riêng.</small></main>
-<script defer src="../js/typography.js?v=4.4.0"></script>
-<script defer src="../js/abyss-config.js?v=4.4.0"></script>
-<script defer src="../js/underwater-config.js?v=4.4.0"></script>
-<script defer src="../js/middle-sea-config.js?v=4.4.0"></script>
-<script defer src="../js/predator-sea-config.js?v=4.4.0"></script>
-<script defer src="../js/deep-sea-config.js?v=4.4.0"></script>
-<script defer src="../js/final-sea-config.js?v=4.4.0"></script>
-<script defer src="../js/island-config.js?v=4.4.0"></script>
-<script defer src="../js/campaign.js?v=4.4.0"></script>
-<script defer src="../js/mobile.js?v=4.4.0"></script>
-<script defer src="../js/bosses.js?v=4.4.0"></script>
-<script defer src="../js/golem.js?v=4.4.0"></script>
-<script defer src="../js/wolves.js?v=4.4.0"></script>
-<script defer src="../js/kong.js?v=4.4.0"></script>
-<script defer src="../js/dragons.js?v=4.4.0"></script>
-<script defer src="../js/mythic.js?v=4.4.0"></script>
-<script defer src="../js/abyss-combat.js?v=4.4.0"></script>
-<script defer src="../js/abyss-renderer.js?v=4.4.0"></script>
-<script defer src="../js/underwater.js?v=4.4.0"></script>
-<script defer src="../js/merfolk.js?v=4.4.0"></script>
-<script defer src="../js/underwater-enemies.js?v=4.4.0"></script>
-<script defer src="../js/boss160.js?v=4.4.0"></script>
-<script defer src="../js/middle-sea-enemies.js?v=4.4.0"></script>
-<script defer src="../js/boss170.js?v=4.4.0"></script>
-<script defer src="../js/predator-sea-enemies.js?v=4.4.0"></script>
-<script defer src="../js/boss-180.js?v=4.4.0"></script>
-<script defer src="../js/deep-sea-enemies.js?v=4.4.0"></script>
-<script defer src="../js/boss190.js?v=4.4.0"></script>
-<script defer src="../js/final-sea-enemies.js?v=4.4.0"></script>
-<script defer src="../js/boss200.js?v=4.4.0"></script>
-<script defer src="../js/underwater-renderer.js?v=4.4.0"></script>
-<script defer src="../js/ocean-visuals.js?v=4.4.0"></script>
-<script defer src="../js/renderer.js?v=4.4.0"></script>
-<script defer src="../js/chapter-transition.js?v=4.4.0"></script>
-<script defer src="../js/save-manager.js?v=4.4.0"></script>
-<script defer src="../js/boss-manager.js?v=4.4.0"></script>
-<script defer src="../js/map-manager.js?v=4.4.0"></script>
-<script defer src="../js/skill-manager.js?v=4.4.0"></script>
-<script defer src="../js/lightning-orb.js?v=4.4.0"></script>
-<script defer src="../js/weapon-manager.js?v=4.4.0"></script>
-<script defer src="../js/input-manager.js?v=4.4.0"></script>
-<script defer src="../js/progression-ui.js?v=4.4.0"></script>
-<script defer src="../js/key-bindings.js?v=4.4.0"></script>
-<script defer src="../js/story.js?v=4.4.0"></script>
-<script defer src="../js/tutorial.js?v=4.4.0"></script>
-<script defer src="../js/island-combat.js?v=4.4.0"></script>
-<script defer src="../js/resurrection-rewards.js?v=4.4.0"></script>
-<script defer src="../js/island-renderer.js?v=4.4.0"></script>
-<script defer src="../js/game.js?v=4.4.0"></script>
-<script defer src="../js/atlas-landmarks.js?v=4.4.0"></script>
-<script defer src="../js/atlas-terrain.js?v=4.4.0"></script>
-<script defer src="../js/atlas-3d.js?v=4.4.0"></script>
-<script>window.addEventListener('DOMContentLoaded',()=>{const canvas=document.getElementById('island-canvas'),status=document.getElementById('status'),weapon=document.getElementById('weapon');let g,level=201,last=0,running=true;
-function reset(id=level){level=id;g=new MM.Game({headless:true,testMode:true,storage:{getItem:()=>null,setItem:()=>{}},random:Math.random});g.start(id);g.canvas=canvas;g.ui={};g.shieldCount=g.maxShields();g.player.invulnerable=0;
+</style><main><h1>Đảo Phục Sinh</h1><p>Phòng thử riêng cho năm miền đất, boss và phần thưởng. Mở đủ kỹ năng để thử, không ghi tiến độ bản chính.</p><nav id="maps"></nav><div class="tools"><label>Vũ khí <select id="weapon" aria-label="Vũ khí thử"></select></label><button id="motion">Tạm dừng</button><button id="reset">Thử lại</button><button id="half">Boss còn nửa máu</button><button id="form">Trứng · dạng kế tiếp</button><label><input id="safe" type="checkbox" checked>Giữ HP để xem chiêu</label><a href="../?test=all&v=4.4.1">Vào game</a><a href="island-art-preview.html?v=4.4.1">Bộ tạo hình ↗</a></div><canvas id="island-canvas" width="960" height="540" tabindex="0" aria-label="Sân thử Đảo Phục Sinh"></canvas><p id="status" role="status"></p><div class="pad"><button data-control="left">←</button><button data-control="right">→</button><button data-control="jump">↑ Nhảy</button><button data-control="fire-left">Bắn ←</button><button data-control="fire-right">Bắn →</button><button data-control="shield">Khiên</button><button id="summon">Tiểu Moai · R</button><button id="seal">Phong ấn · E</button></div><p>PC: ←/→ di chuyển · ↑ nhảy · A/D bắn · F vũ khí · R Tiểu Moai · E phong ấn. Phán Xét: tới hai bệ khác nhau để kích hoạt, rồi đứng trong vùng sáng; bỏ chọn giữ HP để thử điều kiện sống sót thật.</p><small>Các thông số còn thiếu dùng bộ cân bằng thử đã duyệt; tất cả nằm trong cấu hình riêng.</small></main>
+<script defer src="../js/typography.js?v=4.4.1"></script>
+<script defer src="../js/abyss-config.js?v=4.4.1"></script>
+<script defer src="../js/underwater-config.js?v=4.4.1"></script>
+<script defer src="../js/middle-sea-config.js?v=4.4.1"></script>
+<script defer src="../js/predator-sea-config.js?v=4.4.1"></script>
+<script defer src="../js/deep-sea-config.js?v=4.4.1"></script>
+<script defer src="../js/final-sea-config.js?v=4.4.1"></script>
+<script defer src="../js/island-config.js?v=4.4.1"></script>
+<script defer src="../js/campaign.js?v=4.4.1"></script>
+<script defer src="../js/mobile.js?v=4.4.1"></script>
+<script defer src="../js/bosses.js?v=4.4.1"></script>
+<script defer src="../js/golem.js?v=4.4.1"></script>
+<script defer src="../js/wolves.js?v=4.4.1"></script>
+<script defer src="../js/kong.js?v=4.4.1"></script>
+<script defer src="../js/dragons.js?v=4.4.1"></script>
+<script defer src="../js/mythic.js?v=4.4.1"></script>
+<script defer src="../js/abyss-combat.js?v=4.4.1"></script>
+<script defer src="../js/abyss-renderer.js?v=4.4.1"></script>
+<script defer src="../js/underwater.js?v=4.4.1"></script>
+<script defer src="../js/merfolk.js?v=4.4.1"></script>
+<script defer src="../js/underwater-enemies.js?v=4.4.1"></script>
+<script defer src="../js/boss160.js?v=4.4.1"></script>
+<script defer src="../js/middle-sea-enemies.js?v=4.4.1"></script>
+<script defer src="../js/boss170.js?v=4.4.1"></script>
+<script defer src="../js/predator-sea-enemies.js?v=4.4.1"></script>
+<script defer src="../js/boss-180.js?v=4.4.1"></script>
+<script defer src="../js/deep-sea-enemies.js?v=4.4.1"></script>
+<script defer src="../js/boss190.js?v=4.4.1"></script>
+<script defer src="../js/final-sea-enemies.js?v=4.4.1"></script>
+<script defer src="../js/boss200.js?v=4.4.1"></script>
+<script defer src="../js/underwater-renderer.js?v=4.4.1"></script>
+<script defer src="../js/ocean-visuals.js?v=4.4.1"></script>
+<script defer src="../js/renderer.js?v=4.4.1"></script>
+<script defer src="../js/chapter-transition.js?v=4.4.1"></script>
+<script defer src="../js/save-manager.js?v=4.4.1"></script>
+<script defer src="../js/boss-manager.js?v=4.4.1"></script>
+<script defer src="../js/map-manager.js?v=4.4.1"></script>
+<script defer src="../js/skill-manager.js?v=4.4.1"></script>
+<script defer src="../js/lightning-orb.js?v=4.4.1"></script>
+<script defer src="../js/weapon-manager.js?v=4.4.1"></script>
+<script defer src="../js/input-manager.js?v=4.4.1"></script>
+<script defer src="../js/progression-ui.js?v=4.4.1"></script>
+<script defer src="../js/key-bindings.js?v=4.4.1"></script>
+<script defer src="../js/story.js?v=4.4.1"></script>
+<script defer src="../js/tutorial.js?v=4.4.1"></script>
+<script defer src="../js/island-combat.js?v=4.4.1"></script>
+<script defer src="../js/resurrection-rewards.js?v=4.4.1"></script>
+<script defer src="../js/island-art.js?v=4.4.1"></script><script defer src="../js/island-fx.js?v=4.4.1"></script><script defer src="../js/island-renderer.js?v=4.4.1"></script>
+<script defer src="../js/game.js?v=4.4.1"></script>
+<script defer src="../js/atlas-landmarks.js?v=4.4.1"></script>
+<script defer src="../js/atlas-terrain.js?v=4.4.1"></script>
+<script defer src="../js/atlas-3d.js?v=4.4.1"></script>
+<script>window.addEventListener('DOMContentLoaded',()=>{const canvas=document.getElementById('island-canvas'),status=document.getElementById('status'),weapon=document.getElementById('weapon');let g,level=201,last=0,running=true;const requested=Number(location.hash.replace('#preview-',''));if(Number.isInteger(requested)&&requested>=201&&requested<=250)level=requested;
+function reset(id=level){level=id;history.replaceState(null,'','#preview-'+level);g=new MM.Game({headless:true,testMode:true,storage:{getItem:()=>null,setItem:()=>{}},random:Math.random});g.start(id);g.canvas=canvas;g.ui={};g.shieldCount=g.maxShields();g.player.invulnerable=0;
  if(g.level.boss){g.bossSpawned=true;const b=g.spawn('boss',1);b.phase='active';b.warning=0;b.x=740;g.spawnTimer=999;}weapon.value='gun';canvas.focus();for(const button of document.querySelectorAll('[data-stage]'))button.setAttribute('aria-pressed',String(Number(button.dataset.stage)===level));}
 for(const id of [201,210,211,220,221,230,231,240,241,250]){const b=document.createElement('button');b.textContent=String(id)+' · '+MM.Campaign.worlds[Math.floor((id-1)/10)].name;b.dataset.stage=id;b.onclick=()=>reset(id);document.getElementById('maps').append(b);}
 for(const id of MM.WeaponManager.order)weapon.add(new Option(MM.WeaponManager.names[id],id));weapon.onchange=()=>MM.WeaponManager.select(g,weapon.value);
@@ -62,4 +62,4 @@ document.getElementById('reset').onclick=()=>reset();document.getElementById('mo
 document.getElementById('summon').onclick=()=>MM.ResurrectionRewards.activate(g);document.getElementById('seal').onclick=()=>MM.IslandCombat.interact(g);
 for(const b of document.querySelectorAll('[data-control]')){b.onpointerdown=e=>g.padDown(e,b);b.onpointerup=e=>g.padUp(e,b);b.onpointercancel=e=>g.padUp(e,b);}
 window.addEventListener('keydown',e=>{if(!['SELECT','INPUT','BUTTON'].includes(e.target.tagName))g.keyDown(e);});window.addEventListener('keyup',e=>g.keyUp(e));canvas.onpointerdown=()=>canvas.focus();
-reset();function frame(t){const dt=last?Math.min(.05,(t-last)/1000):0;last=t;if(running){if(document.getElementById('safe').checked){g.player.health=g.player.maxHealth;g.player.invulnerable=.1;}g.update(dt);}MM.Renderer.draw(canvas.getContext('2d'),g);const boss=g.enemies.find(e=>e.boss&&!e.dead),r=g.resurrection;status.textContent='Màn '+level+' · HP '+g.player.health+' · Khiên '+g.shieldCount+'/'+g.maxShields()+' · '+(boss?'Boss '+boss.health.toFixed(1)+' HP · '+boss.islandState:'Quái '+g.levelKills+'/'+g.level.target)+' · '+(r.form?MM.ResurrectionRewards.names[r.form]+' '+Math.ceil(r.formRemaining)+'s':'')+' · '+g.screen;requestAnimationFrame(frame);}requestAnimationFrame(frame);});</script></html>
+reset();function frame(t){const dt=last?Math.min(.05,(t-last)/1000):0;last=t;if(running){if(document.getElementById('safe').checked){g.player.health=g.player.maxHealth;g.player.invulnerable=.1;}g.update(dt);}MM.Renderer.draw(canvas.getContext('2d'),g);const boss=g.enemies.find(e=>e.boss&&!e.dead),r=g.resurrection;status.textContent='Màn '+level+' · HP '+g.player.health+' · Khiên '+g.shieldCount+'/'+g.maxShields()+' · '+(boss?'Boss '+boss.health.toFixed(1)+' HP · '+boss.islandState:'Quái '+g.levelKills+'/'+g.level.target)+' · '+(r.form?MM.ResurrectionRewards.names[r.form]+' '+Math.ceil(r.formRemaining)+'s':'')+' · '+g.screen;requestAnimationFrame(frame);}status.textContent='Đang nạp bộ tạo hình…';Promise.all([MM.Typography?.ready,MM.IslandArt?.allArtReady]).then(()=>requestAnimationFrame(frame));});</script></html>

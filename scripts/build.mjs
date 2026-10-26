@@ -21,7 +21,9 @@ files.push(...["predator-sea-config", "predator-sea-enemies", "boss-180", "deep-
 files.push(...["hammerhead", "electric-ray", "swordfish", "mega-london", "gulper", "ghost-shark", "glow-bug", "leviathan", "sea-crab", "pearl-clam", "angler-fish", "giant-squid", "sea-turtle", "kraken"].map(name=>'assets/sprites/underwater/'+name+'.png'));
 files.push(...['predator-trench','deep-chasm','kraken-grave'].map(name=>'assets/backgrounds/underwater/'+name+'.png'));
 files.push(...['forest-passage','cave-passage','whirlpool-passage','shore-return','submerged-passage'].map(name=>'assets/backgrounds/transitions/'+name+'.png'));
-files.push(...['island-config','island-combat','resurrection-rewards','island-renderer'].map(name=>'js/'+name+'.js'));
+files.push(...['island-config','island-combat','resurrection-rewards','island-art','island-fx','island-renderer'].map(name=>'js/'+name+'.js'));
+files.push(...['easter-egg','ghost-bunny','patrick','leprechaun','drunken-wanderer','mini-moai','awakening-moai','deforested-alpha','birdman','mana-spirit','makemake','golden-fish'].map(name=>'assets/sprites/island/'+name+'.png'));
+files.push(...['quarry','dead-palms','bird-cliffs','mana-sanctuary','volcano'].map(name=>'assets/backgrounds/island/'+name+'.png'));
 for (const file of [...files,...managers]) {
   if(file.endsWith('.js'))execFileSync(process.execPath,['--check',path.join(root,file)],{stdio:'inherit'});
   const target=path.join(root,'dist',file);

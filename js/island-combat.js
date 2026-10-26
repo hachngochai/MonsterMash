@@ -19,7 +19,7 @@
  }
  function tell(g,e,skill,time=C().warning){e.islandState='tell';e.islandSkill=skill;e.islandTimer=e.islandDuration=time;e.islandProgress=0;e.targetX=clamp(g.player.x);e.targetY=g.player.y;e.dir=Math.sign(g.player.x-e.x)||e.dir||1;e.attackDir=e.dir;}
  function rest(e,time=C().recovery){e.islandState='rest';e.islandTimer=time;e.islandSkill=null;}
- function hazard(g,e,type,x,y,w,h,damage=1,extra={}){const s=state(g);if(s.hazards.length>=C().maxHazards)return null;const z={type,owner:e,x,y,w,h,damage,phase:'warning',timer:C().warning,life:C().active,hit:false,...extra};s.hazards.push(z);return z;}
+ function hazard(g,e,type,x,y,w,h,damage=1,extra={}){const s=state(g);if(s.hazards.length>=C().maxHazards)return null;const z={type,owner:e,x,y,w,h,damage,phase:'warning',timer:C().warning,life:C().active,hit:false,...extra};z.visualWarning=z.phase==='warning'?z.timer:0;z.visualLife=z.phase==='active'?z.timer:z.life;s.hazards.push(z);return z;}
  function apply(g,e,spec={}){if(g.screen!=='playing')return false;const s=state(g),damage=(spec.damage||0)+(spec.damage>0&&s.vulnerable>0?C().manaExtraDamage:0);
   return g.applyCombatEffect?.({owner:e,sourceBoss:!!e?.boss,ordinaryEnemy:!e?.boss,...spec,damage})===true;}
  function projectile(g,e,type,damage=1,extra={}){const s=state(g);if(s.projectiles.length>=C().maxProjectiles)return null;const y=e.y-e.h*.6,a=Math.atan2((g.player.y-g.player.h*.5)-y,g.player.x-e.x),v=O().projectileSpeed;
