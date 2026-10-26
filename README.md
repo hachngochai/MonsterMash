@@ -1,6 +1,12 @@
 # Monster Mash — The Midnight Hunt
 
-Rebuild 19 (v4.4.1) của Monster Mash của KIO: 250 màn, 5 cốt truyện, Canvas 2D và bản đồ Three.js đóng gói trong repo. Không cần CDN hoặc cài package. Tiến độ màn, kỹ năng, vũ khí, kỷ lục và cài đặt lưu vĩnh viễn bằng localStorage trên trình duyệt hiện tại.
+Rebuild 20 (v4.4.2) của Monster Mash của KIO: 250 màn, 5 cốt truyện, Canvas 2D và bản đồ Three.js đóng gói trong repo. Không cần CDN hoặc cài package. Tiến độ màn, kỹ năng, vũ khí, kỷ lục và cài đặt lưu vĩnh viễn bằng localStorage trên trình duyệt hiện tại.
+
+## Bản đồ núi Moai · v4.4.2
+
+Đảo Phục Sinh thay các công trình chung bằng núi basalt mang gương mặt Moai, tượng tổ tiên và bia cổ ngữ Cá/Chim. Bề mặt đá, mũi, hốc mắt và nét khắc có hình khối riêng; các dấu X và chấm màn chơi giữ nguyên vị trí. Bản SVG dự phòng dùng cùng chủ đề khi không có WebGL. Chương 1–4 và gameplay giữ nguyên.
+
+[Chạy chuyển cảnh lên đảo](tests/chapter-preview.html?v=4.4.2#island) · [Phát cả hành trình](tests/chapter-preview.html?v=4.4.2).
 
 ## Tạo hình Đảo Phục Sinh · v4.4.1
 

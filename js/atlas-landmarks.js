@@ -5,18 +5,19 @@
  const definitions={
   2:[{id:'ancient-cave',x:750,y:218,width:128,depth:50,height:72},{id:'old-growth-guardians',x:750,y:238,width:176,depth:35,height:63}],
   3:[{id:'terraced-abyss',x:530,y:240,width:226,depth:98,height:78},{id:'sunken-rune-sanctum',x:530,y:240,width:49,depth:29,height:38},{id:'colossal-rib-cage',x:366,y:263,width:91,depth:34,height:36}],
-  4:[{id:'drowned-temple',x:510,y:239,width:107,depth:64,height:44},{id:'broken-shipwreck',x:350,y:282,width:112,depth:38,height:59},{id:'ocean-whirlpool',x:650,y:244,width:140,depth:66,height:18},{id:'living-coral-reefs',x:465,y:270,width:540,depth:74,height:29}]
+  4:[{id:'drowned-temple',x:510,y:239,width:107,depth:64,height:44},{id:'broken-shipwreck',x:350,y:282,width:112,depth:38,height:59},{id:'ocean-whirlpool',x:650,y:244,width:140,depth:66,height:18},{id:'living-coral-reefs',x:465,y:270,width:540,depth:74,height:29}],
+  5:[{id:'moai-basalt-mountain',x:510,y:240,width:170,depth:70,height:53},{id:'ancestral-moai-guardians',x:510,y:242,width:145,depth:34,height:118},{id:'ancient-glyph-steles',x:660,y:255,width:100,depth:40,height:38}]
  };
  const describe=chapter=>(definitions[chapter]||[]).map(value=>({...value}));
  function build(T,landscape){
   const chapter=Number(landscape.chapter),group=new T.Group(),batches=new Map(),materials={},animations=[],stats={landmarks:describe(chapter).map(value=>value.id),batches:0,instances:0,drawCalls:0};
   group.name='atlas-landmarks-'+chapter;
-  if(chapter<2||chapter>4)return {group,stats,update(){}};
+  if(chapter<2||chapter>5)return {group,stats,update(){}};
   const geometries={rock:new T.IcosahedronGeometry(1,0),leaf:new T.IcosahedronGeometry(1,1),box:new T.BoxGeometry(1,1,1),column:new T.CylinderGeometry(1,1,1,7),spike:new T.ConeGeometry(1,1,5)};
   geometries.column.rotateX(Math.PI*.5);geometries.spike.rotateX(Math.PI*.5);
   const dummy=new T.Object3D(),up=new T.Vector3(0,0,1),vector=new T.Vector3(),quaternion=new T.Quaternion();
   const material=(key,color,extra={})=>materials[key]||(materials[key]=new T.MeshStandardMaterial({color,roughness:.91,flatShading:true,...extra}));
-  const stone=material('stone',chapter===2?0x697164:chapter===3?0x5a506b:0x547d83),lightStone=material('light-stone',chapter===2?0x92957c:chapter===3?0x887395:0x8caaa0),darkStone=material('dark-stone',chapter===2?0x34413b:chapter===3?0x332d47:0x285567);
+  const stone=material('stone',chapter===2?0x697164:chapter===3?0x5a506b:chapter===5?0x706a55:0x547d83),lightStone=material('light-stone',chapter===2?0x92957c:chapter===3?0x887395:chapter===5?0xa69b77:0x8caaa0),darkStone=material('dark-stone',chapter===2?0x34413b:chapter===3?0x332d47:chapter===5?0x3c4238:0x285567);
   const moss=material('moss',chapter===2?0x4d6842:0x4e8f83),bark=material('bark',0x514333),bone=material('bone',0xb7ac9d),wood=material('wood',0x715a43),woodLight=material('wood-light',0x95815c);
   const amber=material('amber',0xf4b75f,{emissive:0xd77b28,emissiveIntensity:.9,roughness:.4}),violet=material('violet',0xbda0eb,{emissive:0x6944a5,emissiveIntensity:.7,roughness:.35}),cyan=material('cyan',0x8ee7dd,{emissive:0x267b87,emissiveIntensity:.55,roughness:.35});
   const coral=material('coral',0xd49d9c),coralTip=material('coral-tip',0xecd2a3),kelp=material('kelp',0x3b9a89);
@@ -210,9 +211,71 @@
    const bubbleGeometry=new T.BufferGeometry();bubbleGeometry.setAttribute('position',new T.Float32BufferAttribute(bubbles,3));const bubbleCloud=new T.Points(bubbleGeometry,new T.PointsMaterial({color:0xc2ede4,size:2.5,transparent:true,opacity:.54,depthWrite:false,sizeAttenuation:false}));group.add(bubbleCloud);stats.drawCalls++;
    animations.push(time=>{schools.forEach((school,i)=>{school.position.x=Math.sin(time*.00027+i*2)*4;school.position.z=Math.sin(time*.00053+i)*1.6;});bubbleCloud.position.z=Math.sin(time*.0007)*2.2;});
   }
+  function islandAncestors(){
+   const cx=510,cy=240,z=ground(cx,cy),cliff=[],terraces=[];
+   // A quarried volcanic ridge rather than a village: its fractured faces rise
+   // inside the exploration loop, leaving the X marks and dot trail untouched.
+   const rings=[[1,0],[.81,14],[.55,36],[.38,46]],sides=13;
+   const point=(i,rise)=>{const a=i*TAU/sides,r=rise[0],noise=1+.13*Math.sin(i*2.8)+.08*Math.cos(i*4.1);return [cx+Math.cos(a)*83*r*noise+Math.sin(a*3)*5*(1-r),cy+Math.sin(a)*31*r*noise+Math.cos(a*5)*3*(1-r),z+rise[1]+Math.sin(i*2.1)*Math.min(rise[1]*.15,7)];};
+   for(let j=0;j<rings.length-1;j++)for(let i=0;i<sides;i++)quad(j%2?terraces:cliff,point(i,rings[j+1]),point(i+1,rings[j+1]),point(i+1,rings[j]),point(i,rings[j]));
+   mesh(cliff,darkStone).name='moai-mountain-cliff';mesh(terraces,stone).name='moai-mountain-terraces';
+   const cap=[];for(let i=0;i<sides;i++)for(const p of [[cx,cy,z+44],point(i+1,rings.at(-1)),point(i,rings.at(-1))])cap.push(p[0]-500,200-p[1],p[2]);mesh(cap,stone);
+   const patina=material('island-patina',0x5c7150),capstone=material('moai-capstone',0x8e6250),shadow=material('moai-carving',0x303b35);
+   function ancestor(x,y,base,s,index){
+    const levels=[[0,7.5,5.6],[14,9,7],[43,11,8],[50,10.3,7.4]],head=[];
+    const height=value=>base+(value<=19?value:19+(value-19)*1.16)*s;
+    const corner=(v,side,front)=>[x+side*v[1]*s,y+front*v[2]*s,height(19+v[0])];
+    for(let j=0;j<levels.length-1;j++)for(const side of [-1,1]){
+     const a=levels[j],b=levels[j+1],front=[corner(a,-1,side),corner(a,1,side),corner(b,1,side),corner(b,-1,side)],edge=[corner(a,side,-1),corner(a,side,1),corner(b,side,1),corner(b,side,-1)];
+     quad(head,...(side<0?front.reverse():front));quad(head,...(side>0?edge.reverse():edge));
+    }
+    quad(head,corner(levels.at(-1),-1,1),corner(levels.at(-1),1,1),corner(levels.at(-1),1,-1),corner(levels.at(-1),-1,-1));
+    mesh(head,stone).name='ancestral-moai-'+index;
+    put('box',darkStone,x,y,base+7*s,26*s,19*s,14*s);
+    rock(x,y,base+4*s,16*s,9*s,11*s,index*.9,stone);
+    put('box',lightStone,x,y+8*s,height(55),22*s,3*s,4*s);
+    for(const side of [-1,1]){
+     put('box',shadow,x+side*5.7*s,y+8.2*s,height(51.8),6*s,.7*s,2.6*s);
+     put('box',stone,x+side*11.2*s,y+.8*s,height(42),3*s,7*s,25.5*s);
+    }
+    const nose=[];const a=[x-2.5*s,y+8.1*s,height(53)],b=[x+2.5*s,y+8.1*s,height(53)],d=[x-3.2*s,y+13.9*s,height(34)],e=[x+3.2*s,y+13.9*s,height(34)],f=[x,y+8.3*s,height(32)];
+    quad(nose,a,d,e,b);for(const p of [a,f,d,b,e,f,d,f,e])nose.push(p[0]-500,200-p[1],p[2]);mesh(nose,lightStone);
+    put('box',shadow,x,y+7.3*s,height(28),10*s,.8*s,1.1*s);
+    put('box',lightStone,x,y+7.6*s,height(25),12*s,2*s,2.4*s);
+    if(index===1)put('column',capstone,x,y,height(71.3),11.8*s,8.8*s,5*s);
+    rock(x-8*s,y-4*s,base-1,8*s,5*s,4*s,index,patina);
+   }
+   // Heights and spacing are fixed; no random face can drift over a route.
+   ancestor(455,244,z+26,.80,0);ancestor(510,237,z+40,.94,1);ancestor(563,246,z+24,.78,2);
+   for(const [i,[dx,dy,h]]of [[0,[-66,-7,29]],[1,[-36,-21,40]],[2,[31,-20,42]],[3,[64,-4,28]],[4,[-43,17,27]],[5,[42,18,29]]]){
+    rock(cx+dx,cy+dy,z,14+i%2*3,9+i%3*2,h*.78,i*.83,i%2?stone:darkStone);
+    put('box',lightStone,cx+dx-3,cy+dy+3,z+h*.72,3,3,h*.31,.1*i);
+   }
+   for(let i=0;i<7;i++)rock(cx-78+i*25,cy+26+(i%2)*3,z,9+i%2*2,7,5+i%3,i*.7,i%3===0?patina:darkStone);
+
+   const incisions=[],inlay=[],ink=new T.LineBasicMaterial({color:0x344237}),ochre=new T.LineBasicMaterial({color:0xc3b488,transparent:true,opacity:.69});
+   function carve(x,y,base,s,paths){for(const points of paths)for(let i=1;i<points.length;i++)for(const [u,v]of [points[i-1],points[i]]){
+    incisions.push(x+u*s-500,200-(y+4.2*s),base+v*s);
+    inlay.push(x+u*s-500,200-(y+4.25*s),base+v*s+.5*s);
+   }}
+   // Invented bird, fish and ancestor petroglyphs echo the island's combat
+   // symbols. They are geometry engraved into front faces, never font glyphs.
+   const glyphs=[[[[-5,25],[-2,28],[0,24],[2,28],[5,25]],[[0,24],[0,17],[-3,14]],[[0,17],[3,14]],[[-5,9],[5,9]]],
+    [[[-5,24],[0,28],[5,24],[0,20],[-5,24]],[[-5,24],[-7,27],[-7,21],[-5,24]],[[0,19],[0,13]],[[-4,10],[0,7],[4,10]]],
+    [[[0,28],[-3,25],[0,22],[3,25],[0,28]],[[0,22],[0,11]],[[-5,20],[0,17],[5,20]],[[-4,8],[0,11],[4,8]]]];
+   for(const [i,[x,y,s]]of [[0,[628,255,.95]],[1,[661,266,1.05]],[2,[694,252,.85]]]){
+    const base=ground(x,y);put('box',darkStone,x,y,base+2,20*s,13*s,4);
+    put('box',i===1?stone:lightStone,x,y,base+18*s,14*s,8*s,34*s,.02*(i-1));
+    rock(x-7*s,y-2*s,base+4*s,5*s,4*s,5*s,i*.7,patina);
+    carve(x,y,base,s,glyphs[i]);
+   }
+   for(const [array,mat,name]of [[incisions,ink,'ancient-glyph-incisions'],[inlay,ochre,'ancient-glyph-inlay']]){const geometry=new T.BufferGeometry();geometry.setAttribute('position',new T.Float32BufferAttribute(array,3));const lines=new T.LineSegments(geometry,mat);lines.name=name;group.add(lines);stats.drawCalls++;}
+   animations.push(time=>{ochre.opacity=.66+Math.sin(time*.00052)*.035;});
+  }
   if(chapter===2)cave();
   if(chapter===3)abyss();
   if(chapter===4){temple();wreck();whirlpool();reef(216,267,1.05);reef(749,268,1.1);seaLife();}
+  if(chapter===5)islandAncestors();
   for(const value of batches.values()){
    const instances=new T.InstancedMesh(geometries[value.type],value.mat,value.items.length);
    let index=0;

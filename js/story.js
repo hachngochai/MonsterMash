@@ -26,10 +26,10 @@
       ending:'Bạn đã chinh phục tận cùng đại dương. Những bí mật dưới vực sâu cuối cùng đã được khám phá. Khi Kraken chìm xuống, ba sao biển bay quanh ngọn đèn và một luồng sáng mở lối lên mặt nước. Người giữ đèn trở về đất liền, mang nguyên những kỹ năng và ký ức của hành trình. Hải Vực Quên Lãng đã khép lại, còn ánh sáng trong tay bạn vẫn hướng về những miền đất chưa kể tên.'}
   ];
   if(MM.IslandConfig)stories.push({id:5,start:201,end:250,name:'Đảo Phục Sinh',tagline:'Khi những cổ thần thức giấc giữa biển và dung nham.',color:'#b9c89a',
-    intro:['Sau Kraken, người giữ đèn bước lên một bờ biển xa lạ. Tiểu Ngư Nhân bay theo ánh lửa; sâu trong đảo, những tượng Moai đang mở mắt. Mỏ đá, rừng cọ đã chết và vách Người Chim giữ những dấu vết dẫn tới thánh địa Mana.',
+    intro:['Sau Kraken, người giữ đèn bước lên một bờ biển xa lạ. Tiểu Ngư vàng bơi theo ánh lửa; sâu trong đảo, những tượng Moai đang mở mắt. Mỏ đá, rừng cọ đã chết và vách Người Chim giữ những dấu vết dẫn tới thánh địa Mana.',
       'Đi qua năm miền đất, học cách phá giáp đá, đọc xúc xắc và giữ đạn trước những kẻ trộm. Tại miệng núi lửa, Makemake chờ người mang đèn với một lời phán xét. Sức mạnh bất tử không thể thay cho những bệ phong ấn cổ đại.'],
     arcs:['Lừa Tộc Trưởng Hóa Đá lao vào vách để phá giáp và gọi được Tiểu Moai đồng hành.','Sống qua đàn chuột và phục kích dưới đất; chiến thắng mở kho năm khiên.','Theo dấu đáp của Người Chim và nhận Trứng Phục Sinh với bảy hình thái tạm thời.','Phân biệt ký tự Cá và Chim, dùng phép qua Khiên Linh Hồn để nhận sách Ảo Mộng.','Giữ lối an toàn giữa dung nham; kích hoạt hai bệ rồi đứng trong vùng phong ấn để sống qua Phán Xét.'],
-    ending:'Những vệt dung nham lắng xuống. Mặt nạ đá khép đôi mắt sáng, còn các bệ phong ấn nối lại thành một vòng bình yên. Người giữ đèn đứng giữa những tượng Moai đã thôi chiến đấu. Tiểu Ngư Nhân và những người bạn đồng hành giữ ngọn lửa trên hòn đảo vừa thức giấc.'});
+    ending:'Những vệt dung nham lắng xuống. Mặt nạ đá khép đôi mắt sáng, còn các bệ phong ấn nối lại thành một vòng bình yên. Người giữ đèn đứng giữa những tượng Moai đã thôi chiến đấu. Tiểu Ngư vàng và những người bạn đồng hành giữ ngọn lửa trên hòn đảo vừa thức giấc.'});
   const get=id=>stories.find(s=>s.id===Number(id))||stories[0];
   const forLevel=id=>stories.find(s=>id>=s.start&&id<=s.end)||stories[0];
   const progress=(story,completed=[])=>new Set(completed.filter(id=>Number.isInteger(id)&&id>=story.start&&id<=story.end)).size;

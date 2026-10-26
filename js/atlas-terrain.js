@@ -11,13 +11,14 @@
   const xs=p.map(v=>v[0]),ys=p.map(v=>v[1]),bounds={left:Math.min(...xs),right:Math.max(...xs),top:Math.min(...ys),bottom:Math.max(...ys)},r=rng(chapter*6731),objects=[],hills=[];
   const cavity=chapter===3?{x:530,y:240,rx:110,ry:47,depth:84}:null;
   const inCavity=(x,y,padding=0)=>!!cavity&&((x-cavity.x)/(cavity.rx+padding))**2+((y-cavity.y)/(cavity.ry+padding))**2<1;
-  const reserved=(x,y)=>chapter===2?((x-750)/70)**2+((y-220)/54)**2<1:chapter===4?(((x-640)/86)**2+((y-242)/48)**2<1||((x-510)/54)**2+((y-238)/38)**2<1):inCavity(x,y,22);
+  const reserved=(x,y)=>chapter===5?(((x-510)/90)**2+((y-240)/48)**2<1||((x-660)/64)**2+((y-255)/36)**2<1):chapter===2?((x-750)/70)**2+((y-220)/54)**2<1:chapter===4?(((x-640)/86)**2+((y-242)/48)**2<1||((x-510)/54)**2+((y-238)/38)**2<1):inCavity(x,y,22);
   const clear=(x,y,margin=18,height=25)=>inside(x,y,p)&&!reserved(x,y)&&edgeDistance(x,y,p)>margin&&trailDistance(x,y,route)>margin&&trailDistance(x,y-height*.5,route)>margin&&route.bosses.every(v=>Math.abs(x-v[0])>36||Math.abs(y-v[1])>48);
   for(let i=0;i<350;i++){
    const x=bounds.left+18+r()*(bounds.right-bounds.left-36),y=bounds.top+28+r()*(bounds.bottom-bounds.top-46);
    if(y<112||!clear(x,y,19,35))continue;
-   const type=chapter===5?(i%3===0?'moai':i%5===0?'ruin':i%2?'tree':'rock'):chapter===4?(i%5===0?'ruin':i%3===0?'crystal':'coral'):chapter===3?(i%6===0?'ruin':i%3===0?'rock':'crystal'):chapter===2?(i%3===0?'tree':'rock'):(i%12===0?'ruin':i%5===0?'rock':'tree');
-   const size=.7+r()*.8,height=type==='tree'?22+size*13:type==='ruin'?24:12+size*10;
+   const type=chapter===5?(i%3===0?'moai':i%5===0?'runeStele':i%4===0?'tree':'rock'):chapter===4?(i%5===0?'ruin':i%3===0?'crystal':'coral'):chapter===3?(i%6===0?'ruin':i%3===0?'rock':'crystal'):chapter===2?(i%3===0?'tree':'rock'):(i%12===0?'ruin':i%5===0?'rock':'tree');
+   const size=.7+r()*(type==='moai'?.55:.8),height=type==='moai'?47*size:type==='runeStele'?35*size:type==='tree'?22+size*13:type==='ruin'?24:12+size*10;
+   if(chapter===5&&!clear(x,y,19,height))continue;
    if(objects.some(o=>Math.hypot(x-o.x,y-o.y)<(type==='tree'?13:19)))continue;
    objects.push({x,y,type,size,height,angle:r()*TAU,seed:r()});if(objects.length>=(chapter<3?60:50))break;
   }
@@ -42,8 +43,10 @@
   const geometries={rock:new T.IcosahedronGeometry(1,0),leaf:new T.IcosahedronGeometry(1,1),trunk:new T.CylinderGeometry(.7,1.2,1,5),crystal:new T.ConeGeometry(1,1,5),box:new T.BoxGeometry(1,1,1),pillar:new T.CylinderGeometry(1,1,1,6),roof:new T.ConeGeometry(1,1,6)};
   for(const key of ['trunk','crystal','pillar','roof'])geometries[key].rotateX(Math.PI*.5);
   const batches=new Map(),dummy=new T.Object3D();
-  function instance(type,mat,x,y,z,sx,sy,sz,angle=0){const key=type+':'+mat.uuid;if(!batches.has(key))batches.set(key,{type,mat,items:[]});batches.get(key).items.push({x,y,z,sx,sy,sz,angle});}
+  function instance(type,mat,x,y,z,sx,sy,sz,angle=0,lean=0){const key=type+':'+mat.uuid;if(!batches.has(key))batches.set(key,{type,mat,items:[]});batches.get(key).items.push({x,y,z,sx,sy,sz,angle,lean});}
   const bark=material('bark',0x584a37),leaf=material('leaf',palette.tree),leafLight=material('leaf-light',page===1?0x49654a:0x34755b),stone=material('stone',palette.rock),stoneLight=material('stone-light',page===4?0x7ea8a7:0x9a9c89),roof=material('roof',page===1?0x593c43:0x364a51),crystal=material('crystal',page===4?0x73d2d6:0x9d6bc5,{emissive:page===4?0x16464f:0x43235e,emissiveIntensity:.45,roughness:.4}),coral=material('coral',0x986e9c),coralLight=material('coral-light',0xc1a2a6);
+  const carving=page===5?material('island-carving',0x34443c):null,glyph=page===5?material('island-glyph',0xc4b17e,{emissive:0x5d471f,emissiveIntensity:.12}):null;
+  function glyphLine(x,y,z,s,a,b){const dx=(b[0]-a[0])*s,dz=(b[1]-a[1])*s;instance('box',glyph,x+(a[0]+b[0])*s*.5,y,z+(a[1]+b[1])*s*.5,Math.hypot(dx,dz),.55*s,.8*s,0,-Math.atan2(dz,dx));}
   function rock(x,y,z,size,seed){instance('rock',stone,x,y,z+size*4,size*7,size*5,size*(5+seed*5),seed*3);}
   for(const o of landscape.objects){const x=o.x-500,y=200-o.y,z=landscape.heightAt(o.x,o.y)+(page===4?-18:0),s=o.size;
    if(o.type==='tree'){
@@ -52,9 +55,16 @@
     instance('leaf',leafLight,x-s*4,y+s,z+h*.9,s*5.5,s*5,h*.23,o.angle+.8);
     instance('leaf',leaf,x+s*5,y-s*2,z+h*.65,s*5.2,s*4,h*.25,o.angle+2);
    }else if(o.type==='moai'){
-    instance('box',stone,x,y,z+3*s,15*s,12*s,6*s);instance('box',stone,x,y,z+18*s,12*s,11*s,26*s);
-    instance('box',stoneLight,x,y-7*s,z+17*s,3*s,5*s,12*s);instance('box',stoneLight,x,y-6*s,z+25*s,11*s,2*s,3*s);
-    instance('box',stone,x,y-6*s,z+8*s,10*s,3*s,4*s);
+    instance('rock',stone,x,y,z+3*s,11*s,8*s,5*s,o.angle);instance('box',stone,x,y,z+11*s,15*s,11*s,17*s);
+    instance('box',stone,x,y,z+31*s,10*s,10*s,32*s);instance('box',stoneLight,x,y-5.8*s,z+40*s,11*s,2.4*s,3.2*s);
+    for(const side of [-1,1]){instance('box',carving,x+side*2.8*s,y-5.3*s,z+37.5*s,3.4*s,.7*s,1.7*s);instance('box',stoneLight,x+side*5.5*s,y,z+31*s,2*s,5*s,19*s);}
+    instance('box',stoneLight,x,y-7*s,z+31*s,3*s,5*s,18*s);instance('box',carving,x,y-5.6*s,z+20*s,7*s,.7*s,.9*s);
+    instance('box',stoneLight,x,y-5.7*s,z+18.8*s,8*s,1.4*s,1*s);
+   }else if(o.type==='runeStele'){
+    instance('rock',stone,x,y,z+2*s,10*s,7*s,4*s,o.angle);instance('box',stone,x,y,z+17*s,13*s,7*s,29*s,0,.055);
+    instance('box',carving,x,y-3.9*s,z+18*s,10*s,.5*s,22*s);instance('rock',stoneLight,x,y,z+32*s,7*s,4*s,3*s,.3);
+    const fish=[[-3,23],[0,26],[3,23],[0,20],[-3,23],[-4,26],[-4,20],[-3,23]],bird=[[-4,14],[-1,17],[0,14],[1,17],[4,14]],stem=[[0,14],[0,10],[-2,8],[0,10],[2,8]];
+    for(const points of [fish,bird,stem])for(let i=1;i<points.length;i++)glyphLine(x,y-4.3*s,z,s,points[i-1],points[i]);
    }else if(o.type==='rock'){
     rock(x,y,z,s,o.seed);rock(x+s*5,y-s*2,z,s*.65,1-o.seed);
    }else if(o.type==='crystal'){
@@ -82,7 +92,7 @@
   if(page!==4)for(const h of landscape.hills){const x=h.x-500,y=200-h.y,z=landscape.heightAt(h.x,h.y);for(let i=0;i<3;i++)instance('rock',stone,x+(i-1)*7,y+(i%2)*4,z+5,9+i*2,9,12+i*4,i*1.7);}
   for(const batch of batches.values()){
    const mesh=new T.InstancedMesh(geometries[batch.type],batch.mat,batch.items.length);let index=0;
-   for(const o of batch.items){dummy.position.set(o.x,o.y,o.z);dummy.rotation.set(0,0,o.angle);dummy.scale.set(o.sx,o.sy,o.sz);dummy.updateMatrix();mesh.setMatrixAt(index++,dummy.matrix);}
+   for(const o of batch.items){dummy.position.set(o.x,o.y,o.z);dummy.rotation.set(0,o.lean,o.angle);dummy.scale.set(o.sx,o.sy,o.sz);dummy.updateMatrix();mesh.setMatrixAt(index++,dummy.matrix);}
    mesh.instanceMatrix.needsUpdate=true;mesh.castShadow=true;mesh.receiveShadow=true;group.add(mesh);
   }
   const coastPoints=landscape.outline.map(p=>new T.Vector3(p[0]-500,200-p[1],page===4?-20:-3));

@@ -15,6 +15,7 @@ test('each region gets its own physical scenery while keeping semantic map contr
  const MM=fixture(),types=[];
  for(const {chapter,d}of outlines){const p=MM.AtlasTerrain.plan(MM.AtlasTerrain.outline(d),chapter,MM.Story.trail(MM.Story.get(chapter)));types.push(new Set(p.objects.map(o=>o.type)));}
  assert.ok(types[0].has('tree'));assert.ok(types[1].has('tree'));assert.ok(types[2].has('crystal'));assert.ok(types[3].has('coral'));assert.ok(types[4].has('moai'));
+ assert.ok(types[4].has('runeStele'));assert.equal(types[4].has('ruin'),false,'island uses carved steles instead of generic house or temple props');
  assert.ok(html.indexOf('src="js/atlas-terrain.js')<html.indexOf('src="js/atlas-3d.js'));
  assert.equal((html.match(/data-boss-marker="\d+"/g)||[]).length,25);
  const css=fs.readFileSync('style.css','utf8');assert.match(css,/\.atlas-terrain-ready \.atlas-flat-scenery\{opacity:0\}/);
