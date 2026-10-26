@@ -5,6 +5,8 @@
  const MM=root.MM=root.MM||{},W=960,H=540,TAU=Math.PI*2;
  const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x)),lerp=(a,b,t)=>a+(b-a)*t;
  const ease=x=>{x=clamp(x);return x*x*(3-2*x);};
+ const travel=(a,b,start,end,u)=>{u=clamp(u);return (2*u*u*u-3*u*u+1)*a+(u*u*u-2*u*u+u)*start+(-2*u*u*u+3*u*u)*b+(u*u*u-u*u)*end;};
+ const travelSpeed=(a,b,start,end,u,duration)=>{u=clamp(u);return ((6*u*u-6*u)*a+(3*u*u-4*u+1)*start+(-6*u*u+6*u)*b+(3*u*u-2*u)*end)/duration;};
  const kinds=new Map([[50,'forest'],[100,'cave'],[150,'whirlpool'],[200,'ending'],['forest','forest'],['cave','cave'],['whirlpool','whirlpool'],['ending','ending']]);
  const backgroundManifest=Object.freeze({
   forest:'assets/backgrounds/transitions/forest-passage.png',cave:'assets/backgrounds/transitions/cave-passage.png',
@@ -19,7 +21,7 @@
  const vortexMouth=Object.freeze({x:675,y:365});
  // Native frame copies stay outside the game/save graph. Allocate only at the
  // two scene boundaries; ordinary frames just composite the retained bitmap.
- const entryFrames=new WeakMap(),landingFrames=new WeakMap(),landingDuration=.5;
+ const entryFrames=new WeakMap(),landingFrames=new WeakMap(),handoffs=new WeakMap(),landingDuration=.5;
  function copyCanvas(source){
   const width=source?.width,height=source?.height;
   if(!Number.isFinite(width)||width<=0||!Number.isFinite(height)||height<=0)return null;
@@ -30,7 +32,7 @@
    ctx.drawImage(source,0,0);return frame;
   }catch{return null;}
  }
- function clear(g){entryFrames.delete(g);landingFrames.delete(g);}
+ function clear(g){entryFrames.delete(g);landingFrames.delete(g);handoffs.delete(g);}
  function validLanding(g,state){return !!state&&!g.cinematic&&g.level?.id===state.level&&(g.screen==='playing'||g.screen==='paused');}
  function updateLanding(g,dt){
   const state=landingFrames.get(g);if(!state)return false;
@@ -64,7 +66,12 @@
   const s=g.cinematic;if(!s||s.finished)return false;
   const from=g.level?.id,expected={forest:50,cave:100,whirlpool:150,island:200}[s.kind];
   const frame=!skipped&&from===expected?copyCanvas(g.canvas):null;
-  s.finished=true;clear(g);g.cinematic=null;g.screen=s.previousScreen;g.lastTime=0;skipButton(g,true);s.done?.(g);
+  const handoff=!skipped&&s.kind==='ending'?{time:s.duration+(s.motionOffset||0),lastTime:g.lastTime}:null;
+  s.finished=true;clear(g);g.cinematic=null;g.screen=s.previousScreen;g.lastTime=0;skipButton(g,true);
+  // Only a synchronous next film can consume this live shoreline handoff.
+  // It cannot leak into saves, later replays, retries or a skipped ending.
+  if(handoff)handoffs.set(g,handoff);
+  try{s.done?.(g);}finally{handoffs.delete(g);}
   // Game.start clears old visual records inside the callback. Only its actual
   // adjacent destination receives this last film frame after the reset.
   if(frame&&g.screen==='playing'&&g.level?.id===from+1)landingFrames.set(g,{frame,level:g.level.id,time:0});
@@ -72,14 +79,16 @@
  }
  function begin(g,kind,done){
   const normalized=kinds.get(kind);if(!normalized||g.cinematic)return false;
-  clear(g);const frame=copyCanvas(g.canvas);if(frame)entryFrames.set(g,frame);
+  const handoff=normalized==='island'?handoffs.get(g):null;
+  clear(g);const frame=handoff?null:copyCanvas(g.canvas);if(frame)entryFrames.set(g,frame);
   const reduced=!!g.settings?.reducedMotion,duration=reduced?1.2:normalized==='ending'?11:5;
-  g.cinematic={kind:normalized,time:0,duration,done:typeof done==='function'?done:null,previousScreen:g.screen,reducedMotion:reduced,finished:false};
-  g.clearInputs?.();g.screen='cinematic';g.lastTime=0;
+  g.cinematic={kind:normalized,time:0,duration,done:typeof done==='function'?done:null,previousScreen:g.screen,reducedMotion:reduced,finished:false,
+    continuedFromEnding:!!handoff,motionOffset:handoff?.time||0};
+  g.clearInputs?.();g.screen='cinematic';g.lastTime=handoff?.lastTime||0;
   for(const id of ['result-overlay','home-overlay','stage-banner','toast'])if(g.ui?.[id])g.ui[id].hidden=true;
   skipButton(g,false);return true;
  }
- function update(g,dt){const s=g.cinematic;if(!s||g.screen!=='cinematic')return false;s.time=Math.min(s.duration,s.time+Math.max(0,Number.isFinite(dt)?dt:0));if(s.time+1e-8>=s.duration)finish(g);return true;}
+ function update(g,dt){const s=g.cinematic;if(!s||g.screen!=='cinematic')return false;const elapsed=s.time+Math.max(0,Number.isFinite(dt)?dt:0);s.time=Math.min(s.duration,elapsed);if(s.time+1e-8>=s.duration){finish(g);if(g.cinematic?.continuedFromEnding&&elapsed>s.duration)update(g,elapsed-s.duration);}return true;}
  function skip(g){return finish(g,true);}
 
  /* World positions before the camera. Continuous positions, scale and heading
@@ -101,14 +110,14 @@
    else{const u=ease((p-.85)/.15);Object.assign(a,{x:cx,y:lerp(cy+65,460,u),scale:lerp(.29,.62,u),tilt:lerp(.85,.38,u),vx:40,swim:true,phase:'submerged'});}
    a.camera={zoom:1.025+.055*q,x:-7*q,y:-3*q};
   }else if(kind==='island'||kind==='islandVictory'){
-   const victory=kind==='islandVictory';Object.assign(a,{x:lerp(victory?420:670,victory?510:845,q),y:lerp(victory?438:460,438,q),scale:lerp(victory?1.2:1.32,1.05,q),vx:victory?35:75,phase:'island-walk'});
+   const victory=kind==='islandVictory';Object.assign(a,{x:victory?lerp(420,510,q):travel(670,845,48*5,0,p),y:lerp(victory?438:460,438,q),scale:lerp(victory?1.2:1.32,1.05,q),vx:victory?35:travelSpeed(670,845,48*5,0,p,5),phase:'island-walk'});
    a.camera={zoom:1.05+.005*q,x:-4-4*q,y:-3+q};
   }else{
    const time=p*11;
    if(time<2.8){const u=ease(time/2.8);Object.assign(a,{x:lerp(365,382,u),y:lerp(414,398,u),scale:1.07,tilt:-.2,swim:true,vx:30,phase:'release'});}
    else if(time<6.4){const u=ease((time-2.8)/3.6);Object.assign(a,{x:lerp(382,460,u),y:lerp(398,319,u),scale:lerp(1.07,.96,u),tilt:lerp(-.2,-.65,u),swim:true,vx:75,phase:'ascent'});}
    else if(time<8.25){const u=ease((time-6.4)/1.85);Object.assign(a,{x:lerp(460,515,u),y:lerp(319,425,u),scale:lerp(.96,1.12,u),tilt:lerp(-.65,0,u),swim:true,vx:42,phase:'surface'});}
-   else{const u=ease((time-8.25)/2.75);Object.assign(a,{x:lerp(515,670,u),y:lerp(425,460,u),scale:lerp(1.12,1.32,u),vx:85*(1-ease((time-10.55)/.45)),phase:'shore'});}
+   else{const progress=clamp((time-8.25)/2.75),u=ease(progress);Object.assign(a,{x:travel(515,670,0,48*2.75,progress),y:lerp(425,460,u),scale:lerp(1.12,1.32,u),vx:travelSpeed(515,670,0,48*2.75,progress,2.75),phase:'shore'});}
    a.camera={zoom:1.025+.025*q,x:-4*q,y:-3*q};
   }
   if(reduced){a.camera={zoom:1,x:0,y:0};a.vx=0;a.tilt=0;}return a;
@@ -140,7 +149,7 @@
   const actor={...g.player,x:0,y:438,w:38,h:54,dir:1,vx:a.vx,vy:0,swimming:a.swim,swimPhase:t*6,swimTilt:0,invulnerable:0,stunTime:0,petrifyTime:0,knockdownTime:0,burnTime:0,immortalTime:0,shieldTime:0,rollTime:0,rollProgress:0,shotTimer:0,weaponMode:'normal',merfolkTime:0};
   const paintGame={settings:g.settings,level:{id:101,underwater:a.swim},progression:{equipped:'gun'},rollSlash:null,weaponAttack:null};
   const film=g.cinematic,p=film?clamp(film.time/film.duration):0;
-  const boundaryAlpha=entryFrames.has(g)&&film?.kind!=='ending'?ease((p-.12)/.08)*(1-ease((p-.88)/.12)):1;
+  const boundaryAlpha=film?.continuedFromEnding?1-ease((p-.88)/.12):entryFrames.has(g)&&film?.kind!=='ending'?ease((p-.12)/.08)*(1-ease((p-.88)/.12)):1;
   c.save();c.globalAlpha*=a.alpha*boundaryAlpha;c.translate(a.x,a.y);c.scale(a.scale,a.scale);c.translate(0,-29);c.rotate(a.tilt);c.translate(0,29);
   function arm(front){const side=front?1:-1,hx=torch&&front?28:side*(22+gait*3),hy=torch&&front?-27:-11+side*gait*3;
    line(c,[[side*15,-30],[side*20,-22],[hx,hy]],front?'#607c48':'#3f593d',7.5);line(c,[[side*16,-30],[side*21,-22],[hx,hy-1]],'#9aaa6b',1);ellipse(c,hx,hy,4.4,4.2,'#d8b47d','#16252b',1.2);
@@ -277,15 +286,19 @@
   c.restore();
  }
  function island(c,g,s,p,t){
-  const victory=s.kind==='islandVictory',a=sampleShot(s.kind,p,s.reducedMotion),mix=victory?1:ease((p-.08)/.6);
+  const victory=s.kind==='islandVictory',a=sampleShot(s.kind,p,s.reducedMotion),mix=victory?1:ease((p-.08)/.6),arrival=s.continuedFromEnding?1-ease(p/.24):0;
   c.save();camera(c,a);if(!victory)shore(c,t,s.reducedMotion);
-  c.save();c.globalAlpha*=mix;
-  const scene={...g,level:{id:victory?250:201,island:true},island:{hazards:[],seals:[],platforms:[]}};
+  c.save();c.globalAlpha*=mix;if(!victory)c.translate(0,a.y-438);
+  const scene={...g,time:t,level:{id:victory?250:201,island:true},island:{hazards:[],seals:[],platforms:[]}};
   if(!MM.IslandRenderer?.drawBackground(c,scene)){backdrop(c,'#23434a','#6c8062');rect(c,0,438,W,102,'#697b59');for(const x of [135,370,815]){rect(c,x,275,46,160,'#778274');rect(c,x+14,300,16,80,'#a1a68b');}}
-  c.restore();shadow(c,a,.6);footsteps(c,a,t,s.reducedMotion);hunter(c,g,a,t);motes(c,t,s.reducedMotion,false,.5);
+  c.restore();shadow(c,a,.65-.05*mix);footsteps(c,a,t,s.reducedMotion);
+  if(arrival>0)glow(c,a.x,a.y-30,100,'#c4e6d12a',arrival*.3);
+  hunter(c,g,a,t);if(arrival>0)stars(c,a,t,s.reducedMotion,arrival*.4);motes(c,t,s.reducedMotion,false,.5*(victory?1:mix));
   if(victory){glow(c,a.x,a.y-35,130,'#e3d0a02a',.8);stars(c,a,t,s.reducedMotion,.8);}
-  c.restore();title(c,victory?'BIÊN NIÊN NGỌN ĐÈN':'ĐẢO PHỤC SINH · 201—250',victory?'Các cổ thần đã yên giấc.':'Hòn đảo vừa thức giấc.',victory?'Ngọn đèn giữ lại bình minh giữa những phiến đá.':'Rời bờ biển, theo dấu Moai vào lòng đảo.');
+  c.restore();if(arrival>0)arrivalTitle(c,arrival);
+  title(c,victory?'BIÊN NIÊN NGỌN ĐÈN':'ĐẢO PHỤC SINH · 201—250',victory?'Các cổ thần đã yên giấc.':'Hòn đảo vừa thức giấc.',victory?'Ngọn đèn giữ lại bình minh giữa những phiến đá.':'Rời bờ biển, theo dấu Moai vào lòng đảo.',1-arrival);
  }
+ function arrivalTitle(c,alpha=1){title(c,'BIÊN NIÊN NGỌN ĐÈN','Bình minh đã trở lại.','Sau hai trăm đêm, đôi chân lại chạm đất.',alpha);}
  function ending(c,g,s,p,t){
   const elapsed=p*11,a=sampleShot('ending',p,s.reducedMotion),shoreFade=ease((elapsed-5.8)/1.35);c.save();camera(c,a);
   underwater(c,g,t,s.reducedMotion,true,s.reducedMotion?0:ease((elapsed-2.8)/3.6)*105);fallingKraken(c,g,elapsed,s.reducedMotion);
@@ -296,16 +309,16 @@
   if(elapsed>8.25&&elapsed<9.3&&!s.reducedMotion)splash(c,a.x-10,a.y,(elapsed-8.25)/1.05,.25);c.restore();
   if(elapsed<3.2)title(c,'HẢI VỰC QUÊN LÃNG','Đáy biển đã lặng yên.','Những hung thần cuối cùng chìm vào ký ức.',1-ease((elapsed-2.5)/.7));
   else if(elapsed<8.3)title(c,'HÀNH TRÌNH TRỞ VỀ','Theo ánh sao về phía mặt trời.','Không còn lời nguyền nào níu người giữ đèn.',ease((elapsed-3.2)/.7)*(1-ease((elapsed-7.6)/.7)));
-  else title(c,'BIÊN NIÊN NGỌN ĐÈN','Bình minh đã trở lại.','Sau hai trăm đêm, đôi chân lại chạm đất.',ease((elapsed-8.3)/.9));
+  else arrivalTitle(c,ease((elapsed-8.3)/.9));
  }
  function draw(c,g){
-  const s=g.cinematic;if(!s||g.screen!=='cinematic')return false;const p=clamp(s.time/s.duration),t=s.reducedMotion?0:s.time;
+  const s=g.cinematic;if(!s||g.screen!=='cinematic')return false;const p=clamp(s.time/s.duration),t=s.reducedMotion?0:s.time+(s.motionOffset||0);
   c.save();c.beginPath();c.rect(0,0,W,H);c.clip();({forest,cave,whirlpool,ending,island,islandVictory:island}[s.kind])(c,g,s,p,t);
   const v=c.createLinearGradient(0,0,0,H);v.addColorStop(0,'#01071317');v.addColorStop(.58,'#01071300');v.addColorStop(1,'#01071373');rect(c,0,0,W,H,v);
   rect(c,0,0,W,15,'#02070dc2');rect(c,0,H-21,W,21,'#02070dc2');rect(c,29,H-12,W-58,1,'#d6dec92d');rect(c,29,H-12,(W-58)*p,1,'#e8d9b69c');
   const entry=entryFrames.get(g);
   if(entry&&p<.12){c.save();c.globalAlpha*=1-ease(p/.12);c.drawImage(entry,0,0,W,H);c.restore();}
-  else if(!entry){const fade=Math.max(1-ease(p/.07),s.kind==='ending'?0:ease((p-.92)/.08));if(fade>0)rect(c,0,0,W,H,'rgba(3,12,20,'+fade+')');}
+  else if(!entry&&!s.continuedFromEnding){const fade=Math.max(1-ease(p/.07),s.kind==='ending'?0:ease((p-.92)/.08));if(fade>0)rect(c,0,0,W,H,'rgba(3,12,20,'+fade+')');}
   c.restore();return true;
  }
  MM.ChapterTransition={begin,update,draw,skip,clear,updateLanding,drawLanding,allArtReady,backgroundManifest,setBackground,getBackgroundState,sampleShot};

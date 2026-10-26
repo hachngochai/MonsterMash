@@ -1,6 +1,6 @@
 {
   "name": "monster-mash",
-  "version": "4.4.2",
+  "version": "4.4.3",
   "private": true,
   "description": "A 250-stage Canvas 2D monster hunting game across five story campaigns",
   "scripts": {

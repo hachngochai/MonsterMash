@@ -156,3 +156,49 @@ test('skips, unrelated destinations and explicit cancellations cannot leave stal
   const {c}=canvas();assert.equal(R.drawLanding(c,g),false,action);assert.ok(made.length<=2,'no per-frame capture');
  }
 });
+
+test('returning from the sea keeps a live visible hunter, one clock and no black flash when entering the island',()=>{
+ for(const native of [false,true]){
+  const {MM,g,scope}=fixture(),R=MM.ChapterTransition,made=nativeCanvases(scope),hunters=[];
+  if(native)g.canvas={width:1920,height:1080};
+  const shore={width:1672,height:941};R.setBackground(shore,'shore');
+  MM.Renderer={drawHunter(c,actor,time){hunters.push({alpha:c.globalAlpha,time,actor});}};
+  g.lastTime=1234;R.begin(g,'ending',()=>R.begin(g,'island'));g.lastTime=1234;
+  R.update(g,11.02);assert.equal(g.cinematic.kind,'island');assert.equal(g.lastTime,1234,'a joined scene does not drop the next animation frame');
+  assert.ok(Math.abs(g.cinematic.time-.02)<1e-8,'the frame remainder continues into the new scene');
+  assert.equal(made.length,native?1:0,'no frozen shoreline snapshot is captured between these shots');
+  for(const elapsed of [0,.08,.3,.8]){
+   g.cinematic.time=elapsed;const {c,calls,depth}=canvas(),fills=[];c.fillRect=(...args)=>fills.push({args,style:c.fillStyle});
+   hunters.length=0;const before=JSON.stringify(g);R.draw(c,g);
+   assert.equal(hunters.length,1);assert.equal(hunters[0].alpha,1,'the live walker never fades out at this boundary');
+   assert.equal(hunters[0].time,11+elapsed,'legs, waves and stars continue their phase');
+   assert.equal(hunters[0].actor.swimming,false);assert.ok(hunters[0].actor.vx>40);
+   assert.equal(fills.some(fill=>String(fill.style).startsWith('rgba(3,12,20,')),false,'no full-screen entry/exit veil at the joined boundary');
+   assert.equal(calls.some(([name,image])=>name==='drawImage'&&made.some(value=>value.node===image)),false);
+   assert.equal(JSON.stringify(g),before);assert.equal(depth(),0);
+  }
+  R.skip(g);
+ }
+});
+
+test('shore and island positions, cameras and real walking velocity match across the join',()=>{
+ const {MM}=fixture(),R=MM.ChapterTransition,last=R.sampleShot('ending',1),first=R.sampleShot('island',0),dt=.0001;
+ for(const field of ['x','y','scale','tilt','vx'])assert.equal(last[field],first[field],field);
+ for(const field of ['zoom','x','y'])assert.ok(Math.abs(last.camera[field]-first.camera[field])<1e-12,field+' camera continuity');
+ const before=R.sampleShot('ending',1-dt/11),after=R.sampleShot('island',dt/5);
+ assert.ok(Math.abs((last.x-before.x)/dt-(after.x-first.x)/dt)<.03,'no stop/start kink in the walking trajectory');
+ assert.ok(first.vx>40,'the hunter walks through the cut rather than stopping on the beach');
+ for(const p of [0,.2,.5,.8,1]){
+  const a=R.sampleShot('island',p),b=R.sampleShot('island',Math.min(1,p+dt/5));
+  if(p<1)assert.ok(Math.abs((b.x-a.x)/dt-a.vx)<.03,'leg motion follows actual horizontal travel');
+  assert.equal(R.sampleShot('island',p,true).vx,0);
+ }
+});
+
+test('a skipped ending or a later standalone replay never inherits a previous live shoreline handoff',()=>{
+ for(const skip of [false,true]){
+  const {MM,g}=fixture(),R=MM.ChapterTransition;R.begin(g,'ending',skip?()=>R.begin(g,'island'):null);
+  if(skip){R.skip(g);assert.equal(g.cinematic.continuedFromEnding,false);R.skip(g);}else R.update(g,11);
+  R.begin(g,'island');assert.equal(g.cinematic.continuedFromEnding,false);assert.equal(g.cinematic.motionOffset,0);R.skip(g);
+ }
+});

@@ -1,6 +1,12 @@
 # Monster Mash — The Midnight Hunt
 
-Rebuild 20 (v4.4.2) của Monster Mash của KIO: 250 màn, 5 cốt truyện, Canvas 2D và bản đồ Three.js đóng gói trong repo. Không cần CDN hoặc cài package. Tiến độ màn, kỹ năng, vũ khí, kỷ lục và cài đặt lưu vĩnh viễn bằng localStorage trên trình duyệt hiện tại.
+Rebuild 21 (v4.4.3) của Monster Mash của KIO: 250 màn, 5 cốt truyện, Canvas 2D và bản đồ Three.js đóng gói trong repo. Không cần CDN hoặc cài package. Tiến độ màn, kỹ năng, vũ khí, kỷ lục và cài đặt lưu vĩnh viễn bằng localStorage trên trình duyệt hiện tại.
+
+## Nối liền bờ biển và Đảo Phục Sinh · v4.4.3
+
+Chuyển cảnh Trở về → Lên đảo giữ một đồng hồ hoạt ảnh cho nhân vật, sóng biển và ánh sao; không giữ ảnh đứng hoặc chèn màn đen giữa hai đoạn. Vận tốc bước chân nối liên tục, nền đảo chuyển dần trên cùng đường chân. Phần thời gian dư của khung hình được giữ khi sang đoạn tiếp theo. Không đổi thời lượng, gameplay, phần thưởng hoặc dữ liệu lưu.
+
+[Xem riêng đoạn nối 16 giây](tests/chapter-preview.html?v=4.4.3#shore-to-island). Rạp có nút “Trở về → Lên đảo” để phát lại đúng cặp cảnh này.
 
 ## Bản đồ núi Moai · v4.4.2
 
