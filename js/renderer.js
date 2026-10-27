@@ -476,7 +476,12 @@
     eye(c, -7, -40, 7, '#f4ebd1', dir); eye(c, 7, -40, 7, '#f4ebd1', dir);
     line(c, -12, -46, -3, -44, '#805c42', 1.5); line(c, 3, -44, 12, -46, '#805c42', 1.5);
     line(c, -4, -31, 5, -31, '#765941', 1.7); ellipse(c, 12, -33, 2, 1, '#eecc9f');
-    if(weapon!=='gun')drawRewardWeapon(c,player,weapon,game,t,effects);
+    if(game?.cosmicRewards?.stance){
+      c.save();c.scale(dir,1);const casting=player.shotTimer>0,reach=casting?5:0;
+      line(c,-15,-25,-22,-21,'#607c48',8);rounded(c,-27,-25,9,8,3,skin,outline,1.5);
+      line(c,15,-25,27+reach,-28,'#607c48',8);rounded(c,24+reach,-32,10,10,3,skin,outline,1.5);c.restore();
+    }
+    else if(weapon!=='gun')drawRewardWeapon(c,player,weapon,game,t,effects);
     else if (sniper) {
       c.save(); c.scale(dir, 1);
       // Both hands brace a long rifle; its glass scope remains clear at mobile scale.
@@ -2402,6 +2407,7 @@
     drawHunter(c, { x: 477, y: GROUND, w: 45, h: 64, dir: 1, vx: 0 }, t, effects);
   }
   function draw(c, game) {
+    if(window.MM?.UFOTransition?.draw(c,game))return;
     if(window.MM?.ChapterTransition?.draw(c,game))return;
     const world = Math.max(0, Math.min(palettes.length - 1, game.level && Number.isFinite(game.level.world) ? Math.trunc(game.level.world) : 0));
     const t = game.time || 0, settings = game.settings || {}, effects = settings.effects !== false && !settings.reducedMotion;
@@ -2411,10 +2417,11 @@
     c.save();
     if (effects && game.shake > 0) c.translate(Math.sin(t * 83) * game.shake, Math.cos(t * 97) * game.shake * .6);
     const abyss=window.MM?.AbyssRenderer,water=window.MM?.UnderwaterRenderer,island=window.MM?.IslandRenderer;
+    const cosmicScene=window.MM?.CosmicRenderer?.drawBackground(c,game,t);
     const islandScene=island?.drawBackground(c,game,t);
     const waterScene=water?.drawBackground(c,game,t);
     const abyssScene=abyss?.drawBackground(c,game,t);
-    if(!abyssScene&&!waterScene&&!islandScene){c.drawImage(scenes.get(sceneWorld), 0, 0); drawAtmosphere(c, sceneWorld, t, effects);}
+    if(!abyssScene&&!waterScene&&!islandScene&&!cosmicScene){c.drawImage(scenes.get(sceneWorld), 0, 0); drawAtmosphere(c, sceneWorld, t, effects);}
     drawBloodMoon(c, game, t, effects);
     drawKongRage(c, game);
     if (game.screen === 'home' && (!game.enemies || !game.enemies.length)) {
@@ -2432,6 +2439,7 @@
       drawBananaPeels(c, game.bananaPeels, t, effects);
       abyss?.drawEffects(c,game,false);
       island?.drawEffects(c,game,false);
+      window.MM?.CosmicRenderer?.drawEffects(c,game,false);
       water?.drawEffects(c,game,t,false);
       drawPlatforms(c, game.enemies || [], t, effects);
       for (const p of game.pickups || []) drawPickup(c, p, t, effects);
@@ -2445,7 +2453,7 @@
           const shadowGame={...game,progression:{...game.progression,equipped:e.shadowSnapshot?.weapon||'gun'},rollSlash:null,weaponAttack:null};
           drawHunter(c,{...e,ammo:e.ammo,weaponMode:e.shadowSnapshot?.profile?.kind||'normal'},t,effects,shadowGame);
           c.globalCompositeOperation='source-atop';ellipse(c,e.x,e.y-e.h*.5,e.w*.7,e.h*.55,'#51347166');c.restore();
-        }else if(!island?.drawEnemy(c,game,e,t)&&!water?.drawEnemy(c,game,e,t)&&!abyss?.drawEnemy(c,game,e,t))drawMonster(c, e, t, effects, world, game.viewTop || 0);
+        }else if(!window.MM?.CosmicRenderer?.drawEnemy(c,game,e,t)&&!island?.drawEnemy(c,game,e,t)&&!water?.drawEnemy(c,game,e,t)&&!abyss?.drawEnemy(c,game,e,t))drawMonster(c, e, t, effects, world, game.viewTop || 0);
         if ((e.splitTriggered || e.draculaClone) && e.health > 0 && !e.intangible) {
           c.save(); rounded(c, e.x - 10, e.y - e.h - 27, 20, 17, 3, '#202634c9', '#bd98a05e', 1);
           c.font = `600 11px ${font}`; c.fillStyle = '#f6d7bd'; c.textAlign = 'center'; c.fillText(e.draculaClone ? 'II' : 'I', e.x, e.y - e.h - 15); c.restore();
@@ -2468,6 +2476,7 @@
         if(!island?.drawMoaiPlayer(c,game))drawHunter(c, game.player, t, effects,game);c.restore();
         abyss?.drawPlayerTorch(c,game);
         island?.drawPlayer(c,game,t);
+        window.MM?.CosmicRenderer?.drawPlayer(c,game,t);
       }
       for (const z of game.mythicZones || []) if(z.kind==='bite'&&!z.expired)drawChimeraBite(c,z,t,effects,game.viewTop||0);
       for (const b of game.bullets || []) drawBullet(c, b, effects);
@@ -2478,6 +2487,7 @@
       abyss?.drawEffects(c,game,true);
       water?.drawEffects(c,game,t,true);
       island?.drawEffects(c,game,true);
+      window.MM?.CosmicRenderer?.drawEffects(c,game,true);
       abyss?.drawLighting(c,game);
       window.MM?.OceanVisuals?.drawEffects(c,game,t);
       window.MM?.OceanVisuals?.drawLighting(c,game,t);

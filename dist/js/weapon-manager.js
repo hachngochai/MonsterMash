@@ -42,6 +42,7 @@
       if (suppressed(g) || !this.available(g).includes(id)) return false;
       if (g.rollSlash?.time > 0) return false;
       progression(g).equipped = id;
+      MM.CosmicRewards?.leaveStance(g);
       MM.LightningOrbWeapon?.stop(g);
       g.player.weaponMode = id === 'gun' ? 'normal' : id;
       g.weaponAttack = null;
@@ -61,6 +62,7 @@
       return true;
     },
     profile(g, dir = g.player.dir || 1) {
+      const essence = MM.CosmicRewards?.profile(g);if(essence)return essence;
       const id = this.current(g), p = g.player;
       if(['easterEgg','dreamBook'].includes(id))return MM.ResurrectionRewards?.profile(g,dir)||{kind:id,equipped:id,name:NAMES[id],cost:0,damage:0,cooldown:1};
       if (id === 'gun') {
@@ -85,6 +87,7 @@
     },
     fire(g, direction) {
       const p = g.player, dir = direction < 0 ? -1 : 1;
+      const cosmic=MM.CosmicRewards?.fire(g,dir);if(cosmic!==null&&cosmic!==undefined)return cosmic;
       if(['easterEgg','dreamBook'].includes(this.current(g)))return MM.ResurrectionRewards?.fire(g,dir)===true;
       if(this.current(g)==='lightningOrb')return MM.LightningOrbWeapon?.fire(g,dir)===true;
       if (g.screen !== 'playing' || g.weaponPicker?.open || p.shotTimer > .001 || p.stunTime > 0

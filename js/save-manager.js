@@ -2,7 +2,7 @@
 (function (root) {
   'use strict';
   const MM = root.MM = root.MM || {};
-  const milestones = Object.freeze([10,20,30,40,50,60,70,80,90,100,110,120,130,140,150,160,170,180,190,200,210,220,230,240]);
+  const milestones = Object.freeze([10,20,30,40,50,60,70,80,90,100,110,120,130,140,150,160,170,180,190,200,210,220,230,240].concat(MM.CosmicBalance?Array.from({length:11},(_,i)=>250+i*10):[]));
   const weaponLevels = Object.freeze({gun:0,bones:10,club:60,bow:90,spear:90,axes:100,hammer:120,scythe:140,lightningOrb:170,easterEgg:230,dreamBook:240});
   const record = value => value && typeof value === 'object' && !Array.isArray(value);
   const milestone = value => Number.isInteger(value) && milestones.includes(value);
@@ -32,6 +32,30 @@
     return weaponLevels[weapon] === 0 || unlocked(game,weaponLevels[weapon]);
   }
 
+  // Cosmic metadata is kept beside, rather than inside, the V3 progression
+  // record. Existing weapons and milestone saves retain their original shape.
+  function cosmicSnapshot(raw, completed, resume) {
+    if (!MM.CosmicBalance || !MM.CosmicConfig) return {};
+    const outer = record(raw) ? raw : {};
+    const maxLevel = MM.Campaign?.levels?.length || 350;
+    const levels = (Array.isArray(completed) ? completed : Array.isArray(outer.completed) ? outer.completed : [])
+      .filter(id => Number.isInteger(id) && id >= 1 && id <= maxLevel);
+    const selected = Number.isInteger(resume) ? resume : Number.isInteger(outer.resume) ? outer.resume : 1;
+    const current = MM.CosmicConfig.getRegion(Math.max(1,Math.min(maxLevel,selected)));
+    const regions = MM.CosmicConfig.authored.regions;
+    const next = current ? regions[regions.indexOf(current)+1] : null;
+    const route = value => Number.isInteger(value) && value >= 250 && value <= 340 && value % 10 === 0;
+    const transitions = [...new Set((Array.isArray(outer.cosmicTransitions) ? outer.cosmicTransitions : [])
+      .filter(from => route(from) && levels.includes(from)))];
+    const saved = record(outer.cosmicJourney) ? outer.cosmicJourney : null;
+    const journey = saved && route(saved.from) && saved.to === saved.from+1 && levels.includes(saved.from)
+      && ['in-flight','arrived'].includes(saved.state)
+      ? {from:saved.from,to:saved.to,state:saved.state} : null;
+    if (journey?.state === 'arrived' && !transitions.includes(journey.from)) transitions.push(journey.from);
+    return {maxMap:Math.max(0,...levels),currentPlanet:current?.id || null,nextPlanet:next?.id || null,
+      cosmicJourney:journey,cosmicTransitions:transitions.sort((a,b) => a-b)};
+  }
+
   function write(game) {
     if (!game || !record(game.save)) return null;
     const clean = normalize(game.progression || game.save.progression,game.save.completed);
@@ -41,9 +65,10 @@
     Object.assign(state,clean);
     game.progression = state;
     game.save.progression = state;
+    Object.assign(game.save,cosmicSnapshot(game.save));
     game.persist?.();
     return state;
   }
 
-  MM.SaveManager = {normalize,write,unlocked,weaponUnlocked,milestones,weaponLevels};
+  MM.SaveManager = {normalize,write,unlocked,weaponUnlocked,milestones,weaponLevels,cosmicSnapshot};
 })(typeof window !== 'undefined' ? window : globalThis);

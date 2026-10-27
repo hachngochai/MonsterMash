@@ -3,6 +3,7 @@
  'use strict';const MM=root.MM=root.MM||{};
  const defaults={left:'ArrowLeft',right:'ArrowRight',jump:'ArrowUp',shootLeft:'KeyA',shootRight:'KeyD',shield:'Space',weapon:'KeyF',aimHigh:'KeyW',aimGround:'KeyS',pause:'KeyP',scytheSwap:'KeyG',merfolk:'KeyR',interact:'KeyE'};
  const names={left:'Đi trái',right:'Đi phải',jump:'Nhảy / cấp oxy dưới biển',shootLeft:'Bắn trái',shootRight:'Bắn phải',shield:'Khiên / bất tử',weapon:'Đổi / giữ chọn vũ khí',aimHigh:'Bắn cao / bơi lên',aimGround:'Bắn mặt đất / bơi xuống',pause:'Tạm dừng',scytheSwap:'Cổ Điểu · Hoán đổi với quái thường',merfolk:'Ngư Nhân / Tiểu Moai theo khu vực',interact:'Kích hoạt bệ phong ấn'};
+ if(MM.CosmicBalance){defaults.jetpack='KeyJ';names.jetpack='Jetpack';MM.CosmicConfig.authored.essences.forEach((e,i)=>{defaults['essence'+i]='Digit'+((i+1)%10);names['essence'+i]=e.name;});}
  const valid=code=>typeof code==='string'&&/^(Key[A-Z]|Digit[0-9]|Numpad[0-9]|Arrow(Left|Right|Up|Down)|Space|ShiftLeft|ShiftRight|BracketLeft|BracketRight|Semicolon|Quote|Comma|Period|Slash|Backslash|Minus|Equal|Backquote)$/.test(code);
  const label=code=>({ArrowLeft:'←',ArrowRight:'→',ArrowUp:'↑',ArrowDown:'↓',Space:'Space',ShiftLeft:'Shift trái',ShiftRight:'Shift phải',BracketLeft:'[',BracketRight:']',Semicolon:';',Quote:"'",Comma:',',Period:'.',Slash:'/',Backslash:'\\',Minus:'−',Equal:'=',Backquote:'`'}[code]||code.replace(/^Key|^Digit/,'').replace(/^Numpad/,'Num '));
  function swap(map,action,code){const other=Object.keys(defaults).find(key=>key!==action&&map[key]===code),old=map[action];map[action]=code;if(other)map[other]=old;return other;}
@@ -19,7 +20,12 @@
   if(g.weaponPicker?.open&&['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Enter','Escape'].includes(physical))code=physical;
   else{
    const action=Object.keys(defaults).find(key=>map[key]===physical);
-   if(action){code=defaults[action];if(action==='aimHigh'&&!MM.UnderwaterMode?.freeSwim(g)&&MM.MapManager?.manualAim(g)!==true&&(map.aimHigh!==defaults.aimHigh||map.jump!==defaults.jump))code='Unbound:'+physical;}
+   if(action){code=defaults[action];
+    // Jetpack uses J inside the cosmic controller. Outside that chapter,
+    // preserve the original physical-J shooting alias without turning a
+    // remapped jetpack key into an unintended fire button.
+    if(action==='jetpack'&&!g.level?.cosmic)code=physical==='KeyJ'&&map.shootLeft===defaults.shootLeft?'KeyJ':'Unbound:'+physical;
+    if(action==='aimHigh'&&!MM.UnderwaterMode?.freeSwim(g)&&MM.MapManager?.manualAim(g)!==true&&(map.aimHigh!==defaults.aimHigh||map.jump!==defaults.jump))code='Unbound:'+physical;}
    else if(physical==='Escape'||physical==='Enter'||physical==='Tab')code=physical;
    else if(physical==='ArrowDown'&&MM.AbyssCombat?.inputDirection(g)<0)code=physical;
    else if(physical==='KeyJ'&&map.shootLeft===defaults.shootLeft)code='KeyJ';
@@ -51,7 +57,7 @@
  function bind(g){
   const grid=g.ui['key-binding-grid'];if(!grid)return;
   for(const action of Object.keys(defaults)){const row=root.document.createElement('div'),name=root.document.createElement('span'),button=root.document.createElement('button');row.className='key-binding-row';name.textContent=names[action];button.type='button';button.dataset.bindAction=action;button.addEventListener('click',()=>{g.clearInputs();g.keyCapture=action;sync(g);g.ui['key-binding-status'].textContent='Nhấn phím mới cho '+names[action]+'. Esc để hủy.';});row.append(name,button);grid.append(row);}
-  g.ui['key-preset-apply']?.addEventListener('click',()=>{g.keyCapture=null;g.settings.keyBindings=g.ui['key-preset'].value==='wasd'?{...defaults,left:'KeyA',right:'KeyD',jump:'KeyW',shootLeft:'KeyJ',shootRight:'KeyL',aimHigh:'KeyI',aimGround:'KeyK'}:{...defaults};g.clearInputs();g.persist();sync(g);g.ui['key-binding-status'].textContent='Đã áp dụng và lưu bộ phím.';});
+  g.ui['key-preset-apply']?.addEventListener('click',()=>{g.keyCapture=null;g.settings.keyBindings=g.ui['key-preset'].value==='wasd'?{...defaults,left:'KeyA',right:'KeyD',jump:'KeyW',shootLeft:'KeyJ',shootRight:'KeyL',aimHigh:'KeyI',aimGround:'KeyK',...(MM.CosmicBalance?{jetpack:'KeyT'}:{})}:{...defaults};g.clearInputs();g.persist();sync(g);g.ui['key-binding-status'].textContent='Đã áp dụng và lưu bộ phím.';});
   g.ui['settings-dialog']?.addEventListener('close',()=>{g.keyCapture=null;sync(g);});sync(g);
  }
  MM.KeyBindings={defaults,names,normalize,label,set,translate,capture,bind,sync};

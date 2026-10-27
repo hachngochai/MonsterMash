@@ -24,6 +24,14 @@ files.push(...['forest-passage','cave-passage','whirlpool-passage','shore-return
 files.push(...['island-config','island-combat','resurrection-rewards','island-art','island-fx','island-renderer'].map(name=>'js/'+name+'.js'));
 files.push(...['easter-egg','ghost-bunny','patrick','leprechaun','drunken-wanderer','mini-moai','awakening-moai','deforested-alpha','birdman','mana-spirit','makemake','golden-fish'].map(name=>'assets/sprites/island/'+name+'.png'));
 files.push(...['quarry','dead-palms','bird-cliffs','mana-sanctuary','volcano'].map(name=>'assets/backgrounds/island/'+name+'.png'));
+const cosmicRegions=['mercury','venus','mars','jupiter','saturn','uranus','neptune','moon','sun','blackHole'];
+files.push('cosmic.css',...['cosmic-config','cosmic-balance','cosmic-combat','cosmic-rewards','cosmic-scenery','cosmic-art','cosmic-essence-fx','cosmic-renderer','cosmic-planets','cosmic-ui','ufo-transition'].map(name=>'js/'+name+'.js'));
+files.push(...cosmicRegions.map(name=>'assets/backgrounds/cosmic/'+name+'.png'));
+files.push(...cosmicRegions.map(name=>'assets/sprites/cosmic/'+name+'-enemies.png'));
+files.push(...['hermes','aphrodite','ares','zeus','chronos','ouranos','poseidon','selene','helios','singularitySovereign'].map(name=>'assets/sprites/cosmic/'+name+'.png'));
+// Preview rooms ship with the same runtime and local assets as the game.
+// Include newly added rooms automatically, without copying Node-only tests.
+files.push(...fs.readdirSync(path.join(root,'tests')).filter(name=>name.endsWith('.html')).map(name=>'tests/'+name));
 for (const file of [...files,...managers]) {
   if(file.endsWith('.js'))execFileSync(process.execPath,['--check',path.join(root,file)],{stdio:'inherit'});
   const target=path.join(root,'dist',file);

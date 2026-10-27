@@ -111,7 +111,7 @@
     if (e.boss && e.dragonForm === 'dragon') {
       if (!e.yinYangTriggered && e.health <= e.maxHealth / 2) beginReincarnation(game, e);
       else if (e.health <= 0) becomeKnight(game, e);
-    } else if (e.boss && e.dragonForm === 'knight' && !attack.melee) rewardKnightHit(game, e);
+    } else if (e.boss && e.dragonForm === 'knight' && !attack.melee && attack.projectile !== false) rewardKnightHit(game, e);
     return true;
   }
   function apply(game, source) {

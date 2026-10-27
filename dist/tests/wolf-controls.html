@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="vi">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Thử khung hình · Bắn và lướt</title>
+<style>
+  *{box-sizing:border-box}body{margin:0;background:#101b18;color:#e4eadc;font:13px system-ui;overflow:hidden}
+  header{height:46px;display:flex;align-items:center;gap:9px;padding:5px 12px;white-space:nowrap;overflow-x:auto;scrollbar-width:none}
+  header::-webkit-scrollbar{display:none}
+  button,select,a{border:1px solid #819080;border-radius:6px;background:#253d32;color:inherit;padding:6px 9px;font:inherit;text-decoration:none}
+  small{color:#b3c4b4}iframe{display:block;border:0;width:100%;height:calc(100dvh - 46px)}
+  @media(max-width:600px){header{font-size:11px;gap:6px;padding:5px 7px}header small{display:none}}
+</style>
+<header>
+  <button id="restart" disabled>Chạy thử</button>
+  <label>Cảnh <select id="scene"><option value="70">70 · Trăng Máu</option><option value="20">20 · Nhện trên cao</option></select></label>
+  <label>Điều khiển <select id="mode"><option value="both">Vuốt + nút</option><option value="gestures">Vuốt</option><option value="buttons">Nút</option></select></label>
+  <label><input id="safe" type="checkbox" checked> Bất tử thử</label>
+  <small>Phòng thử · 100 đạn, 3 khiên · Không lưu tiến độ</small>
+  <a href="../">Game chính ↗</a>
+</header>
+<iframe id="arena" src="../" title="Sân thử khung hình và điều khiển" allow="fullscreen"></iframe>
+<script>
+  const arena=document.getElementById('arena'),restart=document.getElementById('restart'),mode=document.getElementById('mode'),safe=document.getElementById('safe'),scene=document.getElementById('scene');
+  let game;
+  arena.addEventListener('load',()=>{
+    game=arena.contentWindow.MM?.game;
+    if(!game)return;
+    // The practice arena uses the real game without writing to the player's save.
+    game.persist=()=>{};
+    if(game.mobileView)game.mobileView.enter=()=>game.mobileView.sync();
+    restart.disabled=false;
+  });
+  mode.addEventListener('change',()=>{if(game){game.settings.controls=mode.value;game.clearInputs();game.updateUI();}});
+  safe.addEventListener('change',()=>{if(game)game.player.immortalTime=safe.checked?12:0;});
+  setInterval(()=>{if(game&&safe.checked&&game.screen==='playing'&&game.player.immortalTime<6)game.player.immortalTime=12;},1000);
+  restart.addEventListener('click',()=>{
+    if(!game)return;
+    const level=Number(scene.value);game.start(level);game.settings.controls=mode.value;
+    game.player.immortalTime=safe.checked?12:0;
+    game.player.ammo=game.player.maxAmmo=100;game.shieldCount=3;
+    game.regularSpawned=game.level.target;
+    if(level===70) {
+      game.levelKills=game.level.target;game.checkCompletion();
+      const boss=game.enemies.find(enemy=>enemy.boss);
+      if(boss){boss.phase='active';boss.x=760;arena.contentWindow.MM.WolfCombat.hit(game,boss,boss.maxHealth/2);}
+    } else {
+      for(const x of [180,480,780]) {
+        const enemy=game.spawn('spider',1);game.configureAbility(enemy,'hanging');
+        enemy.phase='active';enemy.x=x;enemy.abilityTimer=Infinity;
+      }
+    }
+    game.updateUI();game.canvas.focus({preventScroll:true});
+  });
+</script>
+</html>

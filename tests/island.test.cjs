@@ -2,7 +2,7 @@ const test=require('node:test'),assert=require('node:assert/strict'),fs=require(
 const modules=['abyss-config','underwater-config','middle-sea-config','predator-sea-config','deep-sea-config','final-sea-config','island-config','campaign','bosses','golem','wolves','kong','dragons','mythic','abyss-combat','underwater','merfolk','underwater-enemies','boss160','middle-sea-enemies','boss170','predator-sea-enemies','boss-180','deep-sea-enemies','boss190','final-sea-enemies','boss200','save-manager','boss-manager','map-manager','skill-manager','lightning-orb','weapon-manager','input-manager','key-bindings','island-combat','resurrection-rewards','island-renderer','chapter-transition','game'];
 function fixture(id=201,rewards=[]){const scope=vm.createContext({});for(const name of modules)vm.runInContext(fs.readFileSync('js/'+name+'.js','utf8'),scope,{filename:name});const MM=scope.MM,g=new MM.Game({headless:true,random:()=>.5,storage:{getItem:()=>null,setItem(){}}});g.start(id);g.progression.rewards=rewards.slice();g.spawnTimer=999;g.player.invulnerable=0;return {MM,g,scope};}
 function enemy(g,type,x=700){const e=g.spawn(type,1);e.phase='active';e.warning=0;e.x=x;e.islandNext=999;return e;}
-function boss(g){g.bossSpawned=true;const e=enemy(g,'boss');if(e.islandState==='sleep'){e.islandState='walk';e.intangible=false;}return e;}
+function boss(g){g.levelKills=g.level.target;g.regularSpawned=g.level.target;g.bossSpawned=true;const e=enemy(g,'boss');if(e.islandState==='sleep'){e.islandState='walk';e.intangible=false;}return e;}
 function tick(g,time){for(let left=time;left>1e-8&&g.screen==='playing';){const dt=Math.min(.02,left);g.update(dt);left-=dt;}}
 const plain=x=>JSON.parse(JSON.stringify(x));
 
@@ -10,7 +10,7 @@ test('Island adds precisely50 land stages and five exclusive boss arenas without
  const {MM}=fixture();assert.equal(MM.Campaign.levels.length,250);assert.equal(MM.Campaign.worlds.length,25);
  const old=vm.createContext({});for(const name of modules.slice(0,6).concat('campaign'))vm.runInContext(fs.readFileSync('js/'+name+'.js','utf8'),old);
  assert.deepEqual(plain(MM.Campaign.levels.slice(0,200)),plain(old.MM.Campaign.levels));
- for(let id=201;id<=250;id++){const level=MM.Campaign.getLevel(id);assert.equal(level.id,id);assert.equal(level.island,true);assert.equal(level.underwater,false);assert.equal(level.world,Math.floor((id-1)/10));assert.equal(level.boss,id%10===0);if(level.boss)assert.equal(level.target,0);assert.ok(level.types.every(k=>Object.hasOwn(MM.IslandConfig.enemies,k)));}
+ for(let id=201;id<=250;id++){const level=MM.Campaign.getLevel(id);assert.equal(level.id,id);assert.equal(level.island,true);assert.equal(level.underwater,false);assert.equal(level.world,Math.floor((id-1)/10));assert.equal(level.boss,id%10===0);assert.ok(level.target>0);assert.ok(level.types.every(k=>Object.hasOwn(MM.IslandConfig.enemies,k)));}
  assert.deepEqual(Array.from(MM.Campaign.getLevel(203).types),['easterEgg','ghostBunny','miniMoai']);assert.deepEqual(Array.from(MM.Campaign.getLevel(248).types),['miniMoai','ghostBunny','luckyPatrick','leprechaun','drunkenWanderer']);
  for(const level of MM.Campaign.levels.slice(200))assert.ok(!level.types.includes('giantBunny')&&!level.types.includes('mutantRat'),'summons never enter ordinary spawn quotas');
 });
@@ -137,7 +137,7 @@ test('every new boss awards only its own permanent reward after final death, wit
 
 test('all fifty island stages use their actual spawn quotas and never spawn an old biome enemy',()=>{
  for(let id=201;id<=250;id++){const {g}=fixture(id);g.spawnTimer=0;g.player.health=g.player.maxHealth=500;
-  g.update(.02);if(id%10===0){assert.equal(g.regularSpawned,0);assert.equal(g.enemies.length,1);assert.equal(g.enemies[0].boss,true);}else{assert.equal(g.regularSpawned,1);assert.equal(g.enemies.length,1);assert.ok(g.level.types.includes(g.enemies[0].archetype));}
+  g.update(.02);assert.equal(g.regularSpawned,1);assert.equal(g.enemies.length,1);assert.equal(g.enemies[0].boss,false);assert.ok(g.level.types.includes(g.enemies[0].archetype));
  }
 });
 

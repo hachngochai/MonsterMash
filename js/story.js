@@ -35,7 +35,7 @@
   const progress=(story,completed=[])=>new Set(completed.filter(id=>Number.isInteger(id)&&id>=story.start&&id<=story.end)).size;
   const nextLevel=(story,completed=[])=>{const done=new Set(completed);for(let id=story.start;id<=story.end;id++)if(!done.has(id))return id;return story.start;};
   const length=story=>story.end-story.start+1;
-  const milestones=(story,rewards=[])=>Array.from({length:5},(_,i)=>{const level=story.start+9+i*10,available=level<=story.end,cleared=available&&rewards.includes(level);return {level,available,planned:!available,cleared,mark:cleared?'O':'X'};});
+  const milestones=(story,rewards=[])=>Array.from({length:Math.ceil((story.end-story.start+1)/10)},(_,i)=>{const level=story.start+9+i*10,available=level<=story.end,cleared=available&&rewards.includes(level);return {level,available,planned:!available,cleared,mark:cleared?'O':'X'};});
   const routes={
     1:{points:[[110,140],[150,208],[260,180],[360,236],[290,320],[160,308]],controls:[[75,185],[175,145],[338,160],[370,302],[212,355]]},
     2:{points:[[600,135],[650,185],[850,165],[790,265],[620,280],[880,315]],controls:[[585,175],[730,100],[875,245],[705,225],[735,375]]},
@@ -47,6 +47,16 @@
   // without moving its terrain, exploration route or boss hit targets.
   const viewports={1:{x:-50,y:-20,width:600,height:430},2:{x:455,y:-20,width:600,height:430},3:{x:50,y:-20,width:900,height:430},4:{x:50,y:-20,width:900,height:430}};
   viewports[5]={x:50,y:-20,width:900,height:430};
+  if(MM.CosmicBalance){
+    const regions=MM.CosmicConfig.authored.regions;
+    stories.push({id:6,start:251,end:350,name:'Thiên Hà',tagline:'Ngọn đèn đi qua mười miền giữa các vì sao.',color:'#b7c8e7',
+      intro:['Makemake đã yên giấc. Chiếc UFO đón người giữ đèn rời Trái Đất, mang theo bộ đồ phi hành gia và những kỹ năng của hành trình cũ.',
+        'Một trăm màn nối mười vùng vũ trụ. Mỗi hành tinh giữ năm loài quái và một vị thần. Thu thập mười Tinh túy để đi tới tận cùng không-thời gian.'],
+      arcs:regions.map(r=>r.story),ending:'Chúa Tể Hố Đen gục xuống ngoài chân trời sự kiện. Mười Tinh túy sáng quanh ngọn đèn, khép lại chuyến viễn chinh giữa các vì sao.'});
+    routes[6]={points:[[90,170],[190,165],[340,120],[490,180],[650,135],[815,180],[820,310],[650,285],[490,335],[335,290],[190,335]],
+      controls:[[125,135],[260,85],[415,125],[560,110],[740,130],[880,240],[750,335],[570,285],[420,300],[265,345]]};
+    viewports[6]={x:50,y:-20,width:900,height:430};
+  }
   const viewport=story=>Object.assign({},viewports[typeof story==='object'?story.id:get(story).id]);
   const crossingRoutes=[
     {from:50,entrance:51,to:60,outStory:1,inStory:2,outPath:'M160 308C170 375 345 388 460 325',inPath:'M490 125C535 104 562 133 600 135Q585 175 650 185'},
@@ -136,7 +146,7 @@
   function bind(g){
     g.storyDots=[];
     for(const story of stories){
-      const dotsGroup=g.ui[story.id===5?'atlas-island-dots':story.id===4?'atlas-ocean-dots':story.id===3?'atlas-abyss-dots':'atlas-level-dots'];if(!dotsGroup)continue;
+      const dotsGroup=g.ui[story.id>=6?'atlas-cosmic-dots-'+story.id:story.id===5?'atlas-island-dots':story.id===4?'atlas-ocean-dots':story.id===3?'atlas-abyss-dots':'atlas-level-dots'];if(!dotsGroup)continue;
       const route=trail(story),path=g.ui['atlas-trail-'+story.id];path?.setAttribute('d',route.path);
       const view=viewport(story);
       route.bosses.forEach(([x,y],i)=>{const button=g.ui['atlas-boss-'+(story.start+9+i*10)];button?.style.setProperty('--mark-x',(x-view.x)/view.width*100+'%');button?.style.setProperty('--mark-y',(y-view.y)/view.height*100+'%');});

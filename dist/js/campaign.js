@@ -57,6 +57,11 @@
     Object.assign(enemyTypes,islandConfig.enemies,islandConfig.bosses);
   }
   // The new expedition reads its provisional balance from one editable module.
+  const cosmicBalance=root.MM&&root.MM.CosmicBalance;
+  if(cosmicBalance){
+    root.MM.CosmicConfig.authored.regions.forEach(r=>worlds.push({id:r.world,name:r.name,subtitle:r.subtitle,color:r.color,enemy:r.enemies[0],scenery:r.world,cosmic:true}));
+    Object.assign(enemyTypes,cosmicBalance.enemies,cosmicBalance.bosses);
+  }
   // Original levels and their enemy records remain unchanged.
   const abyssConfig = root.MM && root.MM.AbyssConfig;
   if (!abyssConfig) throw new Error('Load js/abyss-config.js before js/campaign.js.');
@@ -600,12 +605,13 @@
     for(let i=0;i<50;i++){
       const band=Math.floor(i/10),stage=i%10,boss=stage===9,group=stage<2?0:stage<5?1:stage<7?2:3,balance=islandConfig.campaign;
       levels.push({...balance,id:201+i,world:20+band,name:boss?bossNames[band]:worlds[20+band].name+' · '+(stage+1),island:true,
-        underwater:false,target:balance.targets[i],spawnInterval:balance.intervals[i],maxAlive:balance.caps[i],types:boss?[]:bands[band][group].slice(),hazardTypes:[],
+        underwater:false,target:balance.targets[i],spawnInterval:balance.intervals[i],maxAlive:balance.caps[i],types:bands[band][group].slice(),hazardTypes:[],
         boss,bossArchetype:boss?bossKeys[band]:null,bossHealth:boss?islandConfig.bosses[bossKeys[band]].health:0,
         bossAbilities:boss?[islandConfig.bosses[bossKeys[band]].ability]:[],bossSkills:boss?[islandConfig.bosses[bossKeys[band]].ability]:[],
         bossName:boss?bossNames[band]:undefined,layout:boss?'island-arena':'island',abilitySpawnEvery:0,story:stories[band],tutorial:stories[band],recovery:stage===3,balanceStatus:'provisional-playtest'});
     }
   }
+  if(cosmicBalance)levels.push(...cosmicBalance.levels);
   const difficultySettings = {
     story: { health: 7, spawnMultiplier: 1.2, speedMultiplier: 0.86, enemyHealthMultiplier: 0.9, warningTime: 1.35, damageMultiplier: 1, ammoMultiplier: 1.35, pressureMultiplier: 0.75 },
     normal: { health: 5, spawnMultiplier: 1, speedMultiplier: 1, enemyHealthMultiplier: 1, warningTime: 1.1, damageMultiplier: 1, ammoMultiplier: 1, pressureMultiplier: 1 },
@@ -637,8 +643,8 @@
     return {
       x: side === -1 ? -50 : 1010,
       y: 438,
-      w: config.abyss || config.underwater || config.island ? stats.w : boss ? (archetype === 'golem' ? 156 : archetype === 'werewolf' ? 80 : archetype === 'kong' ? 126 : archetype === 'dragon' ? 252 : archetype === 'chimera' ? 300 : Math.max(96, stats.w * 1.85)) : stats.w,
-      h: config.abyss || config.underwater || config.island ? stats.h : boss ? (archetype === 'golem' ? 172 : archetype === 'werewolf' ? 108 : archetype === 'kong' ? 138 : archetype === 'dragon' ? 190 : archetype === 'chimera' ? 210 : Math.max(94, stats.h * 1.5)) : stats.h,
+      w: config.abyss || config.underwater || config.island || config.cosmic ? stats.w : boss ? (archetype === 'golem' ? 156 : archetype === 'werewolf' ? 80 : archetype === 'kong' ? 126 : archetype === 'dragon' ? 252 : archetype === 'chimera' ? 300 : Math.max(96, stats.w * 1.85)) : stats.w,
+      h: config.abyss || config.underwater || config.island || config.cosmic ? stats.h : boss ? (archetype === 'golem' ? 172 : archetype === 'werewolf' ? 108 : archetype === 'kong' ? 138 : archetype === 'dragon' ? 190 : archetype === 'chimera' ? 210 : Math.max(94, stats.h * 1.5)) : stats.h,
       dir: side === -1 ? 1 : -1,
       type: boss ? 'boss' : enemyType,
       archetype: archetype,
@@ -652,7 +658,7 @@
       maxHealth: health,
       speed: stats.speed * config.speedMultiplier * settings.speedMultiplier * (0.95 + random * 0.1) * (boss ? 0.74 : 1),
       score: boss ? 750 + config.world * 250 : stats.score,
-      damage: config.abyss || config.underwater || config.island ? stats.damage : 1,
+      damage: config.abyss || config.underwater || config.island || config.cosmic ? stats.damage : 1,
       phase: 'warning',
       warning: settings.warningTime + (boss ? 0.45 : 0),
       age: 0,

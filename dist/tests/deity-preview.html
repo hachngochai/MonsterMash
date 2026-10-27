@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="vi"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Thiên Thủ Cổ Thần · Kiểm tra chuyển động</title>
+<link rel="stylesheet" href="../assets/fonts/fonts.css">
+<style>
+*{box-sizing:border-box}body{margin:0;background:#10101a;color:#e9dfce;font:14px 'Noto Sans',sans-serif}main{max-width:1060px;margin:auto;padding:24px}h1{font:600 25px 'Noto Serif',serif;margin:0 0 10px}p{color:#bcb1c8}nav,.controls{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin:16px 0}a,select{color:#e9dfce;background:#262032;border:1px solid #655274;padding:9px 12px;border-radius:7px}label{display:flex;align-items:center;gap:8px}input[type=range]{width:220px;accent-color:#bd9de7}canvas{width:100%;height:auto;display:block;border:1px solid #635273;border-radius:12px}output{color:#cbb3df;font-size:12px}@media(max-width:600px){main{padding:12px}h1{font-size:20px}input[type=range]{width:160px}}
+</style>
+<main><h1>Thiên Thủ Cổ Thần · Chuyển động liền bề mặt</h1>
+<p>Kiểm tra vai, cổ, bàn tay và bước chân ở cự ly gần. Kéo thanh xoay để dừng ở giữa chuyển sắc; phòng thử không dùng dữ liệu lưu.</p>
+<nav><a href="../?test=all">Chơi bản test</a><a href="abyss-preview.html#preview-150">Đấu trường màn 150</a></nav>
+<div class="controls"><label>Chuyển sang <select id="emotion" aria-label="Cảm xúc mới"><option value="rage">Nộ</option><option value="love">Ái</option><option value="hate">Ố</option><option value="joy">Hỉ</option></select></label>
+<label>Xoay đầu <input id="turn" type="range" min="0" max="100" value="0" aria-label="Tiến độ xoay đầu"><span id="percent">0%</span></label>
+<label><input id="moving" type="checkbox" checked> Chuyển động</label><label><input id="loop" type="checkbox"> Lặp chuyển sắc</label></div>
+<canvas id="model" width="960" height="540" aria-label="Mô hình Thiên Thủ Cổ Thần phóng lớn"></canvas><p><output id="render-time">Đang tải tạo hình…</output></p></main>
+<script src="../js/abyss-config.js?v=4.0.6"></script><script src="../js/underwater-config.js?v=4.1.0"></script><script src="../js/middle-sea-config.js?v=4.2.0"></script><script src="../js/predator-sea-config.js?v=4.4.3"></script><script src="../js/deep-sea-config.js?v=4.4.3"></script><script src="../js/final-sea-config.js?v=4.4.3"></script><script src="../js/abyss-renderer.js?v=4.0.6"></script>
+<script>
+(()=>{'use strict';
+const canvas=document.getElementById('model'),c=canvas.getContext('2d'),emotion=document.getElementById('emotion'),turn=document.getElementById('turn'),moving=document.getElementById('moving'),loop=document.getElementById('loop');
+const order=['joy','rage','love','hate'];
+const boss={type:'thousandHands',boss:true,x:480,y:485,w:300,h:390,health:160,maxHealth:160,dir:1,abyssState:'patrol',emotion:'rage',emotionFrom:'joy',emotionChangedAt:0,emotionTurnDuration:1.4,abyssClock:0};
+const game={level:{id:150},time:0,settings:{effects:true},abyss:{},enemies:[boss]};
+let last=0,phase=0,cost=0,count=0,reportAt=0,ready=false;
+MM.AbyssRenderer.allArtReady.then(()=>{ready=true;});
+turn.oninput=()=>{loop.checked=false;phase=Number(turn.value)/100;};
+function frame(t){
+ const dt=last?Math.min(.05,(t-last)/1000):0;last=t;
+ if(moving.checked)game.time+=dt;
+ if(loop.checked){phase=(phase+dt/3)%1;turn.value=Math.round(phase*100);}
+ document.getElementById('percent').textContent=Math.round(phase*100)+'%';
+ boss.emotion=emotion.value;boss.emotionFrom=order[(order.indexOf(boss.emotion)+3)%4];boss.abyssClock=phase*1.4;
+ const bg=c.createRadialGradient(480,270,30,480,270,560);bg.addColorStop(0,'#34303d');bg.addColorStop(1,'#10131d');c.fillStyle=bg;c.fillRect(0,0,960,540);
+ c.strokeStyle='#b69a6d33';c.beginPath();c.ellipse(480,490,230,22,0,0,Math.PI*2);c.stroke();
+ if(ready){const started=performance.now();MM.AbyssRenderer.drawEnemy(c,game,boss);cost+=performance.now()-started;count++;}
+ if(t-reportAt>1000&&count){document.getElementById('render-time').textContent='Vẽ mô hình: '+(cost/count).toFixed(2)+' ms / khung hình · Giữ nguyên ảnh gốc và hiệu ứng bốn cảm xúc.';reportAt=t;cost=count=0;}
+ requestAnimationFrame(frame);
+}requestAnimationFrame(frame);
+})();
+</script></html>

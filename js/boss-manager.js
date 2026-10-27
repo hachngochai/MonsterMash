@@ -26,7 +26,8 @@
     210:{name:'Tiểu Moai Đồng Hành',skills:['moaiCompanion']},
     220:{name:'Kho Khiên · 5 Khiên',skills:['fiveShields']},
     230:{name:'Trứng Phục Sinh · Bảy Vũ Khí',weapons:['easterEgg']},
-    240:{name:'Ảo Mộng · Sách Phép',weapons:['dreamBook']}
+    240:{name:'Ảo Mộng · Sách Phép',weapons:['dreamBook']},
+    ...(MM.CosmicBalance?{250:{name:'Bộ Đồ Phi Hành Gia Makemake',skills:['astronaut']},...Object.fromEntries(MM.CosmicConfig.authored.essences.map(e=>[e.unlock,{name:'Tinh Túy · '+e.name,skills:['essence-'+e.id]}]))}:{})
   });
 
   function onDefeated(game, enemy) {

@@ -1,6 +1,16 @@
 # Monster Mash — The Midnight Hunt
 
-Rebuild 21 (v4.4.3) của Monster Mash của KIO: 250 màn, 5 cốt truyện, Canvas 2D và bản đồ Three.js đóng gói trong repo. Không cần CDN hoặc cài package. Tiến độ màn, kỹ năng, vũ khí, kỷ lục và cài đặt lưu vĩnh viễn bằng localStorage trên trình duyệt hiện tại.
+Rebuild 22 (v5.0.0) của Monster Mash của KIO: 350 màn, 6 cốt truyện, Canvas 2D và bản đồ Three.js đóng gói trong repo. Không cần CDN hoặc cài package. Tiến độ màn, kỹ năng, vũ khí, kỷ lục và cài đặt lưu vĩnh viễn bằng localStorage trên trình duyệt hiện tại.
+
+## Thiên Hà · v5.0.0
+
+Chương VI **Thiên Hà** hợp nhất toàn bộ 251–350 thành một bản đồ 100 màn với mười mốc thiên thể: Sao Thủy, Sao Kim, Sao Hỏa, Sao Mộc, Sao Thổ, Sao Thiên Vương, Sao Hải Vương, Mặt Trăng, Mặt Trời và Hố Đen. Mỗi vùng có năm quái riêng, một boss, một Tinh túy và một nền mới. Các mốc boss có hình cầu, bề mặt và vành đai theo từng thiên thể; năm chương cũ giữ bố cục.
+
+Tất cả màn boss có phần đánh dạo đầu với quái thường. Thắng Makemake mở bộ đồ phi hành gia; J bật/tắt phản lực, dùng tối đa 6 giây rồi hồi 10 giây. Các phím 1–9, 0 kích hoạt mười Tinh túy đã mở; điện thoại có bảng cảm ứng riêng. Tinh túy Trăng/Mặt Trời thay đòn bắn bằng chưởng, F thoát trạng thái đó để dùng vũ khí. Hành trình có mười đoạn UFO nối 250→251 rồi 260→261 đến 340→341; không tạo màn 351 sau trận cuối.
+
+[Bản chính 350 màn](https://hachngochai.github.io/MonsterMash/?v=5.0.0) · [Bản test mở toàn bộ](https://hachngochai.github.io/MonsterMash/?test=all&v=5.0.0) · [Xem 50 quái, 10 boss và mười nền](tests/cosmic-art-preview.html) · [Cơ chế và cấu hình chơi thử](docs/cosmic-implementation.md) · [Nguồn tạo hình](docs/cosmic-art-prompts.md).
+
+Các sát thương, thời lượng và điều kiện thưởng do người thiết kế quy định nằm riêng trong `js/cosmic-config.js`. Những chỉ số còn thiếu đã được cho phép hoàn thiện để test, nằm trong `js/cosmic-balance.js`; không thay âm thầm các mốc 99/999/2000 sát thương của Tinh túy. Phần thưởng chỉ cấp sau khi boss chết thật và vẫn đi qua các quy tắc miễn nhiễm, chuyển pha và phong ấn.
 
 ## Nối liền bờ biển và Đảo Phục Sinh · v4.4.3
 
@@ -98,7 +108,7 @@ Kiểm tra phóng lớn tại [phòng thử Cổ Thần](tests/deity-preview.htm
 
 [Mở và chia sẻ bản test](https://hachngochai.github.io/MonsterMash/?test=all&v=4.4.1). Ai có link đều chơi được trên PC hoặc điện thoại, không cần tài khoản. Mỗi người chơi trên thiết bị riêng.
 
-Link `?test=all` mở đủ 250 màn và toàn bộ phần thưởng, vũ khí, kỹ năng để thử. Badge **BẢN TEST** giúp nhận biết. Độ khó, sát thương, giới hạn đạn và cơ chế boss giữ nguyên. Màn 70 vẫn dùng quy tắc riêng của Trăng Máu.
+Link `?test=all` mở đủ 350 màn và toàn bộ phần thưởng, vũ khí, kỹ năng để thử. Badge **BẢN TEST** giúp nhận biết. Độ khó, sát thương, giới hạn đạn và cơ chế boss giữ nguyên. Màn 70 vẫn dùng quy tắc riêng của Trăng Máu.
 
 Tiến trình, trang bị, kỹ năng và cài đặt thay đổi trong bản test chỉ tồn tại trong phiên đang mở, không ghi đè save thật. Mở link chính không có `test=all` để tiếp tục hành trình đã lưu. Localhost mặc định vẫn bật test; thêm `?test=off` (có thể kèm `v`) để thử lưu tiến độ bình thường.
 
@@ -212,7 +222,7 @@ Khung game nằm trong kích thước cửa sổ hiện tại, tránh thanh cu�
 
 ## Cấu trúc và cập nhật sau này
 
-- `js/campaign.js`: dữ liệu 150 màn, 15 chương, loại địch và hệ số độ khó. Thêm chương hoặc màn tại đây; `levels.length` điều khiển tiến trình và điều kiện màn cuối.
+- `js/campaign.js`: ghép dữ liệu 350 màn, 35 vùng chiến đấu từ các config; `levels.length` điều khiển tiến trình và điều kiện màn cuối. `js/story.js` nhóm thành sáu cốt truyện, chương VI có 100 màn.
 - `js/game.js`: mô phỏng theo giây, input, va chạm, kỹ năng riêng của từng loài, đạn và tiếp tế, khiên, save và giao diện.
 - `js/typography.js` và `assets/fonts/`: font Noto Sans / Noto Serif có bộ ký tự tiếng Việt, tải từ file trong game trước khi vẽ Canvas. Font được phân phối theo SIL Open Font License; giấy phép nằm cùng thư mục.
 - `js/mobile.js`: điều khiển toàn màn hình, hướng ngang và xử lý trình duyệt không hỗ trợ.
@@ -223,7 +233,8 @@ Khung game nằm trong kích thước cửa sổ hiện tại, tránh thanh cu�
 - `js/dragons.js`: năm hệ rồng, vùng nguyên tố có dấu báo, Rồng ngàn tuổi và Kị sĩ rồng, Âm Dương luân hồi, thưởng khiên theo phát đạn trúng Kị sĩ.
 - `js/mythic.js`: sư tử dùng giáo, Medusa hóa đá, Goatman bổ rìu; Chimera mặt đất, bay và phân hóa thành ba bản thể với tiến độ khiên dùng chung theo sát thương thực tế.
 - `js/renderer.js`: nhân vật khối vuông lấy cảm hứng source gốc, 8 bối cảnh được cache cho 10 chương, bệ lơ lửng, tơ nhện, dơi biến hình, cánh rồng, vòng Âm Dương, hiệu ứng nguyên tố, hóa đá, lộn, thùng đạn, sương và ánh sáng. Rồng và quái thần thoại dùng PNG trong suốt từ `assets/sprites/`, được tải sẵn và vẽ lên Canvas; các hình vẽ bằng code làm dự phòng khi ảnh chưa sẵn sàng. Bối cảnh, các quái khác và hiệu ứng vẫn vẽ bằng code.
-- `style.css` và `index.html`: giao diện responsive, bản đồ 150 màn, hướng dẫn và cài đặt.
+- `style.css`, `underwater.css`, `cosmic.css` và `index.html`: giao diện responsive, bản đồ 350 màn, hướng dẫn và cài đặt.
+- `js/cosmic-config.js`, `js/cosmic-balance.js`, `js/cosmic-combat.js`, `js/cosmic-rewards.js`: danh mục vũ trụ, bộ cân bằng tạm, chiến đấu và Tinh túy. `js/ufo-transition.js` quản lý phim UFO; các module `cosmic-art/scenery/renderer/essence-fx/planets/ui` vẽ tạo hình, nền, chiêu và giao diện.
 - `tests/`: kiểm tra chiến dịch, input, đa chạm, khiên, boss, save, pause và kết thúc trận.
 - `tests/boss-preview.html`: bảng xem các trạng thái hiệu ứng và dấu tiếng Việt; mở qua server local để kiểm tra hình ảnh khi cập nhật.
 
@@ -235,7 +246,7 @@ Kiểm tra tự động bảo vệ cơ chế và tiến trình; cân bằng cu�
 
 ## Hướng dẫn theo chặng
 
-Mục 05 trong Cách chơi gồm 20 chặng (1–10 đến 191–200). Lần đầu bắt đầu màn 1, 11, 21…191 sẽ mở hướng dẫn chặng đó, tạm dừng giao chiến đến khi đóng hướng dẫn hoặc nhấn Sẵn sàng. Các chặng đã đọc được lưu cùng tiến độ; thử lại không mở lặp. Có thể xem lại từng mục trong Cách chơi. Bản localhost mở toàn bộ phần thưởng để test, không ghi vào save thật; dùng `?test=off` để kiểm tra tiến trình bình thường.
+Mục 05 trong Cách chơi gồm 35 chặng (1–10 đến 341–350). Lần đầu bắt đầu màn 1, 11, 21…341 sẽ mở hướng dẫn chặng đó, tạm dừng giao chiến đến khi đóng hướng dẫn hoặc nhấn Sẵn sàng. Các chặng đã đọc được lưu cùng tiến độ; thử lại không mở lặp. Có thể xem lại từng mục trong Cách chơi. Bản localhost mở toàn bộ phần thưởng để test, không ghi vào save thật; dùng `?test=off` để kiểm tra tiến trình bình thường.
 
 ## Tiếp tế khiên tại Vực Sâu Cổ Đại · v4.0.2
 

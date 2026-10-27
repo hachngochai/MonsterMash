@@ -42,6 +42,7 @@
         // Consume this pair even if the current action is still on cooldown.
         state.lastDir = 0; state.lastDirAt = -Infinity;
         state.lastDirStamp = null; state.lastDirSource = null;
+        if (MM.CosmicRewards?.directionTap(g,dir)) return true;
         if (enabled(g) && MM.WeaponManager.current(g) === 'axes') return MM.WeaponManager.tryRollSlash(g, dir);
         if (g.level?.id === 70) return this.requestDash(g, dir);
         return false;
@@ -62,7 +63,15 @@
       return true;
     },
     weaponDown(g) {
-      if (g.screen !== 'playing' || MM.WeaponManager.available(g).length < 2 || g.weaponPicker?.open) return false;
+      if (g.screen !== 'playing' || g.weaponPicker?.open) return false;
+      // A directly earned Moon/Sun stance can exist before any weapon reward.
+      // F must still restore the original gun when there is nothing to cycle.
+      if (MM.WeaponManager.available(g).length < 2) {
+        if (!g.cosmicRewards?.stance) return false;
+        MM.CosmicRewards?.leaveStance(g);
+        g.updateAmmoUI?.(); g.updateUI?.();
+        return true;
+      }
       if (!g.inputState) this.init(g);
       const state = g.inputState;
       if (state.weaponHeld) return true;
@@ -135,7 +144,7 @@
       if(code==='KeyG'&&MM.WeaponManager.current(g)==='scythe') {
         event.preventDefault?.();if(!event.repeat)MM.WeaponManager.tryScytheSwap(g);return true;
       }
-      if (code === 'KeyF' && MM.WeaponManager.available(g).length > 1) {
+      if (code === 'KeyF' && (MM.WeaponManager.available(g).length > 1 || g.cosmicRewards?.stance)) {
         event.preventDefault?.(); if (!event.repeat) this.weaponDown(g);
         return true;
       }

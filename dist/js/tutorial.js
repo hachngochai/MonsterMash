@@ -197,6 +197,14 @@
       'Khiên cá nhân, giáp Ngư Nhân và dạng bất tử không thay thế phong ấn. Phải hoàn thành thử thách kể cả khi đã gây đủ sát thương kết liễu boss.'
     ],reward:'Hạ Makemake sau Phán Xét để khép lại Đảo Phục Sinh và xem đoạn kết. Màn 250 không cấp thêm vũ khí hoặc kỹ năng; các phần thưởng đã mở vẫn được lưu vĩnh viễn.'}
   ].map((g,index)=>({...g,index:index+1,end:g.start+9,learn:g.start>=101&&g.start<=141?['Trong màn 101–150, hạ mỗi 5 quái thường hoặc bắn trúng boss đủ 10 viên nhận 1 khiên, giữ tối đa 3. Hai bộ đếm riêng biệt. Đạn hụt, bị chặn/phản lại và đòn cận chiến không tính vào mốc bắn boss. Bắn đúng hình chiếu Nộ trong mê cung vẫn được tính.',...g.learn]:g.learn}));
+  if(MM.CosmicBalance){
+    guides.find(g=>g.start===241).reward='Hạ Makemake sau Phán Xét mở Bộ Đồ Phi Hành Gia và chuyến UFO tới Thiên Hà. J bật/tắt phản lực tối đa 6 giây, hồi 10 giây, không tốn đạn.';
+    MM.CosmicConfig.authored.regions.forEach((r,i)=>guides.push({start:r.first,end:r.last,index:26+i,title:r.name+' · '+r.subtitle,boss:r.bossName+' · Màn '+r.last,
+      learn:[r.story,'J bật phản lực trong tối đa 6 giây rồi hồi 10 giây. Trong lúc bay vẫn đi ngang, bắn, đổi vũ khí và dùng khiên. Phím 1–0 hoặc bảng Tinh túy dùng kỹ năng đã mở.'],
+      fight:['Hạ đủ quái thường để gọi boss. Đòn rộng luôn có vùng báo trước; nhảy, bay hoặc dùng khoảng trống để né.',
+        r.id==='blackHole'?'Sóng Diệt Vong trừ 90% HP hiện tại nếu đứng ngoài nơi trú ẩn. Tới một trong hai vùng che chắn được đánh dấu; khiên cá nhân không thay nơi trú.':'Quan sát vùng báo và giữ đạn. Sau khi hạ boss, UFO đưa bạn tới vùng tiếp theo, giữ phần thưởng đã mở.'],
+      reward:'Mở Tinh Túy '+r.name+' · '+MM.CosmicConfig.authored.essences[i].name+'. Chỉ nhận sau khi boss thực sự bị hạ; trạng thái mở khóa được lưu vĩnh viễn.'}));
+  }
   const forLevel=id=>guides.find(g=>id>=g.start&&id<=g.end)||guides[0];
   const normalizeSeen=value=>Array.isArray(value)?[...new Set(value.filter(id=>guides.some(g=>g.start===id)))].sort((a,b)=>a-b):[];
   function element(tag,text,className){const e=root.document.createElement(tag);if(text)e.textContent=text;if(className)e.className=className;return e;}
