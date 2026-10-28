@@ -1,9 +1,58 @@
 /* Paint-only cosmic attacks and suit overlay; authored damage zones remain
  * visible throughout tell/impact/recovery and never move with the camera. */
 (function(root){'use strict';const MM=root.MM=root.MM||{},TAU=Math.PI*2;
+ const jetVisuals=new WeakMap(),clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
+ const suitActive=g=>!!g?.level?.cosmic&&MM.SaveManager?.unlocked(g,250)===true;
  const ellipse=(c,x,y,rx,ry,fill,stroke)=>{c.beginPath();c.ellipse(x,y,Math.max(.1,rx),Math.max(.1,ry),0,0,TAU);if(fill){c.fillStyle=fill;c.fill();}if(stroke){c.strokeStyle=stroke;c.stroke();}};
  function line(c,points,color,width=2){c.beginPath();points.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.strokeStyle=color;c.lineWidth=width;c.stroke();}
  function glow(c,x,y,r,color){const gr=c.createRadialGradient(x,y,0,x,y,r);gr.addColorStop(0,color);gr.addColorStop(1,'#00000000');ellipse(c,x,y,r,r,gr);}
+ function jetpackState(g){const s=jetVisuals.get(g);return {active:!!s?.active,particles:s?.particles.length||0,thrust:s?.thrust||0};}
+ function drawJetpack(c,g,time=0){
+  const p=g.player;if(!p||!g.level?.cosmic){jetVisuals.delete(g);return false;}
+  const t=Number.isFinite(time)?time:0,moving=g.settings?.effects!==false&&!g.settings?.reducedMotion,active=(g.cosmicRewards?.jetpack||0)>0,scale=clamp((p.h||54)/54,.7,2.2),dir=p.dir<0?-1:1;
+  const x=p.x-dir*((p.w||38)*.5+8*scale),y=p.y-4*scale;
+  let s=jetVisuals.get(g);if(!s||s.player!==p||t<s.time){s={player:p,time:t,y:p.y,thrust:0,active,particles:[],emission:0,serial:0,lift:0};jetVisuals.set(g,s);}
+  const elapsed=clamp(t-s.time,0,.1);s.active=active;
+  if(elapsed>0){
+   s.lift+=(clamp((s.y-p.y)/elapsed,0,260)-s.lift)*(1-Math.exp(-elapsed*10));
+   s.thrust+=((active?1:0)-s.thrust)*(1-Math.exp(-elapsed*(active?19:24)));if(s.thrust<.002)s.thrust=0;
+   for(const q of s.particles){q.age+=elapsed;q.x+=q.vx*elapsed;q.y=Math.min(436,q.y+q.vy*elapsed);q.vx*=Math.exp(-elapsed*1.8);}
+   s.particles=s.particles.filter(q=>q.age<q.life);
+   if(active&&moving){s.emission+=elapsed*21;while(s.emission>=1&&s.particles.length<28){s.emission--;const seed=++s.serial,spread=Math.sin(seed*12.37),length=Math.min(52*scale,Math.max(5,438-y-3));s.particles.push({x:x+spread*3*scale,y:Math.min(435,y+length*.72),vx:-(p.vx||0)*.1+spread*11,vy:25+Math.cos(seed*4.9)*8,age:0,life:.38+(Math.sin(seed*3.7)+1)*.15,seed});}}else s.emission=0;
+  }
+  s.time=t;s.y=p.y;if(!moving)s.particles=[];
+  c.save();c.lineCap='round';c.lineJoin='round';
+  // Exhaust lives in world space, so turning does not snap an old plume to
+  // the opposite side of the backpack. No gameplay RNG or clocks are used.
+  if(moving)for(const q of s.particles){const u=q.age/q.life,fade=Math.sin(u*Math.PI)*(1-u),r=(2+u*8)*scale;c.globalAlpha=.13*fade;glow(c,q.x,q.y,r,'#b6cdd49c');if(u<.35){c.globalAlpha=.4*(1-u/.35);ellipse(c,q.x,q.y,1.2*scale,2.5*scale,'#b6ecff');}}
+  c.globalAlpha=1;
+  const thrust=moving?s.thrust:active?1:0;
+  if(thrust>.002){
+   const phase=moving?t:0,room=Math.max(6,438-y-2),length=Math.min(room,(47+s.lift*.035+(moving?Math.sin(phase*17)*2.2+Math.sin(phase*29)*1.1:0))*scale)*thrust;
+   const lean=moving?clamp((p.vx||0)/950,-.22,.22):0;
+   c.save();c.translate(x,y);c.rotate(lean);c.globalCompositeOperation='screen';c.globalAlpha=thrust;
+   glow(c,0,8*scale,21*scale,'#81cfff64');
+   for(let layer=0;layer<3;layer++){
+    const len=Math.max(.5,length*[1,.78,.43][layer]),w=[7,4.6,2.7][layer]*scale,curl=moving?Math.sin(phase*11+layer)*2.2*scale:0;
+    const gr=c.createLinearGradient(0,0,0,len);gr.addColorStop(0,layer===2?'#f1ffff':'#9bdfff');gr.addColorStop(.2,layer===2?'#defffff0':layer===1?'#8cdaffe8':'#4ca4f7b0');gr.addColorStop(.58,layer===2?'#fff2baaf':layer===1?'#ffe3a9d0':'#ffb45f9c');gr.addColorStop(1,'#ed754000');
+    c.beginPath();c.moveTo(-w*.55,0);c.bezierCurveTo(-w,len*.2,-w*.35+curl,len*.74,curl*.6,len);c.bezierCurveTo(w*.38+curl,len*.78,w*.93,len*.22,w*.55,0);c.closePath();c.fillStyle=gr;c.fill();
+   }
+   // Small compression knots inside the core suggest a continuous hot jet,
+   // instead of a solid line or an isolated triangular flame.
+   for(let i=0;i<3;i++){const yy=(7+i*10)*scale;if(yy>length*.65)break;c.globalAlpha=thrust*(.3-i*.06);ellipse(c,Math.sin(phase*8+i)*.3*scale,yy,(2.7-i*.45)*scale,1.2*scale,'#f0fbff');}
+   c.restore();
+   const ground=1-clamp((438-y)/80,0,1);if(ground>0){c.globalAlpha=ground*thrust*.45;glow(c,x,436,32*scale,'#8cbfdf55');ellipse(c,x,436,20*scale,2.2*scale,null,'#b6c5bd70');}
+  }
+  // Beveled tank, heat shield and flared nozzle share the hunter's ink lines.
+  c.globalAlpha=1;c.save();c.translate(x,y);c.scale(scale,scale);
+  line(c,[[dir*4,-21],[dir*11,-19]],'#263640',3);line(c,[[dir*4,-10],[dir*10,-9]],'#263640',3);
+  c.fillStyle='#d4dfe3';c.strokeStyle='#101923';c.lineWidth=1.4;c.beginPath();c.moveTo(-6,-27);c.lineTo(4,-27);c.lineTo(6,-23);c.lineTo(6,-6);c.lineTo(3,-3);c.lineTo(-5,-3);c.lineTo(-7,-7);c.lineTo(-7,-23);c.closePath();c.fill();c.stroke();
+  const metal=c.createLinearGradient(-7,0,6,0);metal.addColorStop(0,'#a1b2bd');metal.addColorStop(.35,'#f0f4f2');metal.addColorStop(.65,'#c7d3db');metal.addColorStop(1,'#8199a9');c.fillStyle=metal;c.fillRect(-5,-25,8,19);
+  c.fillStyle='#233b48';c.fillRect(-4,-18,6,4);c.fillStyle=active?'#b1f1fa':'#6a9ba5';c.fillRect(-3,-17,4,2);
+  line(c,[[-6,-23],[4,-23]],'#b6c7c9',1);line(c,[[-6,-8],[4,-8]],'#152733',2);
+  c.beginPath();c.moveTo(-4,-5);c.lineTo(3,-5);c.lineTo(5,0);c.quadraticCurveTo(0,3,-6,0);c.closePath();c.fillStyle='#34424c';c.fill();c.strokeStyle='#14202a';c.stroke();
+  ellipse(c,-.5,0,4.2,1.3,active?'#d5f8ff':'#172632',active?'#79bfeb':'#768b91');c.restore();c.restore();return true;
+ }
  function drawBackground(c,g,t){if(!g.level?.cosmic)return false;return MM.CosmicScenery.drawBackground(c,g.level.id,t,g.settings);}
  function drawEnemy(c,g,e,t){if(!g.level?.cosmic||!MM.CosmicCombat?.owns(e))return false;if(MM.CosmicArt.drawEnemy(c,g,e,t))return true;
   c.save();c.globalAlpha*=.5;ellipse(c,e.x,e.y-e.h*.5,e.w*.4,e.h*.45,'#182536','#8ecedb');c.restore();return true;}
@@ -39,15 +88,12 @@
  function drawPlayer(c,g,t){
   const p=g.player,s=g.cosmicRewards;if(!p)return;
   c.save();
-  if(g.level?.cosmic&&MM.SaveManager?.unlocked(g,250)){
-   c.lineWidth=2;c.strokeStyle='#c4e6ef';ellipse(c,p.x,p.y-p.h*.72,p.w*.6,p.h*.39,'#98d3ef17','#bfdce8');
-   line(c,[[p.x-p.w*.35,p.y-p.h*.92],[p.x+p.w*.24,p.y-p.h*.99]],'#ffffff9c',2);
-   c.fillStyle='#788c98';c.fillRect(p.x-p.dir*26-5,p.y-p.h*.52,10,26);c.fillStyle='#8ae0ee';c.fillRect(p.x-p.dir*26-2,p.y-p.h*.46,4,15);
-   if(s?.jetpack>0){glow(c,p.x-p.dir*27,p.y-8,30,'#82e0ff77');line(c,[[p.x-p.dir*27,p.y-12],[p.x-p.dir*27+Math.sin(t*30)*4,p.y+20]],'#91edff',5);}
+  if(suitActive(g)){
+   drawJetpack(c,g,t);
   }
   MM.CosmicEssenceFX?.drawPlayer(c,g,t);
   if(s?.virtualArmor>0)ellipse(c,p.x,p.y-p.h*.5,p.w*.8,p.h*.63,null,'#cdb5f1');
   c.restore();
  }
- MM.CosmicRenderer={drawBackground,drawEnemy,drawEffects,drawPlayer};
+ MM.CosmicRenderer={drawBackground,drawEnemy,drawEffects,drawPlayer,drawJetpack,jetpackState,suitActive};
 })(typeof window!=='undefined'?window:globalThis);

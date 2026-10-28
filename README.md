@@ -1,6 +1,14 @@
 # Monster Mash — The Midnight Hunt
 
-Rebuild 22 (v5.0.0) của Monster Mash của KIO: 350 màn, 6 cốt truyện, Canvas 2D và bản đồ Three.js đóng gói trong repo. Không cần CDN hoặc cài package. Tiến độ màn, kỹ năng, vũ khí, kỷ lục và cài đặt lưu vĩnh viễn bằng localStorage trên trình duyệt hiện tại.
+Rebuild 22 (v5.0.1) của Monster Mash của KIO: 350 màn, 6 cốt truyện, Canvas 2D và bản đồ Three.js đóng gói trong repo. Không cần CDN hoặc cài package. Tiến độ màn, kỹ năng, vũ khí, kỷ lục và cài đặt lưu vĩnh viễn bằng localStorage trên trình duyệt hiện tại.
+
+## Bộ phi hành gia, phản lực và dây leo · v5.0.1
+
+Động cơ có miệng phun gắn vào ba lô, lõi trắng xanh, lớp lửa ngoài chuyển vàng cam và vệt hơi mỏng tan trong không gian. Luồng phụt nghiêng nhẹ khi đi ngang, tăng dần lúc cất cánh và tắt dần khi ngừng bay. Chế độ giảm chuyển động giữ luồng tĩnh; hiệu ứng không dùng bộ sinh ngẫu nhiên chiến đấu hoặc thay đổi tài nguyên. Thời gian bay 6 giây, hồi 10 giây và cơ chế điều khiển giữ nguyên.
+
+Khi đã mở thưởng Makemake và ở Thiên Hà, nhân vật mặc bộ trắng đầy đủ: áo áp suất, găng tay, quần, ủng, mũ kín với kính đen che mặt. Tay áo và găng đồng bộ với các vũ khí đã mở. Dây Leo Đại Địa bò sát mặt sàn, mọc nhánh, gai móc và lá cong; không dựng cột hoặc leo lên mục tiêu trên không. Chỉ thay cách vẽ, giữ 99 sát thương/nhịp, 5 giây và 20 đạn.
+
+[Xem thử phản lực](tests/jetpack-preview.html?v=5.0.1) · [Chơi bản test mới](https://hachngochai.github.io/MonsterMash/?test=all&v=5.0.1).
 
 ## Thiên Hà · v5.0.0
 

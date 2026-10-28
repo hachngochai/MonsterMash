@@ -123,10 +123,10 @@
   if(a.alpha<=0)return;c.save();c.globalAlpha*=a.alpha;c.translate(a.x,a.y);c.scale(a.scale,a.scale);c.rotate(a.tilt);
   const actor={...g.player,x:0,y:F,w:38,h:54,dir:a.dir,vx:moving?a.walk*a.dir:0,vy:0,swimming:false,invulnerable:0,stunTime:0,petrifyTime:0,knockdownTime:0,burnTime:0,immortalTime:0,shieldTime:0,rollTime:0,rollProgress:0,shotTimer:0,merfolkTime:0};
   const paint={settings:{...g.settings,reducedMotion:!moving},level:{id:251,underwater:false},progression:{...g.progression,equipped:g.progression?.equipped||'gun'},rollSlash:null,weaponAttack:null};
-  if(MM.Renderer?.drawHunter){c.save();c.translate(0,-F);MM.Renderer.drawHunter(c,actor,t,moving,paint);c.restore();}
+  if(MM.Renderer?.drawHunter){
+   const suit=clamp(a.suit);for(const [wearing,opacity] of [[false,1-suit],[true,suit]]){if(opacity<=0)continue;const dressed={...paint,level:{...paint.level,cosmic:wearing}};c.save();c.globalAlpha*=opacity;c.translate(0,-F);MM.Renderer.drawHunter(c,actor,t,moving,dressed);if(wearing)MM.CosmicRenderer?.drawJetpack(c,{...dressed,player:actor,cosmicRewards:{jetpack:0}},t);c.restore();}
+  }
   else{rect(c,-16,-32,32,24,'#577846');rect(c,-16,-53,32,26,'#d8b47d');rect(c,-22,-56,44,7,'#354b3c');rect(c,-12,-12,8,13,'#243d38');rect(c,4,-12,8,13,'#243d38');rect(c,-10,-42,5,5,'#fff1d7');rect(c,6,-42,5,5,'#fff1d7');}
-  if(a.suit>0){c.save();c.globalAlpha*=a.suit;poly(c,[[-20,-34],[-12,-38],[12,-38],[20,-33],[17,-9],[-17,-9]],'#d2ddd5a8','#3a545e',1.5);rect(c,-18,-11,12,6,'#9eafb0');rect(c,6,-11,12,6,'#9eafb0');line(c,[[-11,-31],[11,-31],[11,-18],[-11,-18],[-11,-31]],'#b5e7dc',1.7);rect(c,-3,-27,6,4,'#6ab8cf');
-   ellipse(c,0,-45,25,24,'#77acc521','#d2e5dd',2.3);line(c,[[-16,-61],[-7,-66],[9,-66]],'#e3f7edb0',2);rect(c,-25,-30,7,22,'#698a95');rect(c,-26,-23,3,5,'#91d8e2');c.restore();}
   c.restore();
  }
  function text(c,value,x,y,size=13,color='#dce9df',serif=false){c.fillStyle=color;c.textAlign='center';c.textBaseline='alphabetic';if('letterSpacing'in c)c.letterSpacing='0px';if('fontKerning'in c)c.fontKerning='normal';c.font=(serif?'700 ':'500 ')+size+'px '+(serif?(MM.Typography?.serif||'"Noto Serif",Georgia,serif'):(MM.Typography?.sans||'"Noto Sans",Arial,sans-serif'));c.fillText(String(value).normalize('NFC'),x,y);}

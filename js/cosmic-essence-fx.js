@@ -22,12 +22,25 @@
   for(let i=0;i<24;i++){const x=(t*(230+i%3*35)+i*47)%480,y=Math.sin(i*11+t*2)*Math.min(40,x*.11)-(x/480)**2*14;path(c,[[x,y],[x-5-i%4,y+2]],i%3?'#ffd37ca0':'#fff4c8c0',1.3);}
   glow(c,2,0,30,'#ffc876b0');c.restore();
  }
- function vine(c,g,e,t){const p=g.player,grow=ease(e.age/.55),pulse=Math.max(0,1-(e.age%1)/.24);const targets=e.targets?.length?e.targets.slice(0,6):Array.from({length:4},(_,i)=>({x:p.x+e.dir*(80+i*110),y:438,h:90}));
-  for(let i=0;i<targets.length;i++){const target=targets[i],x=target.x,start=x-e.dir*24,height=clamp(438-target.y+target.h*.7,90,260)*grow,bend=Math.sin(t*2.4+i)*16;
-   c.save();glow(c,start,434,35,'#b7ef8b40');c.beginPath();c.moveTo(start,442);c.bezierCurveTo(start-24,438-height*.35,x+35+bend,438-height*.55,x+bend*.3,438-height);c.strokeStyle='#132a1e';c.lineWidth=10;c.stroke();c.strokeStyle='#527e4a';c.lineWidth=6;c.stroke();c.strokeStyle='#bfdfa078';c.lineWidth=1.5;c.stroke();
-   for(let n=1;n<5;n++){const yy=438-height*n/5,xx=start+(x-start)*n/5+bend*Math.sin(n),side=n%2?1:-1;c.beginPath();c.moveTo(xx,yy);c.quadraticCurveTo(xx+side*24,yy-19,xx+side*30,yy-4);c.quadraticCurveTo(xx+side*12,yy+8,xx,yy);c.fillStyle=n%2?'#719257':'#8bb466';c.fill();}
-   if(pulse>0){c.globalAlpha=pulse*.6;glow(c,x,438-height*.65,55,'#d7ffab80');}c.restore();
+ function vine(c,g,e,t){const p=g.player,dir=e.dir<0?-1:1,grow=ease(e.age/.8),fade=ease(e.remaining/.3),length=480*grow,pulse=Math.max(0,1-(e.age%1)/.26);
+  const rootY=x=>-4-Math.abs(Math.sin(x*.036+t*.65))*4-Math.sin(x*.019)*1.5;
+  c.save();c.translate(p.x,438);c.scale(dir,1);c.globalAlpha*=fade;
+  // A connected root advances along the soil. Its silhouette stays below the
+  // hunter's knees, including when an aerial enemy is among the hit targets.
+  const trunk=()=>{c.beginPath();c.moveTo(0,-1);const count=Math.max(1,Math.ceil(length/28));for(let i=0;i<count;i++){const x=i*length/count,end=(i+1)*length/count,mid=(x+end)/2;c.quadraticCurveTo(mid,rootY(mid)-2,end,rootY(end));}};
+  trunk();c.strokeStyle='#13271c';c.lineWidth=8;c.stroke();c.strokeStyle='#577849';c.lineWidth=5.2;c.stroke();c.strokeStyle='#a6bd6b8c';c.lineWidth=1.25;c.stroke();
+  for(let i=0;i<17;i++){const x=15+i*28;if(x>length-5)break;const yy=rootY(x),unfurl=ease((length-x)/30),side=i%2?1:-1,reach=Math.min(length-x-2,(17+Math.sin(i*4.1)*4)*unfurl),rise=(7+i%3*3)*unfurl,sway=Math.sin(t*1.8+i)*1.2;
+   c.beginPath();c.moveTo(x,yy);c.bezierCurveTo(x+reach*.3,yy-rise*.7,x+reach*.7,yy-rise+sway,x+reach,yy-rise*.55);c.strokeStyle='#243b26';c.lineWidth=3.8;c.stroke();c.strokeStyle='#8b9b56';c.lineWidth=1.7;c.stroke();
+   const leafX=x+reach*.72,leafY=yy-rise*.75+sway*.5,leafLength=Math.min((8+i%3)*unfurl,Math.max(0,length-leafX-1));
+   c.beginPath();c.moveTo(leafX,leafY);c.bezierCurveTo(leafX+side*leafLength*.25,leafY-6*unfurl,leafX+leafLength*.8,leafY-7*unfurl,leafX+leafLength,leafY-4*unfurl);c.bezierCurveTo(leafX+leafLength*.55,leafY+2*unfurl,leafX+leafLength*.2,leafY+2*unfurl,leafX,leafY);c.fillStyle=i%2?'#7e9d56':'#a5b86b';c.fill();path(c,[[leafX,leafY],[leafX+leafLength*.78,leafY-3*unfurl]],'#d5dba262',.7);
+   // Fine hooked thorns and short side roots replace the former tall columns.
+   c.beginPath();c.moveTo(x+5,yy-1);c.quadraticCurveTo(x+5,yy-7*unfurl,x+8,yy-8*unfurl);c.quadraticCurveTo(x+8,yy-3*unfurl,x+11,yy);c.fillStyle='#bbc08a';c.fill();
+   if(i%3===1){c.beginPath();c.moveTo(x,yy+1);c.bezierCurveTo(x-2,yy+5,x+10,yy+7,x+17,yy+4);c.strokeStyle='#3b5130';c.lineWidth=1.6;c.stroke();}
   }
+  const tipY=rootY(length);glow(c,length,tipY,14,'#b3d77b35');
+  for(let i=0;i<5;i++){const x=length-3-i*6;if(x<0)continue;ellipse(c,x,1+Math.sin(i*4)*1.5,1.2+i*.2,.8,'#8b826670');}
+  for(const target of (e.targets||[]).slice(0,8)){const x=(target.x-p.x)*dir;if(x<0||x>length)continue;if(pulse>0){c.save();c.globalAlpha*=pulse*.48;glow(c,x,-5,22,'#d3f69a68');ellipse(c,x,-2,13,2,null,'#d6e9a68a');c.restore();}}
+  c.restore();
  }
  function stone(c,q,t){const r=21;c.save();c.translate(q.x,q.y);ellipse(c,0,19,29,5,'#070e1465');c.rotate(q.x/r);const points=[];for(let i=0;i<9;i++){const a=i*TAU/9,rr=r*(.88+Math.sin(i*9+1)*.12);points.push([Math.cos(a)*rr,Math.sin(a)*rr]);}
   c.beginPath();points.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.closePath();const gr=c.createLinearGradient(-20,-20,20,20);gr.addColorStop(0,'#d4c6a7');gr.addColorStop(.35,'#9b927e');gr.addColorStop(1,'#4c4e49');c.fillStyle=gr;c.fill();c.strokeStyle='#292f31';c.lineWidth=2;c.stroke();

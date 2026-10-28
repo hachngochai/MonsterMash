@@ -390,13 +390,13 @@
     if(window.MM?.IslandRenderer?.drawWeapon(c,player,weapon,game,t,effects))return;
     if(window.MM?.OceanVisuals?.drawWeapon(c,player,weapon,game,t,effects))return;
     if(window.MM?.AbyssRenderer?.drawWeapon(c,player,weapon,game,t,effects))return;
-    const dir=player.dir||1,attack=game?.weaponAttack,active=attack&&attack.time>0;
+    const dir=player.dir||1,attack=game?.weaponAttack,active=attack&&attack.time>0,space=window.MM?.CosmicRenderer?.suitActive(game),sleeve=space?'#e6edf1':'#607c48',glove=space?'#f1f3ed':'#d8b47d';
     const progress=active?1-attack.time/Math.max(.01,attack.duration):0;
     const swing=active&&attack.form==='swing'?Math.sin(progress*Math.PI):0;
     const thrust=active&&attack.form==='stab'?Math.sin(progress*Math.PI)*20:0;
     c.save();c.scale(dir,1);c.lineCap='round';c.lineJoin='round';
-    rounded(c,-25,-29,16,10,3,'#607c48','#101923',1.8);rounded(c,-29,-28,8,8,3,'#d8b47d','#101923',1.3);
-    line(c,14,-25,26,-27,'#607c48',8);rounded(c,23,-30,9,8,2,'#d8b47d','#101923',1.3);
+    rounded(c,-25,-29,16,10,3,sleeve,'#101923',1.8);rounded(c,-29,-28,8,8,3,glove,'#101923',1.3);
+    line(c,14,-25,26,-27,sleeve,8);rounded(c,23,-30,9,8,2,glove,'#101923',1.3);
     c.translate(27,-26);
     if(game?.skillState?.darkReady)halo(c,3,-5,32,'#bd8cf0',.28);
     if(weapon==='bones') {
@@ -449,7 +449,8 @@
     if (player.invulnerable > 0 && effects) c.globalAlpha = .72 + Math.sin(t * 37) * .18;
     const weapon=game&&window.MM?.WeaponManager?window.MM.WeaponManager.current(game):'gun';
     const sniper = weapon==='gun' && player.weaponMode === 'sniper', highAim = player.weaponMode === 'highAim';
-    const outline = '#101923', skin = '#d8b47d', empty = (sniper ? player.ammo < 5 : player.ammo === 0) && !(player.shotTimer > .001);
+    const astronaut=window.MM?.CosmicRenderer?.suitActive(game)===true,sleeve=astronaut?'#e6edf1':'#607c48';
+    const outline = '#101923', skin = astronaut?'#f1f3ed':'#d8b47d', empty = (sniper ? player.ammo < 5 : player.ammo === 0) && !(player.shotTimer > .001);
     // Combat boots and articulated legs under the original square camo body.
     if(swimming&&window.MM?.OceanVisuals?.drawTail(c,player,t,effects)){
       // The upper body and equipped weapon remain the hunter's original art.
@@ -457,6 +458,12 @@
       for(const side of [-1,1]){c.save();c.translate(side*8,-13);c.rotate(side*stride*.07);
         rounded(c,-4,-1,8,13,2,side<0?'#283e3a':'#35493d',outline,2);
         polygon(c,[[-5,9],[6,9],[10,16],[-7,16]],'#247986',outline,1.5);line(c,-3,12,5,13,'#86dce1',1);c.restore();}
+    }else if(astronaut){
+      for(const side of [-1,1]){const step=side<0?stride:-stride,xx=side<0?-13:4;
+        rounded(c,xx+step,-15,10,14,3,side<0?'#b6c4cd':'#e4ebef',outline,1.7);
+        rounded(c,xx+step,-13,10,4,1,'#7f94a2',outline,.8);line(c,xx+step+2,-7,xx+step+7,-7,'#f6f9f2',1);
+        rounded(c,xx+step-3,-5,16,7,2,'#d9e0e3',outline,1.5);rect(c,xx+step-3,0,16,2,'#4f616c');line(c,xx+step-1,-3,xx+step+10,-3,'#f3f5ef',.8);
+      }
     }else{
     rounded(c, -13 + stride, -13, 9, 13, 2, '#283e3a', outline, 2);
     rounded(c, 4 - stride, -13, 9, 13, 2, '#35493d', outline, 2);
@@ -464,6 +471,20 @@
     rounded(c, 3 - stride, -5, 14, 6, 2, '#223039', outline, 1.5);
     line(c, -13 + stride, -2, -5 + stride, -2, '#73806b', 1); line(c, 6 - stride, -2, 14 - stride, -2, '#73806b', 1);
     }
+    if(astronaut){
+      rounded(c,-19,-34,38,25,6,'#e0e8ed',outline,2);rounded(c,-18,-32,8,20,3,'#adbdc9');
+      polygon(c,[[-14,-31],[-8,-34],[9,-34],[15,-29],[13,-23],[-12,-23]],'#f4f6f1');
+      line(c,-13,-22,-13,-13,'#78909e',1);line(c,13,-21,13,-13,'#78909e',1);rounded(c,-9,-30,18,12,2,'#5c7180',outline,1.1);
+      rect(c,-6,-27,8,3,'#b8d8df');rect(c,4,-27,2,3,'#e6ac8e');line(c,-6,-21,6,-21,'#243b4c',1);
+      rounded(c,-19,-15,38,5,1,'#91a4af',outline,1);rounded(c,-5,-15,10,5,1,'#e5e9df',outline,.8);
+      ellipse(c,12,-19,2,2,'#d16e59',outline);line(c,-12,-29,-18,-26,'#b4c9d0',2);
+      rounded(c,-22,-64,44,38,14,'#edf1ef',outline,2.2);rounded(c,-20,-61,7,26,4,'#bdcbd3');
+      rounded(c,-18,-56,36,26,9,'#101a23','#8299a7',1.4);
+      const visor=c.createLinearGradient(-15,-55,16,-30);visor.addColorStop(0,'#263b4a');visor.addColorStop(.38,'#101820');visor.addColorStop(1,'#050b12');rounded(c,-16,-54,32,22,8,visor);
+      c.save();c.globalAlpha=.45;c.beginPath();c.moveTo(-12,-48);c.quadraticCurveTo(-10,-52,-1,-51);c.strokeStyle='#b9d5df';c.lineWidth=1.5;c.stroke();c.restore();
+      line(c,-9,-59,9,-59,'#ffffff',1.2);rounded(c,-24,-51,5,11,2,'#b5c4cb',outline,1);rounded(c,19,-51,5,11,2,'#cad5d8',outline,1);
+      line(c,-23,-43,-20,-43,'#73b6c6',1.3);line(c,20,-43,23,-43,'#73b6c6',1.3);rounded(c,-15,-28,30,4,1,'#788d9b',outline,1);
+    }else{
     rounded(c, -18, -33, 36, 24, 4, '#577846', outline, 2);
     polygon(c, [[-14, -31], [-4, -31], [-2, -24], [-10, -20], [-16, -24]], '#354f36');
     polygon(c, [[7, -24], [15, -29], [17, -17], [8, -14], [4, -19]], '#3c593b');
@@ -476,18 +497,19 @@
     eye(c, -7, -40, 7, '#f4ebd1', dir); eye(c, 7, -40, 7, '#f4ebd1', dir);
     line(c, -12, -46, -3, -44, '#805c42', 1.5); line(c, 3, -44, 12, -46, '#805c42', 1.5);
     line(c, -4, -31, 5, -31, '#765941', 1.7); ellipse(c, 12, -33, 2, 1, '#eecc9f');
+    }
     if(game?.cosmicRewards?.stance){
       c.save();c.scale(dir,1);const casting=player.shotTimer>0,reach=casting?5:0;
-      line(c,-15,-25,-22,-21,'#607c48',8);rounded(c,-27,-25,9,8,3,skin,outline,1.5);
-      line(c,15,-25,27+reach,-28,'#607c48',8);rounded(c,24+reach,-32,10,10,3,skin,outline,1.5);c.restore();
+      line(c,-15,-25,-22,-21,sleeve,8);rounded(c,-27,-25,9,8,3,skin,outline,1.5);
+      line(c,15,-25,27+reach,-28,sleeve,8);rounded(c,24+reach,-32,10,10,3,skin,outline,1.5);c.restore();
     }
     else if(weapon!=='gun')drawRewardWeapon(c,player,weapon,game,t,effects);
     else if (sniper) {
       c.save(); c.scale(dir, 1);
       // Both hands brace a long rifle; its glass scope remains clear at mobile scale.
-      rounded(c, -24, -31, 18, 11, 3, '#4e673f', outline, 2);
-      line(c, -16, -25, 9, -27, '#607c48', 8); rounded(c, 4, -30, 10, 8, 2, skin, outline, 1.4);
-      line(c, 15, -24, 30, -29, '#607c48', 7); rounded(c, 26, -31, 10, 7, 2, skin, outline, 1.4);
+      rounded(c, -24, -31, 18, 11, 3, astronaut?'#c3cfd7':'#4e673f', outline, 2);
+      line(c, -16, -25, 9, -27, sleeve, 8); rounded(c, 4, -30, 10, 8, 2, skin, outline, 1.4);
+      line(c, 15, -24, 30, -29, sleeve, 7); rounded(c, 26, -31, 10, 7, 2, skin, outline, 1.4);
       polygon(c, [[-15, -33], [-3, -33], [2, -29], [-3, -24], [-16, -24]], '#647256', outline, 1.7);
       rounded(c, -3, -33, 37, 8, 2, empty ? '#667376' : '#aab9b3', outline, 1.6);
       rect(c, 4, -33, 25, 2, '#d3d9c6'); rounded(c, 7, -26, 6, 8, 1, '#40564c', outline, 1);
@@ -510,7 +532,7 @@
         const angle = player.aimAngle + (side < 0 ? Math.PI : 0);
         c.translate(side * 18, -26); c.rotate(angle); c.translate(-side * 18, 26);
       }
-      rounded(c, side < 0 ? -26 : 14, -28, 12, 9, 3, '#607c48', outline, 2);
+      rounded(c, side < 0 ? -26 : 14, -28, 12, 9, 3, sleeve, outline, 2);
       rounded(c, side < 0 ? -29 : 22, -28, 8, 8, 3, skin, outline, 1.7);
       c.save();
       if (empty) { c.translate(side * 26, -27); c.rotate(side * .42); c.translate(-side * 26, 27); }

@@ -71,7 +71,7 @@
    const judge=(g.enemies||[]).find(e=>e.islandState==='judgment'&&!e.dead);if(judge){c.globalAlpha=.1+(judge.islandProgress||0)*.2;rect(c,0,0,W,H,'#e8ad71');c.globalAlpha=1;c.fillStyle='#fff0bd';c.font='bold 15px "Noto Sans",sans-serif';c.textAlign='center';c.fillText('PHÁN XÉT · '+Math.ceil(judge.islandTimer)+'s · '+(s.seals.filter(z=>z.activated).length)+'/'+MM.IslandConfig.boss.sealRequired+' PHONG ẤN',W/2,100);}
   }c.restore();}
  function drawWeapon(c,p,weapon,g,t){if(!['easterEgg','dreamBook'].includes(weapon))return false;
-  c.save();c.scale(p.dir||1,1);block(c,-26,-30,15,12,'#5f7b4a','#9b9f7c');block(c,13,-29,20,10,'#5f7b4a','#d7bd92');
+  const space=MM.CosmicRenderer?.suitActive(g);c.save();c.scale(p.dir||1,1);block(c,-26,-30,15,12,space?'#e6edf1':'#5f7b4a',space?'#b8c9d3':'#9b9f7c');block(c,13,-29,20,10,space?'#e6edf1':'#5f7b4a',space?'#f1f3ed':'#d7bd92');
   if(weapon==='dreamBook'){block(c,14,-38,27,27,'#687b96','#a8ceda');line(c,[[27,-35],[27,-13]],'#d6e3bb',2);clover(c,28,-21,5);}
   else{const form=MM.ResurrectionRewards?.currentForm(g);if(form==='staff')block(c,22,-79,9,83,'#896b48','#d8b47c');else if(form==='glove')block(c,19,-33,21,24,'#d8be7c','#f7e4a9');else if(form==='clover')clover(c,30,-22,10);else if(form==='fire')poly(c,[[19,-11],[12,-28],[27,-50],[40,-22],[35,-8]],'#e5a45f');else egg(c,29,-13,13);}
   c.restore();return true;}
