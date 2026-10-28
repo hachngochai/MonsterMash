@@ -1189,7 +1189,7 @@
     if(id!=='hammer'&&id!=='scythe')return false;
     const dir=p.dir||1,attack=g?.weaponAttack,active=attack?.time>0;
     const progress=active?1-attack.time/Math.max(.01,attack.duration):0,swing=active?Math.sin(progress*Math.PI)*1.8:0;
-    const space=MM.CosmicRenderer?.suitActive(g);c.save();c.scale(dir,1);line(c,[[13,-27],[26,-26]],'#101923',10);line(c,[[13,-27],[26,-26]],space?'#e6edf1':'#607c48',7);rect(c,23,-30,9,8,space?'#f1f3ed':'#d8b47d','#101923',1.2);
+    const space=MM.CosmicRenderer?.suitActive?.(g);c.save();c.scale(dir,1);line(c,[[13,-27],[26,-26]],'#101923',10);line(c,[[13,-27],[26,-26]],space?'#e6edf1':'#607c48',7);rect(c,23,-30,9,8,space?'#f1f3ed':'#d8b47d','#101923',1.2);
     c.translate(28,-25);c.rotate(-.3+swing);
     if(id==='hammer'){
       line(c,[[0,18],[0,-36]],INK,6);line(c,[[0,18],[0,-36]],'#79644c',3.5);

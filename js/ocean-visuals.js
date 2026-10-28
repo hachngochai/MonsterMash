@@ -22,7 +22,7 @@
  }
  function drawWeapon(c,p,weapon,g,t,effects){
   if(weapon!=='lightningOrb')return false;const dir=p.dir||1,active=g.lightningOrb?.active;
-  const space=MM.CosmicRenderer?.suitActive(g);c.save();c.scale(dir,1);c.lineCap='round';
+  const space=MM.CosmicRenderer?.suitActive?.(g);c.save();c.scale(dir,1);c.lineCap='round';
   c.strokeStyle=space?'#e6edf1':'#527446';c.lineWidth=8;c.beginPath();c.moveTo(13,-27);c.lineTo(27,-28);c.stroke();
   poly(c,[[24,-33],[32,-33],[34,-27],[27,-23],[23,-27]],space?'#f1f3ed':'#d8b47d');
   const x=35,y=-29,r=active?12:9;glow(c,x,y,r*2,active?'#87bbff77':'#7da7df44');

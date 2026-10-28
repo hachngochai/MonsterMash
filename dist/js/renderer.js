@@ -390,7 +390,7 @@
     if(window.MM?.IslandRenderer?.drawWeapon(c,player,weapon,game,t,effects))return;
     if(window.MM?.OceanVisuals?.drawWeapon(c,player,weapon,game,t,effects))return;
     if(window.MM?.AbyssRenderer?.drawWeapon(c,player,weapon,game,t,effects))return;
-    const dir=player.dir||1,attack=game?.weaponAttack,active=attack&&attack.time>0,space=window.MM?.CosmicRenderer?.suitActive(game),sleeve=space?'#e6edf1':'#607c48',glove=space?'#f1f3ed':'#d8b47d';
+    const dir=player.dir||1,attack=game?.weaponAttack,active=attack&&attack.time>0,space=window.MM?.CosmicRenderer?.suitActive?.(game),sleeve=space?'#e6edf1':'#607c48',glove=space?'#f1f3ed':'#d8b47d';
     const progress=active?1-attack.time/Math.max(.01,attack.duration):0;
     const swing=active&&attack.form==='swing'?Math.sin(progress*Math.PI):0;
     const thrust=active&&attack.form==='stab'?Math.sin(progress*Math.PI)*20:0;
@@ -449,7 +449,7 @@
     if (player.invulnerable > 0 && effects) c.globalAlpha = .72 + Math.sin(t * 37) * .18;
     const weapon=game&&window.MM?.WeaponManager?window.MM.WeaponManager.current(game):'gun';
     const sniper = weapon==='gun' && player.weaponMode === 'sniper', highAim = player.weaponMode === 'highAim';
-    const astronaut=window.MM?.CosmicRenderer?.suitActive(game)===true,sleeve=astronaut?'#e6edf1':'#607c48';
+    const astronaut=window.MM?.CosmicRenderer?.suitActive?.(game)===true,sleeve=astronaut?'#e6edf1':'#607c48';
     const outline = '#101923', skin = astronaut?'#f1f3ed':'#d8b47d', empty = (sniper ? player.ammo < 5 : player.ammo === 0) && !(player.shotTimer > .001);
     // Combat boots and articulated legs under the original square camo body.
     if(swimming&&window.MM?.OceanVisuals?.drawTail(c,player,t,effects)){
